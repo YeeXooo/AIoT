@@ -13,7 +13,8 @@
 ├── prompt.md                          # 需求澄清与 OOD 设计流程说明
 ├── code/                              # 源代码（文档与代码分离）
 ├── docs/
-│   ├── ood.md                         # 领域层 OOD 设计方案（DDD 分层）
+│   ├── ood_domain.md                  # 领域层 OOD 设计方案（DDD 分层）
+│   ├── ood_application.md             # 应用层 OOD 设计方案
 │   └── requirements.md                # 需求文档（req_v4）
 ├── instructions/                      # 流程指令
 │   ├── 202606242128.md
