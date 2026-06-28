@@ -11,6 +11,7 @@
 ```
 ├── README.md                          # 本文件
 ├── prompt.md                          # 需求澄清与 OOD 设计流程说明
+├── code/                              # 源代码（文档与代码分离）
 ├── docs/
 │   ├── ood.md                         # 领域层 OOD 设计方案（DDD 分层）
 │   └── requirements.md                # 需求文档（req_v4）
