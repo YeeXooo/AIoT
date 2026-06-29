@@ -8,12 +8,10 @@ public sealed interface Result<T, E> {
     record Ok<T, E>(T value) implements Result<T, E> { }
     record Err<T, E>(E error) implements Result<T, E> { }
 
-    @SuppressWarnings("unchecked")
     static <T, E> Result<T, E> ok(T value) {
         return new Ok<>(value);
     }
 
-    @SuppressWarnings("unchecked")
     static <T, E> Result<T, E> err(E error) {
         return new Err<>(error);
     }

@@ -150,11 +150,12 @@
   - `VehicleStateBuffer` / `PhysiologicalDataBuffer` / `DrivingBehaviorTrackingPort` / `CameraOcclusionDetectionPort` / `OTADeliveryPort` / `NotificationPort` / `RescueReportPort` / `MediaSessionPort`
   - 方法签名严格按 ood_domain.md §3.7 定义
 
-- [ ] **1.5 领域事件（~20 个）**
+- [x] **1.5 领域事件（~20 个）**
   - 事件密封接口 `DomainEvent`（含 `eventId` / `occurredAt` / `aggregateId`）
   - 全部事件 record 类，按 ood_domain.md §3.6 定义
+  - 18 个事件：RiskDeterminedEvent / RiskResolvedEvent / AlertTriggeredEvent / VehicleIgnitionOffLockedEvent / LifeDetectedEvent / EmergencyActivatedEvent / SensorFailureEvent / CameraOcclusionDetectedEvent / CameraOcclusionRemovedEvent / FamilyAccessGrantedEvent / FamilyAccessRevokedEvent / TripScoredEvent / DriverScoreUpdatedEvent / PerformanceWarningEvent / OTAUpgradeCompletedEvent / OTAUpgradeFailedEvent / DriverDeactivatedEvent / FamilyManualRescueRequestedEvent
 
-- [ ] **1.6 事件总线契约**
+- [x] **1.6 事件总线契约**
   - `DomainEventPublisher`（`publish` / `registerSyncHandler` / `registerAsyncHandler`）
   - 接口定义在 `com.aiot.domain.event`
 
