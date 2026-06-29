@@ -2,8 +2,12 @@
  * 车载安全监测系统 — 车队管理 DTO（S4）
  *
  * 基于 docs/ood_interface.md §1.4 FleetManagementService
+ *
+ * fromJson 构造器：ArkTS-safe，仅用基础类型断言逐字段提取，
+ * 使 API 层可返回具体 DTO 类型而非 ApiResponse<Record<string, unknown>>（问题 4 修复）。
  */
 
+import { getStr, getNum, getArray, getRecord } from '../common/JsonParser'
 import type {
   DataConsistency,
   DataFreshness,
@@ -21,6 +25,15 @@ export interface HeatmapPoint {
   riskIntensity: number
 }
 
+/** ArkTS-safe 构造器 */
+export function heatmapPointFromJson(raw: Record<string, unknown>): HeatmapPoint {
+  return {
+    latitude: getNum(raw, 'latitude'),
+    longitude: getNum(raw, 'longitude'),
+    riskIntensity: getNum(raw, 'riskIntensity'),
+  }
+}
+
 export interface GetFatigueDistributionResponse {
   /** 各等级占比（小数，总和为 1.0） */
   distribution: {
@@ -31,6 +44,26 @@ export interface GetFatigueDistributionResponse {
   heatmapData: HeatmapPoint[]
   dataFreshness: DataFreshness
   generatedAt: string  // ISO 8601
+}
+
+/** ArkTS-safe 构造器 */
+export function getFatigueDistributionResponseFromJson(raw: Record<string, unknown>): GetFatigueDistributionResponse {
+  const distRaw = getRecord(raw, 'distribution')
+  const heatArr = getArray(raw, 'heatmapData')
+  const heatmapData: HeatmapPoint[] = []
+  for (let i = 0; i < heatArr.length; i++) {
+    heatmapData.push(heatmapPointFromJson(heatArr[i]))
+  }
+  return {
+    distribution: {
+      L1_HINT: getNum(distRaw, 'L1_HINT'),
+      L2_WARNING: getNum(distRaw, 'L2_WARNING'),
+      L3_CRITICAL: getNum(distRaw, 'L3_CRITICAL'),
+    },
+    heatmapData,
+    dataFreshness: getStr(raw, 'dataFreshness') as DataFreshness,
+    generatedAt: getStr(raw, 'generatedAt'),
+  }
 }
 
 // ===================================================================
@@ -47,8 +80,31 @@ export interface OfflineVehicleEntry {
   lastHeartbeat: string  // ISO 8601
 }
 
+/** ArkTS-safe 构造器 */
+export function offlineVehicleEntryFromJson(raw: Record<string, unknown>): OfflineVehicleEntry {
+  return {
+    vehicleId: getStr(raw, 'vehicleId'),
+    licensePlate: getStr(raw, 'licensePlate'),
+    driverId: getStr(raw, 'driverId'),
+    driverName: getStr(raw, 'driverName'),
+    offlineReason: getStr(raw, 'offlineReason') as OfflineReason,
+    offlineSince: getStr(raw, 'offlineSince'),
+    lastHeartbeat: getStr(raw, 'lastHeartbeat'),
+  }
+}
+
 export interface GetOfflineVehiclesResponse {
   offlineVehicles: OfflineVehicleEntry[]
+}
+
+/** ArkTS-safe 构造器 */
+export function getOfflineVehiclesResponseFromJson(raw: Record<string, unknown>): GetOfflineVehiclesResponse {
+  const arr = getArray(raw, 'offlineVehicles')
+  const offlineVehicles: OfflineVehicleEntry[] = []
+  for (let i = 0; i < arr.length; i++) {
+    offlineVehicles.push(offlineVehicleEntryFromJson(arr[i]))
+  }
+  return { offlineVehicles }
 }
 
 // ===================================================================
@@ -62,10 +118,34 @@ export interface TrajectoryPoint {
   speed: number    // km/h
 }
 
+/** ArkTS-safe 构造器 */
+export function trajectoryPointFromJson(raw: Record<string, unknown>): TrajectoryPoint {
+  return {
+    timestamp: getStr(raw, 'timestamp'),
+    latitude: getNum(raw, 'latitude'),
+    longitude: getNum(raw, 'longitude'),
+    speed: getNum(raw, 'speed'),
+  }
+}
+
 export interface QueryTrajectoryResponse {
   trajectoryPoints: TrajectoryPoint[]
   totalCount: number
   dataConsistency: DataConsistency
+}
+
+/** ArkTS-safe 构造器 */
+export function queryTrajectoryResponseFromJson(raw: Record<string, unknown>): QueryTrajectoryResponse {
+  const arr = getArray(raw, 'trajectoryPoints')
+  const trajectoryPoints: TrajectoryPoint[] = []
+  for (let i = 0; i < arr.length; i++) {
+    trajectoryPoints.push(trajectoryPointFromJson(arr[i]))
+  }
+  return {
+    trajectoryPoints,
+    totalCount: getNum(raw, 'totalCount'),
+    dataConsistency: getStr(raw, 'dataConsistency') as DataConsistency,
+  }
 }
 
 // ===================================================================
@@ -79,6 +159,16 @@ export interface LatestTripSummary {
   score: number
 }
 
+/** ArkTS-safe 构造器 */
+export function latestTripSummaryFromJson(raw: Record<string, unknown>): LatestTripSummary {
+  return {
+    tripId: getStr(raw, 'tripId'),
+    startTime: getStr(raw, 'startTime'),
+    endTime: getStr(raw, 'endTime'),
+    score: getNum(raw, 'score'),
+  }
+}
+
 export interface HighRiskDriverEntry {
   driverId: string
   driverName: string
@@ -87,9 +177,38 @@ export interface HighRiskDriverEntry {
   primaryPenaltyItems: string[]
 }
 
+/** ArkTS-safe 构造器 */
+export function highRiskDriverEntryFromJson(raw: Record<string, unknown>): HighRiskDriverEntry {
+  const penaltyArr = getArray(raw, 'primaryPenaltyItems')
+  const primaryPenaltyItems: string[] = []
+  for (let i = 0; i < penaltyArr.length; i++) {
+    primaryPenaltyItems.push(penaltyArr[i] as string)
+  }
+  return {
+    driverId: getStr(raw, 'driverId'),
+    driverName: getStr(raw, 'driverName'),
+    compositeRiskScore: getNum(raw, 'compositeRiskScore'),
+    latestTripSummary: latestTripSummaryFromJson(getRecord(raw, 'latestTripSummary')),
+    primaryPenaltyItems,
+  }
+}
+
 export interface DrillDownHighRiskResponse {
   drivers: HighRiskDriverEntry[]
   totalCount: number
+}
+
+/** ArkTS-safe 构造器 */
+export function drillDownHighRiskResponseFromJson(raw: Record<string, unknown>): DrillDownHighRiskResponse {
+  const arr = getArray(raw, 'drivers')
+  const drivers: HighRiskDriverEntry[] = []
+  for (let i = 0; i < arr.length; i++) {
+    drivers.push(highRiskDriverEntryFromJson(arr[i]))
+  }
+  return {
+    drivers,
+    totalCount: getNum(raw, 'totalCount'),
+  }
 }
 
 // ===================================================================
@@ -99,6 +218,14 @@ export interface DrillDownHighRiskResponse {
 export interface TimeRange {
   start: string  // ISO 8601
   end: string    // ISO 8601
+}
+
+/** ArkTS-safe 构造器 */
+export function timeRangeFromJson(raw: Record<string, unknown>): TimeRange {
+  return {
+    start: getStr(raw, 'start'),
+    end: getStr(raw, 'end'),
+  }
 }
 
 export interface GenerateReportRequest {
@@ -113,10 +240,28 @@ export interface SubScores {
   abnormalDrivingScore: number
 }
 
+/** ArkTS-safe 构造器 */
+export function subScoresFromJson(raw: Record<string, unknown>): SubScores {
+  return {
+    fatigueScore: getNum(raw, 'fatigueScore'),
+    distractionScore: getNum(raw, 'distractionScore'),
+    abnormalDrivingScore: getNum(raw, 'abnormalDrivingScore'),
+  }
+}
+
 export interface DrivingBehaviorSummary {
   overallScore: number
   subScores: SubScores
   trendVsLastPeriod: number
+}
+
+/** ArkTS-safe 构造器 */
+export function drivingBehaviorSummaryFromJson(raw: Record<string, unknown>): DrivingBehaviorSummary {
+  return {
+    overallScore: getNum(raw, 'overallScore'),
+    subScores: subScoresFromJson(getRecord(raw, 'subScores')),
+    trendVsLastPeriod: getNum(raw, 'trendVsLastPeriod'),
+  }
 }
 
 export interface RiskDistribution {
@@ -125,10 +270,33 @@ export interface RiskDistribution {
   ROAD_RAGE: number
 }
 
+/** ArkTS-safe 构造器 */
+export function riskDistributionFromJson(raw: Record<string, unknown>): RiskDistribution {
+  return {
+    FATIGUE: getNum(raw, 'FATIGUE'),
+    DISTRACTION: getNum(raw, 'DISTRACTION'),
+    ROAD_RAGE: getNum(raw, 'ROAD_RAGE'),
+  }
+}
+
 export interface PenaltyBreakdownEntry {
   category: string
   penaltyScore: number
   topViolations: string[]
+}
+
+/** ArkTS-safe 构造器 */
+export function penaltyBreakdownEntryFromJson(raw: Record<string, unknown>): PenaltyBreakdownEntry {
+  const vArr = getArray(raw, 'topViolations')
+  const topViolations: string[] = []
+  for (let i = 0; i < vArr.length; i++) {
+    topViolations.push(vArr[i] as string)
+  }
+  return {
+    category: getStr(raw, 'category'),
+    penaltyScore: getNum(raw, 'penaltyScore'),
+    topViolations,
+  }
 }
 
 export interface ReportData {
@@ -144,11 +312,42 @@ export interface ReportData {
   generatedAt: string       // ISO 8601
 }
 
+/** ArkTS-safe 构造器 */
+export function reportDataFromJson(raw: Record<string, unknown>): ReportData {
+  const pArr = getArray(raw, 'penaltyBreakdown')
+  const penaltyBreakdown: PenaltyBreakdownEntry[] = []
+  for (let i = 0; i < pArr.length; i++) {
+    penaltyBreakdown.push(penaltyBreakdownEntryFromJson(pArr[i]))
+  }
+  return {
+    reportId: getStr(raw, 'reportId'),
+    driverId: getStr(raw, 'driverId'),
+    timeRange: timeRangeFromJson(getRecord(raw, 'timeRange')),
+    reportType: getStr(raw, 'reportType') as ReportType,
+    drivingBehaviorSummary: drivingBehaviorSummaryFromJson(getRecord(raw, 'drivingBehaviorSummary')),
+    riskDistribution: riskDistributionFromJson(getRecord(raw, 'riskDistribution')),
+    penaltyBreakdown,
+    totalMileage: getNum(raw, 'totalMileage'),
+    totalDrivingTime: getStr(raw, 'totalDrivingTime'),
+    generatedAt: getStr(raw, 'generatedAt'),
+  }
+}
+
 export interface GenerateReportResponse {
   reportId: string
   reportData: ReportData
   downloadUrl: string
   isEmpty: boolean
+}
+
+/** ArkTS-safe 构造器 */
+export function generateReportResponseFromJson(raw: Record<string, unknown>): GenerateReportResponse {
+  return {
+    reportId: getStr(raw, 'reportId'),
+    reportData: reportDataFromJson(getRecord(raw, 'reportData')),
+    downloadUrl: getStr(raw, 'downloadUrl'),
+    isEmpty: (raw['isEmpty'] ?? false) as boolean,
+  }
 }
 
 // ===================================================================
@@ -164,4 +363,11 @@ export interface SubscribePerformanceWarningRequest {
 
 export interface SubscribePerformanceWarningResponse {
   subscriptionId: string
+}
+
+/** ArkTS-safe 构造器 */
+export function subscribePerformanceWarningResponseFromJson(raw: Record<string, unknown>): SubscribePerformanceWarningResponse {
+  return {
+    subscriptionId: getStr(raw, 'subscriptionId'),
+  }
 }

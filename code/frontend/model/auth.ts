@@ -2,8 +2,13 @@
  * 车载安全监测系统 — 认证服务 DTO（Auth / §1.7）
  *
  * 基于 docs/ood_interface.md §1.7 Auth 认证服务
+ *
+ * fromJson 构造器：ArkTS 严格模式禁止 as T（T 为接口），因此为每个 Response DTO
+ * 提供静态 fromJson(raw: Record<string, unknown>) 构造器，用基础类型断言逐字段提取，
+ * 使 API 层可返回具体 DTO 类型而非 ApiResponse<Record<string, unknown>>（问题 4 修复）。
  */
 
+import { getStr, getNum } from '../common/JsonParser'
 import type { AccountRole, AuthMethod, SecondaryVerifyMethod } from './types'
 
 // ===================================================================
@@ -34,6 +39,18 @@ export interface LoginResponse {
   role: AccountRole
 }
 
+/** ArkTS-safe 构造器：从原始 JSON 构建 LoginResponse（不依赖同名合并声明） */
+export function loginResponseFromJson(raw: Record<string, unknown>): LoginResponse {
+  return {
+    accessToken: getStr(raw, 'accessToken'),
+    refreshToken: getStr(raw, 'refreshToken'),
+    tokenType: getStr(raw, 'tokenType'),
+    expiresIn: getNum(raw, 'expiresIn'),
+    accountId: getStr(raw, 'accountId'),
+    role: getStr(raw, 'role') as AccountRole,
+  }
+}
+
 // ===================================================================
 // Token 刷新
 // ===================================================================
@@ -54,6 +71,16 @@ export interface RefreshTokenResponse {
   expiresIn: number
 }
 
+/** ArkTS-safe 构造器：从原始 JSON 构建 RefreshTokenResponse */
+export function refreshTokenResponseFromJson(raw: Record<string, unknown>): RefreshTokenResponse {
+  return {
+    accessToken: getStr(raw, 'accessToken'),
+    refreshToken: getStr(raw, 'refreshToken'),
+    tokenType: getStr(raw, 'tokenType'),
+    expiresIn: getNum(raw, 'expiresIn'),
+  }
+}
+
 // ===================================================================
 // 二次身份验证
 // ===================================================================
@@ -72,4 +99,12 @@ export interface SecondaryVerifyResponse {
   secondaryAuthToken: string
   /** 凭证过期时间（ISO 8601） */
   expiresAt: string
+}
+
+/** ArkTS-safe 构造器：从原始 JSON 构建 SecondaryVerifyResponse */
+export function secondaryVerifyResponseFromJson(raw: Record<string, unknown>): SecondaryVerifyResponse {
+  return {
+    secondaryAuthToken: getStr(raw, 'secondaryAuthToken'),
+    expiresAt: getStr(raw, 'expiresAt'),
+  }
 }

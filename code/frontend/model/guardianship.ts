@@ -2,8 +2,12 @@
  * 车载安全监测系统 — 远程监护服务 DTO（S3）
  *
  * 基于 docs/ood_interface.md §1.3 RemoteGuardianshipService
+ *
+ * fromJson 构造器：ArkTS-safe，仅用基础类型断言逐字段提取，
+ * 使 API 层可返回具体 DTO 类型而非 ApiResponse<Record<string, unknown>>（问题 4 修复）。
  */
 
+import { getStr, getNum, getArray, getRecord } from '../common/JsonParser'
 import type {
   CareRelationshipStatus,
   GuardianshipPermissionType,
@@ -38,6 +42,16 @@ export interface RequestMediaSessionResp {
   sparkRTCJoinToken: string
 }
 
+/** ArkTS-safe 构造器 */
+export function requestMediaSessionRespFromJson(raw: Record<string, unknown>): RequestMediaSessionResp {
+  return {
+    sessionHandle: getStr(raw, 'sessionHandle'),
+    sessionToken: getStr(raw, 'sessionToken'),
+    sparkRTCRoomId: getStr(raw, 'sparkRTCRoomId'),
+    sparkRTCJoinToken: getStr(raw, 'sparkRTCJoinToken'),
+  }
+}
+
 // ===================================================================
 // 通知偏好
 // ===================================================================
@@ -68,6 +82,15 @@ export interface TriggerManualRescueResp {
   status: RescueRequestStatus
 }
 
+/** ArkTS-safe 构造器 */
+export function triggerManualRescueRespFromJson(raw: Record<string, unknown>): TriggerManualRescueResp {
+  return {
+    rescueRequestId: getStr(raw, 'rescueRequestId'),
+    rescueReportId: getStr(raw, 'rescueReportId'),
+    status: getStr(raw, 'status') as RescueRequestStatus,
+  }
+}
+
 // ===================================================================
 // 车窗控制
 // ===================================================================
@@ -82,6 +105,16 @@ export interface ControlVehicleWindowReq {
 
 export interface QueryWindowStatusResp {
   windowStatuses: WindowStatusEntry[]
+}
+
+/** ArkTS-safe 构造器 */
+export function queryWindowStatusRespFromJson(raw: Record<string, unknown>): QueryWindowStatusResp {
+  const arr = getArray(raw, 'windowStatuses')
+  const windowStatuses: WindowStatusEntry[] = []
+  for (let i = 0; i < arr.length; i++) {
+    windowStatuses.push(arr[i] as WindowStatusEntry)
+  }
+  return { windowStatuses }
 }
 
 // ===================================================================

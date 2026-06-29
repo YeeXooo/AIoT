@@ -3,9 +3,14 @@
  *
  * 基于 docs/ood_interface.md §3.1 家属 APP WebSocket 信令协议
  * 提供实时状态订阅、告警推送、音视频对讲信令等长连接管理
+ *
+ * 心跳策略：服务端每 30s 下发 PING，客户端在 handlePing 中回复 PONG；
+ * 客户端侧另启 30s 检测定时器，连续 maxMissedPings 次（默认 3）未收到 PING
+ * 即主动 close，对 TCP 半开连接做兜底检测。
  */
 
-import { parseJson, getStr, getRecord } from '../common/JsonParser'
+import { getStr, getRecord } from '../common/JsonParser'
+import { BaseWebSocket, type BaseWebSocketOptions } from './BaseWebSocket'
 
 // ===================================================================
 // 事件回调类型（使用 Record<string, unknown> 避免 as T 断言）
@@ -40,77 +45,53 @@ export interface GuardianshipWSEvents {
 // 配置选项
 // ===================================================================
 
-export interface GuardianshipWebSocketOptions {
-  /** WebSocket 基础 URL，默认 wss://api.example.com/ws/guardianship */
-  baseUrl?: string
+export interface GuardianshipWebSocketOptions extends BaseWebSocketOptions {
   /** 心跳丢失超时次数（连续 N 次 PING 未收到视为断开），默认 3 */
   maxMissedPings?: number
-  /** 重连最大重试次数，默认 5 */
-  maxReconnectAttempts?: number
-  /** 重连初始退避（ms），默认 1000 */
-  reconnectBaseDelay?: number
-  /** 是否自动重连，默认 true */
-  autoReconnect?: boolean
+  /** 心跳检测间隔（ms），默认 30000 */
+  pingInterval?: number
 }
 
 // ===================================================================
 // GuardianshipWebSocket
 // ===================================================================
 
-export class GuardianshipWebSocket {
-  private ws: WebSocket | null = null
-  private accessToken: string
+export class GuardianshipWebSocket extends BaseWebSocket {
   private events: GuardianshipWSEvents
-  private options: Required<GuardianshipWebSocketOptions>
-  private reconnectAttempts = 0
+  private guardianshipOptions: Required<GuardianshipWebSocketOptions>
   private pingTimer: ReturnType<typeof setInterval> | null = null
   private pingMissedCount = 0
   private subscriptions: Map<string, unknown> = new Map()
-  private destroyed = false
 
   constructor(
     accessToken: string,
     events: GuardianshipWSEvents = {},
     options: GuardianshipWebSocketOptions = {}
   ) {
-    this.accessToken = accessToken
+    super(accessToken, {
+      baseUrl: options.baseUrl ?? 'wss://api.example.com/ws/guardianship',
+      maxReconnectAttempts: options.maxReconnectAttempts,
+      reconnectBaseDelay: options.reconnectBaseDelay,
+      autoReconnect: options.autoReconnect,
+    })
     this.events = events
-    this.options = {
+    this.guardianshipOptions = {
       baseUrl: options.baseUrl ?? 'wss://api.example.com/ws/guardianship',
       maxMissedPings: options.maxMissedPings ?? 3,
+      pingInterval: options.pingInterval ?? 30000,
       maxReconnectAttempts: options.maxReconnectAttempts ?? 5,
       reconnectBaseDelay: options.reconnectBaseDelay ?? 1000,
       autoReconnect: options.autoReconnect ?? true,
     }
   }
 
-  /** 建立 WebSocket 连接 */
-  connect(): void {
-    if (this.ws?.readyState === WebSocket.OPEN) return
-    this.destroyed = false
-
-    const url = `${this.options.baseUrl}?token=${encodeURIComponent(this.accessToken)}`
-    this.ws = new WebSocket(url)
-    this.ws.onopen = () => this.handleOpen()
-    this.ws.onmessage = (event: MessageEvent) => this.handleMessage(event)
-    this.ws.onclose = (event: CloseEvent) => this.handleClose(event.code, event.reason)
-    this.ws.onerror = () => this.handleError()
-  }
-
-  /** 断开 WebSocket 连接 */
+  /** 断开连接并清空订阅映射（覆盖基类以保留订阅清理） */
   disconnect(): void {
-    this.destroyed = true
-    this.clearTimers()
     this.subscriptions.clear()
-    this.reconnectAttempts = 0
-    this.ws?.close()
-    this.ws = null
+    super.disconnect()
   }
 
-  /** 更新 JWT token（用于 Token 刷新后续连） */
-  updateToken(token: string): void {
-    this.accessToken = token
-  }
+  // ---- 业务方法 ----
 
   /** 订阅驾驶员状态 */
   subscribeDriverStatus(driverId: string): void {
@@ -147,87 +128,92 @@ export class GuardianshipWebSocket {
     this.send({ type: 'trigger_rescue', payload })
   }
 
-  // ---- 内部方法 ----
+  // ---- 基类钩子实现 ----
 
-  private send(data: unknown): void {
-    if (this.ws?.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify(data))
-    }
+  protected onConnected(): void {
+    // Guardianship 的 connection_established 由服务端下发首帧触发，非 onopen 直接触发
   }
 
-  private handleOpen(): void {
-    this.reconnectAttempts = 0
-    this.pingMissedCount = 0
-    this.startPingTimer()
-  }
-
-  private handleClose(code: number, reason: string): void {
-    this.clearTimers()
+  protected onDisconnected(code: number, reason: string): void {
     this.events.onDisconnected?.(code, reason)
-
-    if (!this.destroyed && this.options.autoReconnect) {
-      this.scheduleReconnect()
-    }
   }
 
-  private handleError(): void {
+  protected onError(): void {
     this.events.onError?.({ code: 'WS_ERROR', message: 'WebSocket 连接错误' })
   }
 
-  private handleMessage(event: MessageEvent): void {
-    try {
-      const msg: Record<string, unknown> = parseJson(event.data as string)
-      const type: string = getStr(msg, 'type')
-      const payload: Record<string, unknown> = getRecord(msg, 'payload')
+  protected dispatchMessage(msg: Record<string, unknown>): void {
+    const type: string = getStr(msg, 'type')
+    const payload: Record<string, unknown> = getRecord(msg, 'payload')
 
-      switch (type) {
-        case 'connection_established':
-          this.events.onConnected?.(payload)
-          break
+    switch (type) {
+      case 'connection_established':
+        this.events.onConnected?.(payload)
+        break
 
-        case 'ping':
-          this.handlePing(payload)
-          break
+      case 'ping':
+        this.handlePing(payload)
+        break
 
-        case 'driver_status_snapshot':
-          this.events.onDriverStatusSnapshot?.(payload)
-          break
+      case 'driver_status_snapshot':
+        this.events.onDriverStatusSnapshot?.(payload)
+        break
 
-        case 'alert_triggered':
-          this.events.onAlertTriggered?.(payload)
-          break
+      case 'alert_triggered':
+        this.events.onAlertTriggered?.(payload)
+        break
 
-        case 'access_granted':
-          this.events.onAccessGranted?.(payload)
-          break
+      case 'access_granted':
+        this.events.onAccessGranted?.(payload)
+        break
 
-        case 'access_revoked':
-          this.events.onAccessRevoked?.(payload)
-          break
+      case 'access_revoked':
+        this.events.onAccessRevoked?.(payload)
+        break
 
-        case 'subscribe_status_ack':
-          this.events.onSubscribeStatusAck?.(payload)
-          break
+      case 'subscribe_status_ack':
+        this.events.onSubscribeStatusAck?.(payload)
+        break
 
-        case 'rescue_triggered':
-          this.events.onRescueTriggered?.(payload)
-          break
+      case 'rescue_triggered':
+        this.events.onRescueTriggered?.(payload)
+        break
 
-        case 'token_renewed':
-          this.events.onTokenRenewed?.(payload)
-          break
+      case 'token_renewed':
+        this.events.onTokenRenewed?.(payload)
+        break
 
-        case 'error':
-          this.events.onError?.(payload)
-          break
+      case 'error':
+        this.events.onError?.(payload)
+        break
 
-        default:
-          console.warn(`[WS] 未知消息类型: ${type}`)
-      }
-    } catch (err) {
-      console.error('[WS] 消息解析失败:')
+      default:
+        console.warn(`[WS] 未知消息类型: ${type}`)
     }
   }
+
+  /**
+   * 心跳定时器：客户端侧 30s 检测，连续 maxMissedPings 次未收到 PING 即主动 close。
+   */
+  protected startPingTimer(): void {
+    this.clearPingTimer()
+    this.pingMissedCount = 0
+    this.pingTimer = setInterval(() => {
+      this.pingMissedCount++
+      if (this.pingMissedCount >= this.guardianshipOptions.maxMissedPings) {
+        this.ws?.close()
+      }
+    }, this.guardianshipOptions.pingInterval)
+  }
+
+  protected clearPingTimer(): void {
+    if (this.pingTimer) {
+      clearInterval(this.pingTimer)
+      this.pingTimer = null
+    }
+  }
+
+  // ---- 私有方法 ----
 
   private handlePing(payload: Record<string, unknown>): void {
     this.events.onPing?.(getStr(payload, 'serverTime'))
@@ -235,40 +221,5 @@ export class GuardianshipWebSocket {
     this.pingMissedCount = 0
     // 立即回复 PONG
     this.send({ type: 'pong', payload: {} })
-  }
-
-  private startPingTimer(): void {
-    this.clearTimers()
-    const checkInterval = 30_000 // 30s 检测间隔（与服务端 PING 频率一致）
-    this.pingTimer = setInterval(() => {
-      this.pingMissedCount++
-      if (this.pingMissedCount >= this.options.maxMissedPings) {
-        // 连续 N 次检测未收到 PING → 视为断开
-        this.ws?.close()
-      }
-    }, checkInterval)
-  }
-
-  private clearTimers(): void {
-    if (this.pingTimer) {
-      clearInterval(this.pingTimer)
-      this.pingTimer = null
-    }
-  }
-
-  private scheduleReconnect(): void {
-    if (this.reconnectAttempts >= this.options.maxReconnectAttempts) {
-      console.warn('[WS] 已达最大重连次数，停止重连')
-      return
-    }
-
-    const delay = this.options.reconnectBaseDelay * Math.pow(2, this.reconnectAttempts)
-    this.reconnectAttempts++
-
-    setTimeout(() => {
-      if (!this.destroyed) {
-        this.connect()
-      }
-    }, delay)
   }
 }

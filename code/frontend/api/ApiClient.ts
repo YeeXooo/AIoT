@@ -179,8 +179,11 @@ export class ApiClient {
   }
 
   /**
-   * 文件下载 — 返回 Blob
-   * 不通过泛型，避免 as T 断言
+   * 文件下载 — 返回 Blob。
+   * 错误响应（4xx/5xx）若 Content-Type 为 application/json，则解析服务端
+   * errorCode / message / requestId 结构填入 error 字段；401 同步触发 onTokenExpired
+   * 回调，与 request() 错误处理对齐（问题 7 修复）。
+   * 不通过泛型，避免 as T 断言。
    */
   async downloadBlob(path: string, options?: RequestOptions): Promise<ApiResponse<Blob>> {
     const { headers = {}, timeout = 30000, params } = options ?? {}
@@ -203,6 +206,26 @@ export class ApiClient {
       clearTimeout(timeoutId)
 
       if (!response.ok) {
+        // 401 触发 token 过期回调（与 request() 一致）
+        if (response.status === 401 && this.onTokenExpired) {
+          this.onTokenExpired()
+        }
+
+        // 尝试解析 JSON 错误体，保留服务端 errorCode / message / requestId
+        const contentType = response.headers.get('content-type') || ''
+        if (contentType.includes('application/json')) {
+          try {
+            const raw: Record<string, unknown> = JSON.parse(await response.text())
+            const errorBody: ApiErrorBody = {
+              errorCode: raw['errorCode'] as string,
+              message: raw['message'] as string,
+              requestId: raw['requestId'] as string,
+            }
+            return { success: false, error: errorBody, status: response.status }
+          } catch {
+            // JSON 解析失败 → 退回仅含 status 的错误响应
+          }
+        }
         return { success: false, status: response.status }
       }
 
