@@ -62,5 +62,5 @@ main ───── 设计文档（冻结，受保护）
 |------|:----:|------|
 | 第一阶段：领域层 OOD | ✅ | `docs/ood_domain.md` |
 | 第二阶段：应用层 OOD | ✅ | `docs/ood_application.md` |
-| 第三阶段：基础设施层 OOD | ⬜ | 待开始 |
-| 第四阶段：接口/API 层 OOD | ⬜ | 待开始 |
+| 第三阶段：基础设施层 OOD | ✅ | `docs/ood_infrastructure.md` |
+| 第四阶段：接口/API 层 OOD | ✅ | `docs/ood_interface.md` |

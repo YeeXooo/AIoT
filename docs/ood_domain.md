@@ -410,7 +410,7 @@
 **角色与职责**：描述一次 OTA 固件升级会话的当前阶段与断点续传偏移量，封装升级状态机——将原本由 DS-15 OTAUpdateService 以"本服务维护"方式持有的持久状态，建模为 Vehicle 聚合内部的值对象，以消除领域服务持状态的违反 DDD 无状态原则问题。状态由 DS-15 以无状态方式读取和更新（不可变值对象的替换模式）。
 
 **类型形态**：`class`（值对象，JPA `@Embeddable`）。升级状态由阶段标识、目标版本、已传输偏移量和阶段时间戳的组合值定义相等性，无独立标识、不可变。状态推进表现为以新实例替换旧实例。其概念维度包括：
-- **阶段（UpgradeStage）**：以 `enum` 穷举有限状态——PENDING / TRANSMITTING / VERIFYING / READY / UPGRADING / COMPLETED / ROLLED_BACK。
+- **阶段（UpgradeStage）**：以 `enum` 穷举有限状态——PENDING / TRANSMITTING / VERIFYING / READY / UPGRADING / COMPLETED / ROLLING_BACK / ROLLED_BACK。
 - **目标版本**：本次升级的目标 OTAVersion（VO-08）。
 - **断点续传偏移量**：已传输的字节偏移量，DS-15 据此通过 OTADeliveryPort 执行断点续传。
 - **阶段时间戳**：进入当前阶段的时刻，用于超时判定。
