@@ -55,7 +55,7 @@ D:\软件测试\requirements\202606242158_vehicle-safety-monitoring\req_v4.md
 
 > 前置依赖：第一阶段（docs/ood_domain.md）、第二阶段（docs/ood_application.md）均已完成。
 
-启动审议式执行框架，完成以下任务：
+启动再审议式执行框架，完成以下任务：
 
 领域层 OOD 产出：docs/ood_domain.md
 应用层 OOD 产出：docs/ood_application.md
@@ -87,7 +87,7 @@ D:\软件测试\requirements\202606242158_vehicle-safety-monitoring\req_v4.md
 
 > 前置依赖：第一~第三阶段均已完成后方可启动。
 
-启动审议式执行框架，完成以下任务：
+启动再审议式执行框架，完成以下任务：
 
 领域层 OOD 产出：docs/ood_domain.md
 应用层 OOD 产出：docs/ood_application.md
