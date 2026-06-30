@@ -5,7 +5,6 @@ on:
     branches: [develop, main]
   pull_request:
     branches: [develop, main]
-  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -31,12 +30,15 @@ jobs:
           cache: maven
 
       - name: Compile
-        working-directory: code/server
-        run: mvn compile -B -q
+        run: |
+          cd code/server
+          mvn compile -B -q
 
       - name: Test
-        working-directory: code/server
-        run: mvn verify -B -Dspring.profiles.active=ci
+        run: |
+          cd code/server
+          mvn verify -B -Dspring.profiles.active=ci
+
       - name: Test Report
         uses: dorny/test-reporter@v2
         if: success() || failure()
@@ -64,8 +66,9 @@ jobs:
           cache: maven
 
       - name: Checkstyle
-        working-directory: code/server
-        run: mvn checkstyle:check -B
+        run: |
+          cd code/server
+          mvn checkstyle:check -B
 
       - name: Checkstyle Report
         uses: jwgmeligmeyling/checkstyle-github-action@v1
@@ -79,40 +82,31 @@ jobs:
   # ===================================================================
   frontend:
     name: Frontend (tsc)
+    if: hashFiles('code/frontend/package.json') != ''
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: code/frontend
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Check frontend project exists
-        id: check
-        working-directory: code/frontend
-        run: |
-          if [ -f package.json ]; then
-            echo "has_frontend=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_frontend=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Set up Node
-        if: steps.check.outputs.has_frontend == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
+          cache-dependency-path: code/frontend/package-lock.json
 
       - name: Install dependencies
-        if: steps.check.outputs.has_frontend == 'true'
-        working-directory: code/frontend
         run: npm ci
 
       - name: Type check
-        if: steps.check.outputs.has_frontend == 'true'
-        working-directory: code/frontend
         run: npx tsc --noEmit
 
   # ===================================================================
-  # CodeQL 安全扫描
+  # CodeQL 安全扫描（公开仓库免费）
   # ===================================================================
   codeql:
     name: CodeQL
@@ -145,7 +139,7 @@ jobs:
           category: "/language:${{ matrix.language }}"
 
   # ===================================================================
-  # 依赖审查（仅 PR）
+  # 依赖审查
   # ===================================================================
   dependency-review:
     name: Dependency Review
