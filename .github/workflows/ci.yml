@@ -11,6 +11,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  HAS_FRONTEND: ${{ hashFiles('code/frontend/package.json') != '' }}
+
 jobs:
   # ===================================================================
   # 后端 — 编译 + 测试
@@ -37,6 +40,7 @@ jobs:
       - name: Test
         working-directory: code/server
         run: mvn verify -B -Dspring.profiles.active=ci
+
       - name: Test Report
         uses: dorny/test-reporter@v2
         if: success() || failure()
@@ -79,6 +83,8 @@ jobs:
   # ===================================================================
   frontend:
     name: Frontend (tsc)
+    needs: []
+    if: fromJSON(env.HAS_FRONTEND)
     runs-on: ubuntu-latest
 
     steps:
@@ -102,12 +108,10 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        if: steps.check.outputs.has_frontend == 'true'
         working-directory: code/frontend
         run: npm ci
 
       - name: Type check
-        if: steps.check.outputs.has_frontend == 'true'
         working-directory: code/frontend
         run: npx tsc --noEmit
 
