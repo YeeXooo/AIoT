@@ -1,5 +1,6 @@
 package com.aiot.domain.model;
 
+import com.aiot.domain.model.exception.BusinessException;
 import jakarta.persistence.Embeddable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -21,7 +22,13 @@ public final class InterventionInstruction {
 
     private InterventionInstruction(InterventionInstructionType type, String targetDevice,
                                     Map<String, Object> parameters, int priority) {
-        if (type == null) throw new IllegalArgumentException("指令类型不能为空");
+        if (type == null) {
+            throw new BusinessException(
+                    "MODEL_030",
+                    "干预指令类型不能为空",
+                    "INTERVENTION_INSTRUCTION_VALIDATE"
+            );
+        }
         this.type = type;
         this.targetDevice = targetDevice;
         this.parameters = parameters == null

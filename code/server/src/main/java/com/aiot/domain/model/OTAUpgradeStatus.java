@@ -1,12 +1,13 @@
 package com.aiot.domain.model;
 
+import com.aiot.domain.model.exception.BusinessException;
 import jakarta.persistence.Embeddable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import java.time.Instant;
 
 /**
- * OTA 升级状态（VO-19）
+ * OTA升级状态（VO-19）
  * 升级会话状态机，断点续传与阶段超时判定依据
  */
 @Embeddable
@@ -19,8 +20,20 @@ public final class OTAUpgradeStatus {
     private final Instant stageTimestamp;
 
     private OTAUpgradeStatus(UpgradeStage stage, OTAVersion targetVersion, long offset, Instant stageTimestamp) {
-        if (stage == null) throw new IllegalArgumentException("升级阶段不能为空");
-        if (offset < 0) throw new IllegalArgumentException("偏移量不能为负");
+        if (stage == null) {
+            throw new BusinessException(
+                    "MODEL_039",
+                    "OTA升级阶段不能为空",
+                    "OTA_UPGRADE_STATUS_VALIDATE"
+            );
+        }
+        if (offset < 0) {
+            throw new BusinessException(
+                    "MODEL_040",
+                    "OTA传输偏移量不能为负数",
+                    "OTA_UPGRADE_STATUS_VALIDATE"
+            );
+        }
         this.stage = stage;
         this.targetVersion = targetVersion;
         this.offset = offset;

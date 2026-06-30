@@ -1,5 +1,6 @@
 package com.aiot.domain.model;
 
+import com.aiot.domain.model.exception.BusinessException;
 import jakarta.persistence.Embeddable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -16,8 +17,13 @@ public final class DrivingBehaviorCounters {
     private final int suddenAccelerationCount;
 
     private DrivingBehaviorCounters(int suddenBrakingCount, int suddenAccelerationCount) {
-        if (suddenBrakingCount < 0 || suddenAccelerationCount < 0)
-            throw new IllegalArgumentException("计数不能为负数");
+        if (suddenBrakingCount < 0 || suddenAccelerationCount < 0) {
+            throw new BusinessException(
+                    "MODEL_035",
+                    "驾驶行为计数不能为负数",
+                    "DRIVING_BEHAVIOR_COUNTERS_VALIDATE"
+            );
+        }
         this.suddenBrakingCount = suddenBrakingCount;
         this.suddenAccelerationCount = suddenAccelerationCount;
     }

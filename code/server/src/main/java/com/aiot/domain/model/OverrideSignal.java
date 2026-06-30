@@ -1,5 +1,6 @@
 package com.aiot.domain.model;
 
+import com.aiot.domain.model.exception.BusinessException;
 import jakarta.persistence.Embeddable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -17,10 +18,22 @@ public final class OverrideSignal {
     private final Instant timestamp;
 
     private OverrideSignal(OverrideType type, Instant timestamp) {
-        if (type == null) throw new IllegalArgumentException("操作类型不能为空");
-        if (timestamp == null) throw new IllegalArgumentException("时间戳不能为空");
-        this.timestamp = timestamp;
+        if (type == null) {
+            throw new BusinessException(
+                    "MODEL_044",
+                    "覆盖操作类型不能为空",
+                    "OVERRIDE_SIGNAL_VALIDATE"
+            );
+        }
+        if (timestamp == null) {
+            throw new BusinessException(
+                    "MODEL_045",
+                    "覆盖信号时间戳不能为空",
+                    "OVERRIDE_SIGNAL_VALIDATE"
+            );
+        }
         this.type = type;
+        this.timestamp = timestamp;
     }
 
     public static OverrideSignal of(OverrideType type, Instant timestamp) {

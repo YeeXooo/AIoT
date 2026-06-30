@@ -1,5 +1,6 @@
 package com.aiot.domain.model;
 
+import com.aiot.domain.model.exception.BusinessException;
 import jakarta.persistence.Embeddable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -8,7 +9,7 @@ import java.util.List;
 
 /**
  * 救援报告（VO-13）
- * SOS 上报时的完整信息聚合载体，一次性定格不可修改
+ * SOS上报时的完整信息聚合载体，一次性定格不可修改
  */
 @Embeddable
 @Getter
@@ -21,7 +22,13 @@ public final class RescueReport {
 
     private RescueReport(GeoLocation location, String vitalSignsSummary,
                          List<VehicleStateSnapshot> snapshots, String healthProfileSummary) {
-        if (location == null) throw new IllegalArgumentException("定位信息不能为空");
+        if (location == null) {
+            throw new BusinessException(
+                    "MODEL_031",
+                    "救援报告定位信息不能为空",
+                    "RESCUE_REPORT_VALIDATE"
+            );
+        }
         this.location = location;
         this.vitalSignsSummary = vitalSignsSummary;
         this.vehicleStateSnapshots = snapshots == null

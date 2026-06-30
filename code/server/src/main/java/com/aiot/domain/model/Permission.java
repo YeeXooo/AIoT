@@ -1,5 +1,6 @@
 package com.aiot.domain.model;
 
+import com.aiot.domain.model.exception.BusinessException;
 import jakarta.persistence.Embeddable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -17,6 +18,16 @@ public final class Permission {
     private final Set<String> operations;
 
     private Permission(Set<String> operations) {
+        if (operations != null) {
+            boolean hasBlank = operations.stream().anyMatch(op -> op == null || op.isBlank());
+            if (hasBlank) {
+                throw new BusinessException(
+                        "MODEL_023",
+                        "权限操作集合不能包含空值元素",
+                        "PERMISSION_VALIDATE"
+                );
+            }
+        }
         this.operations = operations == null
                 ? Collections.emptySet()
                 : Collections.unmodifiableSet(operations);

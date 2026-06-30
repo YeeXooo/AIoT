@@ -1,10 +1,10 @@
 package com.aiot.domain.model;
 
+import com.aiot.domain.model.exception.BusinessException;
 import jakarta.persistence.Embeddable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -22,8 +22,20 @@ public final class SensorReading {
     private final List<Double> featureVector;
 
     private SensorReading(String channelType, Instant timestamp, String rawPayloadRef, List<Double> featureVector) {
-        if (channelType == null || channelType.isBlank()) throw new IllegalArgumentException("通道类型不能为空");
-        if (timestamp == null) throw new IllegalArgumentException("时间戳不能为空");
+        if (channelType == null || channelType.isBlank()) {
+            throw new BusinessException(
+                    "MODEL_028",
+                    "传感器通道类型不能为空",
+                    "SENSOR_READING_VALIDATE"
+            );
+        }
+        if (timestamp == null) {
+            throw new BusinessException(
+                    "MODEL_029",
+                    "传感器读数时间戳不能为空",
+                    "SENSOR_READING_VALIDATE"
+            );
+        }
         this.channelType = channelType;
         this.timestamp = timestamp;
         this.rawPayloadRef = rawPayloadRef;

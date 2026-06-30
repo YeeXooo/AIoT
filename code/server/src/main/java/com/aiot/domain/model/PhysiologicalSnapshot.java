@@ -1,5 +1,6 @@
 package com.aiot.domain.model;
 
+import com.aiot.domain.model.exception.BusinessException;
 import jakarta.persistence.Embeddable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -8,7 +9,6 @@ import java.time.Instant;
 /**
  * 生理体征快照（VO-03）
  * 传感器固定频率采集的瞬时生理数据，不可变时间点切片
- * 被 Trip 聚合根持有为集合，仅追加不修改
  */
 @Embeddable
 @Getter
@@ -20,9 +20,27 @@ public final class PhysiologicalSnapshot {
     private final double emotionIndex;
 
     private PhysiologicalSnapshot(Instant timestamp, int heartRate, int bloodOxygen, double emotionIndex) {
-        if (timestamp == null) throw new IllegalArgumentException("采集时间戳不能为空");
-        if (heartRate <= 0 || heartRate > 250) throw new IllegalArgumentException("心率数值不合法");
-        if (bloodOxygen < 0 || bloodOxygen > 100) throw new IllegalArgumentException("血氧数值不合法");
+        if (timestamp == null) {
+            throw new BusinessException(
+                    "MODEL_017",
+                    "生理快照采集时间戳不能为空",
+                    "PHYSIOLOGICAL_SNAPSHOT_VALIDATE"
+            );
+        }
+        if (heartRate <= 0 || heartRate > 250) {
+            throw new BusinessException(
+                    "MODEL_018",
+                    String.format("心率数值不合法，当前值：%d，合法范围(0,250]", heartRate),
+                    "PHYSIOLOGICAL_SNAPSHOT_VALIDATE"
+            );
+        }
+        if (bloodOxygen < 0 || bloodOxygen > 100) {
+            throw new BusinessException(
+                    "MODEL_019",
+                    String.format("血氧数值不合法，当前值：%d，合法范围[0,100]", bloodOxygen),
+                    "PHYSIOLOGICAL_SNAPSHOT_VALIDATE"
+            );
+        }
         this.timestamp = timestamp;
         this.heartRate = heartRate;
         this.bloodOxygen = bloodOxygen;
@@ -33,7 +51,6 @@ public final class PhysiologicalSnapshot {
         return new PhysiologicalSnapshot(timestamp, heartRate, bloodOxygen, emotionIndex);
     }
 
-    // JPA 反射所需保护空构造器
     protected PhysiologicalSnapshot() {
         this.timestamp = Instant.EPOCH;
         this.heartRate = 0;

@@ -1,5 +1,6 @@
 package com.aiot.domain.model;
 
+import com.aiot.domain.model.exception.BusinessException;
 import com.aiot.domain.shared.VehicleId;
 import jakarta.persistence.Embeddable;
 import lombok.EqualsAndHashCode;
@@ -27,9 +28,27 @@ public final class RescueAuthorizationToken {
     private RescueAuthorizationToken(String tokenId, String issuer, VehicleId targetVehicleId,
                                      Set<String> operations, Instant issuedAt,
                                      Instant expiresAt, boolean consumed) {
-        if (tokenId == null || tokenId.isBlank()) throw new IllegalArgumentException("凭证标识不能为空");
-        if (issuedAt == null || expiresAt == null) throw new IllegalArgumentException("时间不能为空");
-        if (expiresAt.isBefore(issuedAt)) throw new IllegalArgumentException("有效期不合法");
+        if (tokenId == null || tokenId.isBlank()) {
+            throw new BusinessException(
+                    "MODEL_047",
+                    "救援授权凭证标识不能为空",
+                    "RESCUE_AUTH_TOKEN_VALIDATE"
+            );
+        }
+        if (issuedAt == null || expiresAt == null) {
+            throw new BusinessException(
+                    "MODEL_048",
+                    "授权签发时间与过期时间不能为空",
+                    "RESCUE_AUTH_TOKEN_VALIDATE"
+            );
+        }
+        if (expiresAt.isBefore(issuedAt)) {
+            throw new BusinessException(
+                    "MODEL_049",
+                    "授权过期时间不能早于签发时间",
+                    "RESCUE_AUTH_TOKEN_VALIDATE"
+            );
+        }
         this.tokenId = tokenId;
         this.issuer = issuer;
         this.targetVehicleId = targetVehicleId;

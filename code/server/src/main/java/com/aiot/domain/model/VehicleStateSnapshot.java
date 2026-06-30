@@ -1,5 +1,6 @@
 package com.aiot.domain.model;
 
+import com.aiot.domain.model.exception.BusinessException;
 import jakarta.persistence.Embeddable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -7,7 +8,7 @@ import java.time.Instant;
 
 /**
  * 车辆状态快照（VO-09）
- * 事故前 30s 时间窗内的车辆状态切面，用于应急救援上报
+ * 事故前时间窗内的车辆状态切面，用于应急救援上报
  */
 @Embeddable
 @Getter
@@ -22,7 +23,13 @@ public final class VehicleStateSnapshot {
 
     private VehicleStateSnapshot(Instant timestamp, double speed, double acceleration,
                                  boolean doorLocked, boolean fireRisk, boolean fuelLeak) {
-        if (timestamp == null) throw new IllegalArgumentException("时间戳不能为空");
+        if (timestamp == null) {
+            throw new BusinessException(
+                    "MODEL_025",
+                    "车辆状态快照时间戳不能为空",
+                    "VEHICLE_STATE_SNAPSHOT_VALIDATE"
+            );
+        }
         this.timestamp = timestamp;
         this.speed = speed;
         this.acceleration = acceleration;
