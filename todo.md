@@ -146,7 +146,7 @@
   - `TripRepository` / `DriverRepository` / `VehicleRepository` / `SystemAccountRepository` / `RoadRageVoiceRecordRepository`
   - 方法签名严格按 ood_domain.md §3.5 定义
 
-- [ ] **1.4 领域端口接口（8 个）**
+- [x] **1.4 领域端口接口（8 个）**
   - `VehicleStateBuffer` / `PhysiologicalDataBuffer` / `DrivingBehaviorTrackingPort` / `CameraOcclusionDetectionPort` / `OTADeliveryPort` / `NotificationPort` / `RescueReportPort` / `MediaSessionPort`
   - 方法签名严格按 ood_domain.md §3.7 定义
 
