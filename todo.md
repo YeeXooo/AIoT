@@ -240,6 +240,13 @@
 
 > 依据：`docs/ood_interface.md`
 
+- [x] **4.0 前端 DTO 模型 + API 客户端**（角色 D）
+  - `frontend/model/` — auth / driver / fleet / guardianship / types / websocket 类型定义 ✅
+  - `frontend/api/` — ApiClient + AuthApi / DriverApi / FleetApi / GuardianshipApi ✅
+  - `frontend/api/` — BaseWebSocket + FleetWebSocket + GuardianshipWebSocket ✅
+  - `frontend/common/JsonParser.ts` — ArkTS 兼容 JSON 解析工具 ✅
+  - ArkTS 严格模式适配，`fromJson` 构造器接入类型化 DTO
+
 - [ ] **4.1 REST 控制器**（`interfaces.rest`）
   - 按六个功能域拆分为 6 个 `@RestController`（`XxxController` 对应各应用服务）
   - 每个端点按 ood_interface.md §1 的路径、方法、请求/响应 JSON Schema、状态码实现
