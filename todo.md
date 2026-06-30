@@ -4,7 +4,7 @@
 > 
 > **课程作业定位**：全部采用本地免费替代方案，不依赖华为云付费服务（IoTDA 除外，已有）。
 >
-> **任务进度**：0.1~0.4 ✅，下一项 0.5 / 1.1
+> **任务进度**：0.1~0.4 ✅，1.5 ✅，1.6 ✅，前端 DTO ✅，下一项 0.5 / 1.1
 
 ---
 
@@ -86,10 +86,10 @@
 |---|------|------|---------|
 | **A** | 1.1 值对象（23 个 VO） | `docs/ood_domain.md` §3.3 | `domain/model/` 枚举 + record |
 | **B** | 0.5 数据库迁移基线（15 张表） | `docs/ood_infrastructure.md` §3 | `resources/db/migration/V1__init.sql` |
-| **C** | 1.5 领域事件（~20 个）+ 1.6 事件总线契约 | `docs/ood_domain.md` §3.6 | `domain/event/` 事件 record + `DomainEventPublisher` 接口 |
-| **D** | 前端 DTO 模型 + API 客户端 | `docs/ood_interface.md` §4.1 | `frontend/model/` 类型 + `frontend/api/` |
+| **C** | 1.5 领域事件（~20 个）+ 1.6 事件总线契约 ✅ | `docs/ood_domain.md` §3.6 | `domain/event/` 事件 record + `DomainEventPublisher` 接口 |
+| **D** | 前端 DTO 模型 + API 客户端 ✅ | `docs/ood_interface.md` §4.1 | `frontend/model/` 类型 + `frontend/api/` |
 
-> 四块零依赖，即刻开工。A 完成后接 1.2（聚合根）→ 1.7（领域服务）；B 完成后接 3.1（JPA 映射）→ 3.2（仓储实现）；C 完成后接 3.3（事件总线实现）。D 独立推进，等后端接口上线后联调。
+> 四块中 C/D 已完成。A 完成后接 1.2（聚合根）→ 1.7（领域服务）；B 完成后接 3.1（JPA 映射）→ 3.2（仓储实现）；C 已完成，接 3.3（事件总线实现）。D 已完成，等后端接口上线后联调。
 
 ---
 
