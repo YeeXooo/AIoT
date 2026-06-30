@@ -1,5 +1,6 @@
 package com.aiot.domain.model;
 
+import com.aiot.domain.model.exception.BusinessException;
 import com.aiot.domain.shared.DriverId;
 import jakarta.persistence.Embeddable;
 import lombok.EqualsAndHashCode;
@@ -19,9 +20,27 @@ public final class DriverStatusSnapshot {
     private final Instant timestamp;
 
     private DriverStatusSnapshot(DriverId driverId, StatusColor statusColor, Instant timestamp) {
-        if (driverId == null) throw new IllegalArgumentException("驾驶员标识不能为空");
-        if (statusColor == null) throw new IllegalArgumentException("状态色不能为空");
-        if (timestamp == null) throw new IllegalArgumentException("时间戳不能为空");
+        if (driverId == null) {
+            throw new BusinessException(
+                    "MODEL_032",
+                    "驾驶员标识不能为空",
+                    "DRIVER_STATUS_SNAPSHOT_VALIDATE"
+            );
+        }
+        if (statusColor == null) {
+            throw new BusinessException(
+                    "MODEL_033",
+                    "驾驶员状态色不能为空",
+                    "DRIVER_STATUS_SNAPSHOT_VALIDATE"
+            );
+        }
+        if (timestamp == null) {
+            throw new BusinessException(
+                    "MODEL_034",
+                    "状态快照时间戳不能为空",
+                    "DRIVER_STATUS_SNAPSHOT_VALIDATE"
+            );
+        }
         this.driverId = driverId;
         this.statusColor = statusColor;
         this.timestamp = timestamp;

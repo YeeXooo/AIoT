@@ -1,5 +1,6 @@
 package com.aiot.domain.model;
 
+import com.aiot.domain.model.exception.BusinessException;
 import jakarta.persistence.Embeddable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -21,11 +22,27 @@ public final class DetectionWindow {
 
     private DetectionWindow(Duration remainingTime, Instant startTime,
                             int microMovementCount, Duration toleranceThreshold) {
-        if (remainingTime == null || remainingTime.isNegative())
-            throw new IllegalArgumentException("剩余时长不合法");
-        if (startTime == null) throw new IllegalArgumentException("起始时间不能为空");
-        if (toleranceThreshold == null || toleranceThreshold.isNegative())
-            throw new IllegalArgumentException("容差阈值不合法");
+        if (remainingTime == null || remainingTime.isNegative()) {
+            throw new BusinessException(
+                    "MODEL_041",
+                    "检测窗口剩余时长不能为负数",
+                    "DETECTION_WINDOW_VALIDATE"
+            );
+        }
+        if (startTime == null) {
+            throw new BusinessException(
+                    "MODEL_042",
+                    "检测窗口起始时间不能为空",
+                    "DETECTION_WINDOW_VALIDATE"
+            );
+        }
+        if (toleranceThreshold == null || toleranceThreshold.isNegative()) {
+            throw new BusinessException(
+                    "MODEL_043",
+                    "检测窗口容差阈值不能为负数",
+                    "DETECTION_WINDOW_VALIDATE"
+            );
+        }
         this.remainingTime = remainingTime;
         this.startTime = startTime;
         this.microMovementCount = Math.max(microMovementCount, 0);
