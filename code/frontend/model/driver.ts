@@ -64,7 +64,7 @@ export interface AlertSummary {
 /** ArkTS-safe 构造器：从原始 JSON 构建 AlertSummary */
 export function alertSummaryFromJson(raw: Record<string, unknown>): AlertSummary {
   const gpsOpt = (raw['gpsLocation'] !== undefined && raw['gpsLocation'] !== null)
-    ? getRecord(raw, 'gpsLocation') as GeoPoint
+    ? (getRecord(raw, 'gpsLocation') as unknown as GeoPoint)
     : undefined
   return {
     alertId: getStr(raw, 'alertId'),

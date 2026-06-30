@@ -182,7 +182,7 @@ export function highRiskDriverEntryFromJson(raw: Record<string, unknown>): HighR
   const penaltyArr = getArray(raw, 'primaryPenaltyItems')
   const primaryPenaltyItems: string[] = []
   for (let i = 0; i < penaltyArr.length; i++) {
-    primaryPenaltyItems.push(penaltyArr[i] as string)
+    primaryPenaltyItems.push(penaltyArr[i] as unknown as string)
   }
   return {
     driverId: getStr(raw, 'driverId'),
@@ -290,7 +290,7 @@ export function penaltyBreakdownEntryFromJson(raw: Record<string, unknown>): Pen
   const vArr = getArray(raw, 'topViolations')
   const topViolations: string[] = []
   for (let i = 0; i < vArr.length; i++) {
-    topViolations.push(vArr[i] as string)
+    topViolations.push(vArr[i] as unknown as string)
   }
   return {
     category: getStr(raw, 'category'),

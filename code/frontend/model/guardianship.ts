@@ -7,7 +7,7 @@
  * 使 API 层可返回具体 DTO 类型而非 ApiResponse<Record<string, unknown>>（问题 4 修复）。
  */
 
-import { getStr, getNum, getArray, getRecord } from '../common/JsonParser'
+import { getStr, getArray } from '../common/JsonParser'
 import type {
   CareRelationshipStatus,
   GuardianshipPermissionType,
@@ -112,7 +112,7 @@ export function queryWindowStatusRespFromJson(raw: Record<string, unknown>): Que
   const arr = getArray(raw, 'windowStatuses')
   const windowStatuses: WindowStatusEntry[] = []
   for (let i = 0; i < arr.length; i++) {
-    windowStatuses.push(arr[i] as WindowStatusEntry)
+    windowStatuses.push(arr[i] as unknown as WindowStatusEntry)
   }
   return { windowStatuses }
 }

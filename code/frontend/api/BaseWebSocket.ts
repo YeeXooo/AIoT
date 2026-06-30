@@ -70,7 +70,7 @@ export abstract class BaseWebSocket {
   /** 连接建立后的回调（子类可覆盖以触发 onConnected 事件） */
   protected onConnected(): void {}
   /** 连接断开后的回调（子类可覆盖以触发 onDisconnected 事件） */
-  protected onDisconnected(code: number, reason: string): void {}
+  protected onDisconnected(_code: number, _reason: string): void {}
   /** 连接错误回调（子类可覆盖以触发 onError 事件） */
   protected onError(): void {}
 
