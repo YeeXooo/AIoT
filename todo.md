@@ -4,7 +4,7 @@
 > 
 > **课程作业定位**：全部采用本地免费替代方案，不依赖华为云付费服务（IoTDA 除外，已有）。
 >
-> **任务进度**：0.1~0.4 ✅，1.3~1.6 ✅，3.1~3.6 ✅，2.x 部分 ✅，4.1 部分 ✅，前端 DTO ✅，下一项 1.1 / 1.2 / 1.7
+> **任务进度**：0.1~0.4 ✅，1.3~1.6 ✅，3.1~3.7 ✅，2.x/4.1 部分 ✅，前端重构 ✅，下一项 1.1 / 1.2 / 1.7
 
 ---
 
@@ -212,10 +212,9 @@
   - AES-256-GCM + KeyStore + 脱敏校验 + Mock 二次认证 ✅
   - 3 个测试覆盖 ✅
 
-- [ ] **3.7 文件存储**（`infra.storage`）
-  - 语音证据文件 → 本地文件系统存储（`/data/aiot/voice/`）
-  - OTA 升级包 → 本地文件系统（`/data/aiot/ota/`）
-  - 报表导出 → 本地文件系统（`/data/aiot/reports/`）
+- [x] **3.7 文件存储**（`infra.storage`）
+  - LocalFileStorageService + StorageProperties + FileExpiryService ✅
+  - StorageController REST 接口（/api/v1/storage）✅
   - ~~OBS~~ → **本地文件系统替代**
 
 - [ ] **3.8 边缘侧基础设施**（`infra.edge`）
@@ -230,12 +229,13 @@
 
 > 依据：`docs/ood_interface.md`
 
-- [x] **4.0 前端 DTO 模型 + API 客户端**（角色 D）
-  - `frontend/model/` — auth / driver / fleet / guardianship / types / websocket 类型定义 ✅
-  - `frontend/api/` — ApiClient + AuthApi / DriverApi / FleetApi / GuardianshipApi ✅
-  - `frontend/api/` — BaseWebSocket + FleetWebSocket + GuardianshipWebSocket ✅
-  - `frontend/common/JsonParser.ts` — ArkTS 兼容 JSON 解析工具 ✅
-  - ArkTS 严格模式适配，`fromJson` 构造器接入类型化 DTO
+- [x] **4.0 前端**（角色 D）✅
+  - HarmonyOS 项目结构（entry/src/main/ets/）
+  - 页面：LoginPage / MainPage + DashboardTab / FleetTab / GuardianshipTab / ProfileTab
+  - API 客户端：ApiClient + AuthApi / DriverApi / FleetApi / GuardianshipApi
+  - WebSocket：BaseWebSocket + FleetWebSocket + GuardianshipWebSocket
+  - ViewModel：Dashboard / Fleet / Guardianship + SessionStore
+  - 通用组件：AppCard / StatItem / StateViews / StatusBadge
 
 - [ ] **4.1 REST 控制器**（`interfaces.rest`）🟡 部分完成
   - Account / Driver / Safety / Guardianship / Health / Projection 共 6 个 Controller ✅
