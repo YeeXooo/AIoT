@@ -57,4 +57,5 @@ public final class PhysiologicalSnapshot {
         this.bloodOxygen = 0;
         this.emotionIndex = 0;
     }
+
 }

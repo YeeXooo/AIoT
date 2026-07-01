@@ -48,4 +48,5 @@ public final class Permission {
     protected Permission() {
         this.operations = Collections.emptySet();
     }
+
 }

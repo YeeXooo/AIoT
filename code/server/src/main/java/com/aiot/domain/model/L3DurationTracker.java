@@ -59,4 +59,5 @@ public final class L3DurationTracker {
         this.accumulatedDuration = Duration.ZERO;
         this.active = false;
     }
+
 }

@@ -39,4 +39,5 @@ public final class OTAVersion {
         this.vehicleModelRange = "";
         this.packageDigest = "";
     }
+
 }

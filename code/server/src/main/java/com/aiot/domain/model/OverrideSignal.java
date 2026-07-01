@@ -44,4 +44,5 @@ public final class OverrideSignal {
         this.type = null;
         this.timestamp = Instant.EPOCH;
     }
+
 }

@@ -48,4 +48,5 @@ public final class InterventionInstruction {
         this.parameters = Collections.emptyMap();
         this.priority = 0;
     }
+
 }

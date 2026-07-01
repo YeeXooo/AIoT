@@ -83,4 +83,5 @@ public final class RescueAuthorizationToken {
         this.expiresAt = Instant.EPOCH;
         this.consumed = false;
     }
+
 }

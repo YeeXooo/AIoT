@@ -55,4 +55,5 @@ public final class DriverStatusSnapshot {
         this.statusColor = null;
         this.timestamp = Instant.EPOCH;
     }
+
 }

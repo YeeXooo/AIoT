@@ -73,4 +73,5 @@ public final class DetectionWindow {
         this.microMovementCount = 0;
         this.toleranceThreshold = Duration.ZERO;
     }
+
 }

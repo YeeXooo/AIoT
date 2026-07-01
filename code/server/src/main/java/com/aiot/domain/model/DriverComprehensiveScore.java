@@ -33,4 +33,5 @@ public final class DriverComprehensiveScore {
     protected DriverComprehensiveScore() {
         this.value = 0;
     }
+
 }

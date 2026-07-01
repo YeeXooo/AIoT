@@ -48,4 +48,5 @@ public final class RescueReport {
         this.vehicleStateSnapshots = Collections.emptyList();
         this.healthProfileSummary = "";
     }
+
 }

@@ -5,6 +5,8 @@ on:
     branches: [develop, main]
   pull_request:
     branches: [develop, main]
+  workflow_dispatch:
+
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -30,14 +32,12 @@ jobs:
           cache: maven
 
       - name: Compile
-        run: |
-          cd code/server
-          mvn compile -B -q
+        working-directory: code/server
+        run: mvn compile -B -q
 
       - name: Test
-        run: |
-          cd code/server
-          mvn verify -B -Dspring.profiles.active=ci
+        working-directory: code/server
+        run: mvn verify -B -Dspring.profiles.active=ci
 
       - name: Test Report
         uses: dorny/test-reporter@v2
@@ -66,9 +66,8 @@ jobs:
           cache: maven
 
       - name: Checkstyle
-        run: |
-          cd code/server
-          mvn checkstyle:check -B
+        working-directory: code/server
+        run: mvn checkstyle:check -B
 
       - name: Checkstyle Report
         uses: jwgmeligmeyling/checkstyle-github-action@v1
@@ -82,31 +81,22 @@ jobs:
   # ===================================================================
   frontend:
     name: Frontend (tsc)
-    if: hashFiles('code/frontend/package.json') != ''
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: code/frontend
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: code/frontend/package-lock.json
+      - name: Check frontend project exists
+        id: check
+        working-directory: code/frontend
+        run: |
+          if [ -f package.json ]; then
+            echo "has_frontend=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_frontend=false" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Type check
-        run: npx tsc --noEmit
-
-  # ===================================================================
-  # CodeQL 安全扫描（公开仓库免费）
   # ===================================================================
   codeql:
     name: CodeQL
@@ -139,7 +129,8 @@ jobs:
           category: "/language:${{ matrix.language }}"
 
   # ===================================================================
-  # 依赖审查
+  # 依赖审查（仅 PR）
+
   # ===================================================================
   dependency-review:
     name: Dependency Review

@@ -37,4 +37,5 @@ public final class NotificationPreference {
     protected NotificationPreference() {
         this.subscribedLevels = Set.of(RiskLevel.values());
     }
+
 }

@@ -48,4 +48,5 @@ public final class DrivingBehaviorCounters {
         this.suddenBrakingCount = 0;
         this.suddenAccelerationCount = 0;
     }
+
 }

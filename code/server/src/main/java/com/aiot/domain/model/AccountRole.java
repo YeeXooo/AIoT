@@ -50,4 +50,5 @@ public enum AccountRole {
     public boolean isRescue() {
         return this == RESCUE;
     }
+
 }

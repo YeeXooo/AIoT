@@ -54,4 +54,5 @@ public final class OTAUpgradeStatus {
         this.offset = 0;
         this.stageTimestamp = Instant.EPOCH;
     }
+
 }

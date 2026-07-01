@@ -43,4 +43,5 @@ public final class GeoLocation {
         this.longitude = 0;
         this.latitude = 0;
     }
+
 }
