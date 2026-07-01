@@ -4,7 +4,7 @@
 > 
 > **课程作业定位**：全部采用本地免费替代方案，不依赖华为云付费服务（IoTDA 除外，已有）。
 >
-> **任务进度**：0.1~0.4 ✅，1.3~1.6 ✅，3.1~3.7 ✅，2.x/4.1 部分 ✅，前端重构 ✅，下一项 1.1 / 1.2 / 1.7
+> **任务进度**：0.1~0.4 ✅，1.4~1.6 ✅，3.1~3.7 ✅，2.x/4.1 部分 ✅，前端重构 ✅，下一项 1.1 / 1.2 / 1.3 修复 / 1.7
 
 ---
 
@@ -41,7 +41,7 @@
              │ ┌──────┐              ┌────────────┐   │
              │ │ 1.3  │              │3.2 仓储    │   │
              │ │仓储  │              │实现 ✅     │   │
-             │ │接口 ✅│              └────────────┘   │
+             │ │接口🟡│              └────────────┘   │
              │ └──┬───┘                               │
              │    │                                   │
              │    ▼         可以并行                  │
@@ -134,7 +134,7 @@
 
 - [ ] **1.1 值对象（23 个 VO）** 🟡 5/23 完成
   - 已完成：`PhysiologicalSnapshot` / `GeoLocation` / `VehicleStateSnapshot` / `TimeRange` / `RescueReport`（#29）
-  - 剩余 18 个在 #43（待 rebase）
+  - 剩余 18 个：PR #43 / #49 均已关闭未合并，需重新认领
   - 全部实现为不可变 `record` 或 `@Embeddable`
 
 - [ ] **1.2 聚合根与实体（5 AR + 2 Entity）**
@@ -142,9 +142,12 @@
   - `SafetyAlertEvent`（实体）、`DriverHealthProfile`（实体）
   - 每个聚合根含完整属性、协作关系、不变式校验方法
 
-- [x] **1.3 仓储接口（5 个）**
-  - `TripRepository` / `DriverRepository` / `VehicleRepository` / `SystemAccountRepository` + RoadRageVoiceRecordRepository 等 10 个 ✅
-  - 方法签名严格按 ood_domain.md §3.5 定义
+- [ ] **1.3 仓储接口** 🟡 仅骨架，需修复
+  - 5 个领域接口已存在：`TripRepository` / `DriverRepository` / `VehicleRepository` / `SystemAccountRepository` / `AlertEventRepository`
+  - ❌ `RoadRageVoiceRecordRepository` 缺失（OOD §3.7.4 要求，infra 仅有 JPA 实现无领域接口）
+  - ❌ 所有 infra JPA 实现均未继承对应领域接口（DDD 依赖倒置被架空，领域接口成孤立代码）
+  - ❌ 方法签名与 OOD 契约不一致：裸 `String` 替代类型化 ID、无 `PersistenceException` 声明
+  - ❌ 6 个 infra JPA 仓储缺少领域层接口：Guardianship / PhysiologicalSnapshot / AlertProjection / FleetDashboardProjection / TrajectoryProjection / DriverHealthProfile
 
 - [x] **1.4 领域端口接口（8 个）**
   - `VehicleStateBuffer` / `PhysiologicalDataBuffer` / `DrivingBehaviorTrackingPort` / `CameraOcclusionDetectionPort` / `OTADeliveryPort` / `NotificationPort` / `RescueReportPort` / `MediaSessionPort`
