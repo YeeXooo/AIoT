@@ -1,61 +1,30 @@
 package com.aiot.domain.model;
 
-import com.aiot.domain.model.exception.BusinessException;
-import jakarta.persistence.Embeddable;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import java.time.Instant;
+import java.util.Objects;
 
 /**
- * 生理体征快照（VO-03）
- * 传感器固定频率采集的瞬时生理数据，不可变时间点切片
+ * 生理体征快照值对象。
+ * <p>
+ * 传感器按固定频率采集的瞬时生理数据。
+ * </p>
+ * <p>
+ * 设计依据：docs/ood_domain.md VO-03
+ * </p>
  */
-@Embeddable
-@Getter
-@EqualsAndHashCode
-public final class PhysiologicalSnapshot {
-    private final Instant timestamp;
-    private final int heartRate;
-    private final int bloodOxygen;
-    private final double emotionIndex;
-
-    private PhysiologicalSnapshot(Instant timestamp, int heartRate, int bloodOxygen, double emotionIndex) {
-        if (timestamp == null) {
-            throw new BusinessException(
-                    "MODEL_017",
-                    "生理快照采集时间戳不能为空",
-                    "PHYSIOLOGICAL_SNAPSHOT_VALIDATE"
-            );
-        }
-        if (heartRate <= 0 || heartRate > 250) {
-            throw new BusinessException(
-                    "MODEL_018",
-                    String.format("心率数值不合法，当前值：%d，合法范围(0,250]", heartRate),
-                    "PHYSIOLOGICAL_SNAPSHOT_VALIDATE"
-            );
-        }
-        if (bloodOxygen < 0 || bloodOxygen > 100) {
-            throw new BusinessException(
-                    "MODEL_019",
-                    String.format("血氧数值不合法，当前值：%d，合法范围[0,100]", bloodOxygen),
-                    "PHYSIOLOGICAL_SNAPSHOT_VALIDATE"
-            );
-        }
-        this.timestamp = timestamp;
-        this.heartRate = heartRate;
-        this.bloodOxygen = bloodOxygen;
-        this.emotionIndex = emotionIndex;
+public record PhysiologicalSnapshot(
+        Instant timestamp,
+        Integer heartRate,
+        Double bloodOxygen,
+        Double emotionIndex,
+        Integer respiratoryRate,
+        Integer systolicBp,
+        Integer diastolicBp,
+        Double fatigueIndex,
+        Double bodyTemperature
+) {
+    public PhysiologicalSnapshot {
+        Objects.requireNonNull(timestamp, "timestamp must not be null");
     }
-
-    public static PhysiologicalSnapshot of(Instant timestamp, int heartRate, int bloodOxygen, double emotionIndex) {
-        return new PhysiologicalSnapshot(timestamp, heartRate, bloodOxygen, emotionIndex);
-    }
-
-    protected PhysiologicalSnapshot() {
-        this.timestamp = Instant.EPOCH;
-        this.heartRate = 0;
-        this.bloodOxygen = 0;
-        this.emotionIndex = 0;
-    }
-
 }
+

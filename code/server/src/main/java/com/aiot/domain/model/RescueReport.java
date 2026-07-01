@@ -1,52 +1,32 @@
 package com.aiot.domain.model;
 
-import com.aiot.domain.model.exception.BusinessException;
-import jakarta.persistence.Embeddable;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import java.util.Collections;
+import com.aiot.domain.shared.DriverId;
+
+import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 
 /**
- * 救援报告（VO-13）
- * SOS上报时的完整信息聚合载体，一次性定格不可修改
+ * 救援报告值对象。
+ * <p>
+ * EmergencyRescueService 在 SOS 上报时产出的救援信息聚合载体。
+ * </p>
+ * <p>
+ * 设计依据：docs/ood_domain.md VO-13
+ * </p>
  */
-@Embeddable
-@Getter
-@EqualsAndHashCode
-public final class RescueReport {
-    private final GeoLocation location;
-    private final String vitalSignsSummary;
-    private final List<VehicleStateSnapshot> vehicleStateSnapshots;
-    private final String healthProfileSummary;
-
-    private RescueReport(GeoLocation location, String vitalSignsSummary,
-                         List<VehicleStateSnapshot> snapshots, String healthProfileSummary) {
-        if (location == null) {
-            throw new BusinessException(
-                    "MODEL_031",
-                    "救援报告定位信息不能为空",
-                    "RESCUE_REPORT_VALIDATE"
-            );
-        }
-        this.location = location;
-        this.vitalSignsSummary = vitalSignsSummary;
-        this.vehicleStateSnapshots = snapshots == null
-                ? Collections.emptyList()
-                : Collections.unmodifiableList(snapshots);
-        this.healthProfileSummary = healthProfileSummary;
+public record RescueReport(
+        DriverId driverId,
+        GeoLocation location,
+        PhysiologicalSnapshot latestVitals,
+        List<VehicleStateSnapshot> vehicleStates,
+        String healthSummary,
+        Instant occurredAt
+) {
+    public RescueReport {
+        Objects.requireNonNull(driverId, "driverId must not be null");
+        Objects.requireNonNull(location, "location must not be null");
+        Objects.requireNonNull(occurredAt, "occurredAt must not be null");
     }
-
-    public static RescueReport of(GeoLocation location, String vitalSignsSummary,
-                                  List<VehicleStateSnapshot> snapshots, String healthProfileSummary) {
-        return new RescueReport(location, vitalSignsSummary, snapshots, healthProfileSummary);
-    }
-
-    protected RescueReport() {
-        this.location = null;
-        this.vitalSignsSummary = "";
-        this.vehicleStateSnapshots = Collections.emptyList();
-        this.healthProfileSummary = "";
-    }
-
 }
+

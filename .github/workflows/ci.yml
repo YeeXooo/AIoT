@@ -11,6 +11,9 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+env:
+  HAS_FRONTEND: ${{ hashFiles('code/frontend/package.json') != '' }}
+
 
 jobs:
   # ===================================================================
@@ -81,14 +84,34 @@ jobs:
   # ===================================================================
   frontend:
     name: Frontend (tsc)
+needs: []
+if: fromJSON(env.HAS_FRONTEND)
+
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Check frontend project exists
-        id: check
+- name: Check frontend project exists
+  id: check
+  working-directory: code/frontend
+  run: |
+    if [ -f package.json ]; then
+      echo "Frontend project found"
+    else
+      echo "No frontend project"
+    fi
+
+- name: Set up Node
+  uses: actions/setup-node@v4
+  with:
+    node-version: 20
+
+- name: Install dependencies
+  working-directory: code/frontend
+  run: npm ci --silent
+
         working-directory: code/frontend
         run: |
           if [ -f package.json ]; then

@@ -1,47 +1,32 @@
 package com.aiot.domain.model;
 
-import com.aiot.domain.model.exception.BusinessException;
-import jakarta.persistence.Embeddable;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import java.time.Instant;
+import java.util.Objects;
 
 /**
- * 时间范围（VO-10）
- * 连续时间区间，用于查询周期、快照回取参数
+ * 时间范围值对象。
+ * <p>
+ * 表示一段连续的时间区间（起止时间戳）。
+ * </p>
+ * <p>
+ * 设计依据：docs/ood_domain.md VO-10
+ * </p>
  */
-@Embeddable
-@Getter
-@EqualsAndHashCode
-public final class TimeRange {
-    private final Instant startTime;
-    private final Instant endTime;
+public record TimeRange(Instant from, Instant to) {
 
-    private TimeRange(Instant startTime, Instant endTime) {
-        if (startTime == null || endTime == null) {
-            throw new BusinessException(
-                    "MODEL_026",
-                    "时间范围起止时间不能为空",
-                    "TIME_RANGE_VALIDATE"
-            );
+    public TimeRange {
+        Objects.requireNonNull(from, "from must not be null");
+        Objects.requireNonNull(to, "to must not be null");
+        if (from.isAfter(to)) {
+            throw new IllegalArgumentException("from must not be after to");
         }
-        if (startTime.isAfter(endTime)) {
-            throw new BusinessException(
-                    "MODEL_027",
-                    "起始时间不能晚于结束时间",
-                    "TIME_RANGE_VALIDATE"
-            );
-        }
-        this.startTime = startTime;
-        this.endTime = endTime;
     }
 
-    public static TimeRange of(Instant startTime, Instant endTime) {
-        return new TimeRange(startTime, endTime);
-    }
-
-    protected TimeRange() {
-        this.startTime = Instant.EPOCH;
-        this.endTime = Instant.EPOCH;
+    /**
+     * 计算时间范围的持续时间（秒）。
+     */
+    public long durationSeconds() {
+        return to.getEpochSecond() - from.getEpochSecond();
     }
 }
+
