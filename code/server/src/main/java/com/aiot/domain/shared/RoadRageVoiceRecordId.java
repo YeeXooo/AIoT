@@ -1,7 +1,6 @@
 package com.aiot.domain.shared;
 
 import java.util.Objects;
-import java.util.UUID;
 
 /**
  * 路怒语音存证标识。
@@ -14,6 +13,6 @@ public record RoadRageVoiceRecordId(String id) {
     }
 
     public static RoadRageVoiceRecordId generate() {
-        return new RoadRageVoiceRecordId(UUID.randomUUID().toString());
+        return new RoadRageVoiceRecordId(AggregateId.generate(AggregateType.ROAD_RAGE_VOICE_RECORD).value());
     }
 }

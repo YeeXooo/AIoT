@@ -10,9 +10,9 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-
 env:
   HAS_FRONTEND: ${{ hashFiles('code/frontend/package.json') != '' }}
+
 
 jobs:
   # ===================================================================
@@ -83,15 +83,17 @@ jobs:
   # ===================================================================
   frontend:
     name: Frontend (tsc)
-    needs: []
-    if: fromJSON(env.HAS_FRONTEND)
+needs: []
+if: fromJSON(env.HAS_FRONTEND)
+
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Node
+- name: Set up Node
+
         uses: actions/setup-node@v4
         with:
           node-version: 20

@@ -1,5 +1,6 @@
 package com.aiot.domain.event;
 
+import com.aiot.domain.model.VehicleStateSnapshot;
 import com.aiot.domain.shared.AggregateId;
 import com.aiot.domain.shared.AggregateType;
 import com.aiot.domain.shared.DriverId;
