@@ -101,25 +101,6 @@ CREATE TABLE t_trajectory_projection (
     recorded_at   TIMESTAMP NOT NULL
 );
 
--- 事务性事件表
-CREATE TABLE t_domain_event_outbox (
-    event_id        VARCHAR(36) PRIMARY KEY,
-    aggregate_id    VARCHAR(36) NOT NULL,
-    event_type      VARCHAR(64) NOT NULL,
-    event_payload   TEXT NOT NULL,
-    published       BOOLEAN DEFAULT FALSE,
-    last_attempt_at TIMESTAMP,
-    created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- 死信队列表
-CREATE TABLE t_domain_event_dlq (
-    dlq_id            VARCHAR(36) PRIMARY KEY,
-    original_event_id VARCHAR(36) NOT NULL,
-    error_message     TEXT,
-    moved_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
 -- ============================================
 -- 测试数据
 -- ============================================

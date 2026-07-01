@@ -1,6 +1,6 @@
 package com.aiot.infra.persistence;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity

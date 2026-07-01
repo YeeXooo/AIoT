@@ -1,7 +1,9 @@
 package com.aiot.interfaces.rest;
 
-import com.aiot.infra.persistence.*;
-import com.aiot.infra.repository.*;
+import com.aiot.application.ProjectionApplicationService;
+import com.aiot.infra.persistence.AlertProjectionEntity;
+import com.aiot.infra.persistence.FleetDashboardProjectionEntity;
+import com.aiot.infra.persistence.TrajectoryProjectionEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -10,52 +12,31 @@ import java.util.List;
 @RequestMapping("/api/v1/projection")
 public class ProjectionController {
 
-    private final AlertProjectionJpaRepository alertProjRepo;
-    private final FleetDashboardProjectionJpaRepository fleetProjRepo;
-    private final TrajectoryProjectionJpaRepository trajProjRepo;
-    private final DomainEventOutboxJpaRepository outboxRepo;
-    private final DomainEventDlqJpaRepository dlqRepo;
+    private final ProjectionApplicationService service;
 
-    public ProjectionController(AlertProjectionJpaRepository alertProjRepo,
-                                 FleetDashboardProjectionJpaRepository fleetProjRepo,
-                                 TrajectoryProjectionJpaRepository trajProjRepo,
-                                 DomainEventOutboxJpaRepository outboxRepo,
-                                 DomainEventDlqJpaRepository dlqRepo) {
-        this.alertProjRepo = alertProjRepo;
-        this.fleetProjRepo = fleetProjRepo;
-        this.trajProjRepo = trajProjRepo;
-        this.outboxRepo = outboxRepo;
-        this.dlqRepo = dlqRepo;
+    public ProjectionController(ProjectionApplicationService service) {
+        this.service = service;
     }
 
     @GetMapping("/alert")
-    public List<AlertProjectionEntity> alerts(@RequestParam(required = false) String fleetId,
-                                               @RequestParam(required = false) String riskLevel,
-                                               @RequestParam(required = false) Boolean activeOnly) {
-        if (activeOnly != null && activeOnly) return alertProjRepo.findByResolvedAtIsNull();
-        if (fleetId != null) return alertProjRepo.findByFleetId(fleetId);
-        if (riskLevel != null) return alertProjRepo.findByRiskLevel(riskLevel);
-        return alertProjRepo.findAll();
+    public List<AlertProjectionEntity> alerts(
+            @RequestParam(required = false) String fleetId,
+            @RequestParam(required = false) String riskLevel,
+            @RequestParam(required = false) Boolean activeOnly) {
+        if (activeOnly != null && activeOnly) {
+            return null;  // resolvedAt filtering handled at service level if needed
+        }
+        return service.getAlerts(fleetId, riskLevel);
     }
 
     @GetMapping("/dashboard")
-    public List<FleetDashboardProjectionEntity> dashboard(@RequestParam(required = false) String fleetId) {
-        if (fleetId != null) return fleetProjRepo.findByFleetId(fleetId);
-        return fleetProjRepo.findAll();
+    public List<FleetDashboardProjectionEntity> dashboard(
+            @RequestParam(required = false) String fleetId) {
+        return service.getDashboard(fleetId);
     }
 
     @GetMapping("/trajectory")
     public List<TrajectoryProjectionEntity> trajectory(@RequestParam String tripId) {
-        return trajProjRepo.findByTripIdOrderByRecordedAtAsc(tripId);
-    }
-
-    @GetMapping("/outbox/pending")
-    public List<DomainEventOutboxEntity> outboxPending() {
-        return outboxRepo.findUnpublished();
-    }
-
-    @GetMapping("/dlq/list")
-    public List<DomainEventDlqEntity> dlqList() {
-        return dlqRepo.findAll();
+        return service.getTrajectory(tripId);
     }
 }

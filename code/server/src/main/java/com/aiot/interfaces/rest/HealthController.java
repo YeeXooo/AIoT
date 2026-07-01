@@ -1,31 +1,28 @@
 package com.aiot.interfaces.rest;
 
+import com.aiot.application.HealthApplicationService;
 import com.aiot.infra.persistence.DriverHealthProfileEntity;
-import com.aiot.infra.repository.DriverHealthProfileJpaRepository;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/health")
 public class HealthController {
 
-    private final DriverHealthProfileJpaRepository profileRepo;
+    private final HealthApplicationService service;
 
-    public HealthController(DriverHealthProfileJpaRepository profileRepo) {
-        this.profileRepo = profileRepo;
+    public HealthController(HealthApplicationService service) {
+        this.service = service;
     }
 
     @GetMapping("/{driverId}")
-    public ResponseEntity<DriverHealthProfileEntity> get(@PathVariable String driverId) {
-        return profileRepo.findById(driverId)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+    public DriverHealthProfileEntity get(@PathVariable String driverId) {
+        return service.get(driverId).orElse(null);
     }
 
     @PutMapping("/{driverId}")
     public DriverHealthProfileEntity update(@PathVariable String driverId,
                                              @RequestBody DriverHealthProfileEntity profile) {
         profile.setDriverId(driverId);
-        return profileRepo.save(profile);
+        return service.save(profile);
     }
 }
