@@ -21,4 +21,9 @@ public record GeoLocation(
             throw new IllegalArgumentException("Longitude must be between -180 and 180");
         }
     }
+<<<<<<< HEAD
 }
+=======
+}
+
+>>>>>>> d61a4a60204c7e68e9b5b3ec725a630abc2e642a

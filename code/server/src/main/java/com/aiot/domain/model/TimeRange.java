@@ -28,4 +28,9 @@ public record TimeRange(Instant from, Instant to) {
     public long durationSeconds() {
         return to.getEpochSecond() - from.getEpochSecond();
     }
+<<<<<<< HEAD
 }
+=======
+}
+
+>>>>>>> d61a4a60204c7e68e9b5b3ec725a630abc2e642a

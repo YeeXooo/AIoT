@@ -23,4 +23,9 @@ public record VehicleStateSnapshot(
     public VehicleStateSnapshot {
         Objects.requireNonNull(timestamp, "timestamp must not be null");
     }
+<<<<<<< HEAD
 }
+=======
+}
+
+>>>>>>> d61a4a60204c7e68e9b5b3ec725a630abc2e642a

@@ -4,7 +4,7 @@
 > 
 > **课程作业定位**：全部采用本地免费替代方案，不依赖华为云付费服务（IoTDA 除外，已有）。
 >
-> **任务进度**：0.1~0.4 ✅，1.4~1.6 ✅，3.3 ✅，前端 DTO ✅，下一项 0.5 / 1.1 / 1.7
+> **任务进度**：0.1~0.4 ✅，下一项 0.5 / 1.1
 
 
 ---
@@ -28,48 +28,48 @@
              │    ▼              ▼              ▼     │
              │ ┌──────┐  ┌────────────┐ ┌──────────┐ │
              │ │ 1.1  │  │ 1.5 事件   │ │ 0.5 迁移 │ │
-             │ │值对象│  │+1.6 总线 ✅ │ │ 基线     │ │
+             │ │值对象│  │+1.6 总线契约│ │ 基线     │ │
              │ └──┬───┘  └─────┬──────┘ └────┬─────┘ │
              │    │             │              │       │
-             │    ▼             ▼              ▼       │
-             │ ┌──────┐  ┌──────────┐ ┌────────────┐ │
-             │ │ 1.2  │  │3.3 事件   │ │ 3.1 JPA    │ │
-             │ │聚合根│  │总线实现 ✅│ │ 映射       │ │
-             │ └──┬───┘  └──────────┘ └─────┬──────┘ │
-             │    │                          │        │
-             │    ├──────────────────────────┤        │
-             │    ▼                          ▼        │
-             │ ┌──────┐              ┌────────────┐   │
-             │ │ 1.3  │              │3.2 仓储    │   │
-             │ │仓储  │              │实现        │   │
-             │ │接口  │              └────────────┘   │
-             │ └──┬───┘                               │
-             │    │                                   │
-             │    ▼         可以并行                  │
-             │ ┌──────────┐                           │
-             │ │ 1.7 领域  │                           │
-             │ │ 服务(19) │                           │
-             │ └────┬─────┘                           │
-             │      │                                 │
-             │      ▼                                 │
-             │ ┌──────────┐                           │
-             │ │ 2 应用层 │                           │
-             │ │ (6服务)  │                           │
-             │ └────┬─────┘                           │
-             │      │                                 │
-             │      ▼                                 │
-             │ ┌──────────┐                           │
-             │ │ 4.1 REST │                           │
-             │ │ 控制器   │                           │
-             │ └──────────┘                           │
-             │                                        │
-             ▼                                        │
-    ┌─────────────────────────────────────────────┐   │
-    │  以下不依赖任何东西，随时可做：              │   │
-    │  3.5 端口适配器  3.6 安全  3.7 存储  3.4 缓存│   │
-    │  1.4 端口接口 ✅                             │   │
-    ├─────────────────────────────────────────────┤   │
-    │  前端 DTO + API 客户端 ✅（角色 D 已完成）  │◄──┘
+             │    ▼             │              ▼       │
+             │ ┌──────┐         │       ┌────────────┐ │
+             │ │ 1.2  │         │       │ 3.1 JPA    │ │
+             │ │聚合根│         │       │ 映射       │ │
+             │ └──┬───┘         │       └─────┬──────┘ │
+             │    │             │              │        │
+             │    ├─────────────┤              │        │
+             │    ▼             ▼              ▼        │
+             │ ┌──────┐  ┌──────────┐ ┌────────────┐   │
+             │ │ 1.3  │  │3.3 事件   │ │3.2 仓储    │   │
+             │ │仓储  │  │总线实现   │ │实现        │   │
+             │ │接口  │  └──────────┘ └────────────┘   │
+             │ └──┬───┘                                  │
+             │    │                                     │
+             │    ▼         可以并行                    │
+             │ ┌──────────┐                             │
+             │ │ 1.7 领域  │                             │
+             │ │ 服务(19) │                             │
+             │ └────┬─────┘                             │
+             │      │                                   │
+             │      ▼                                   │
+             │ ┌──────────┐                             │
+             │ │ 2 应用层 │                             │
+             │ │ (6服务)  │                             │
+             │ └────┬─────┘                             │
+             │      │                                   │
+             │      ▼                                   │
+             │ ┌──────────┐                             │
+             │ │ 4.1 REST │                             │
+             │ │ 控制器   │                             │
+             │ └──────────┘                             │
+             │                                          │
+             ▼                                          │
+    ┌─────────────────────────────────────────────┐     │
+    │  以下不依赖任何东西，随时可做：              │     │
+    │  3.5 端口适配器  3.6 安全  3.7 存储  3.4 缓存│     │
+    │  1.4 端口接口                               │     │
+    ├─────────────────────────────────────────────┤     │
+    │  前端：完全独立，接口契约定了就能开工       │◄────┘
     │  4.2 MQTT  4.3 WebSocket  4.4 安全配置      │
     │  5 测试  6 CI/CD                            │
     └─────────────────────────────────────────────┘
@@ -87,10 +87,10 @@
 |---|------|------|---------|
 | **A** | 1.1 值对象（23 个 VO） | `docs/ood_domain.md` §3.3 | `domain/model/` 枚举 + record |
 | **B** | 0.5 数据库迁移基线（15 张表） | `docs/ood_infrastructure.md` §3 | `resources/db/migration/V1__init.sql` |
-| **C** | 1.5 领域事件 + 1.6 事件总线契约 + 3.3 事件总线实现 ✅ | `docs/ood_domain.md` §3.6 | `domain/event/` + `infra/eventbus/` |
-| **D** | 前端 DTO 模型 + API 客户端 ✅ | `docs/ood_interface.md` §4.1 | `frontend/model/` 类型 + `frontend/api/` |
+| **C** | 1.5 领域事件（~20 个）+ 1.6 事件总线契约 | `docs/ood_domain.md` §3.6 | `domain/event/` 事件 record + `DomainEventPublisher` 接口 |
+| **D** | 前端 DTO 模型 + API 客户端 | `docs/ood_interface.md` §4.1 | `frontend/model/` 类型 + `frontend/api/` |
 
-> 四块中 C/D 已全部完成。A 完成后接 1.2（聚合根）→ 1.7（领域服务）；B 完成后接 3.1（JPA 映射）→ 3.2（仓储实现）。D 已完成，等后端接口上线后联调。
+> 四块零依赖，即刻开工。A 完成后接 1.2（聚合根）→ 1.7（领域服务）；B 完成后接 3.1（JPA 映射）→ 3.2（仓储实现）；C 完成后接 3.3（事件总线实现）。D 独立推进，等后端接口上线后联调。
 
 
 ---
@@ -148,16 +148,15 @@
   - `TripRepository` / `DriverRepository` / `VehicleRepository` / `SystemAccountRepository` / `RoadRageVoiceRecordRepository`
   - 方法签名严格按 ood_domain.md §3.5 定义
 
-- [x] **1.4 领域端口接口（8 个）**
+- [ ] **1.4 领域端口接口（8 个）**
   - `VehicleStateBuffer` / `PhysiologicalDataBuffer` / `DrivingBehaviorTrackingPort` / `CameraOcclusionDetectionPort` / `OTADeliveryPort` / `NotificationPort` / `RescueReportPort` / `MediaSessionPort`
   - 方法签名严格按 ood_domain.md §3.7 定义
 
-- [x] **1.5 领域事件（~20 个）**
+- [ ] **1.5 领域事件（~20 个）**
   - 事件密封接口 `DomainEvent`（含 `eventId` / `occurredAt` / `aggregateId`）
   - 全部事件 record 类，按 ood_domain.md §3.6 定义
-  - 18 个事件：RiskDeterminedEvent / RiskResolvedEvent / AlertTriggeredEvent / VehicleIgnitionOffLockedEvent / LifeDetectedEvent / EmergencyActivatedEvent / SensorFailureEvent / CameraOcclusionDetectedEvent / CameraOcclusionRemovedEvent / FamilyAccessGrantedEvent / FamilyAccessRevokedEvent / TripScoredEvent / DriverScoreUpdatedEvent / PerformanceWarningEvent / OTAUpgradeCompletedEvent / OTAUpgradeFailedEvent / DriverDeactivatedEvent / FamilyManualRescueRequestedEvent
 
-- [x] **1.6 事件总线契约**
+- [ ] **1.6 事件总线契约**
   - `DomainEventPublisher`（`publish` / `registerSyncHandler` / `registerAsyncHandler`）
   - 接口定义在 `com.aiot.domain.event`
 
@@ -199,10 +198,9 @@
   - 5 个仓储接口的 JDBC/SQLite 实现（边缘侧 `infra.edge.repository`）
   - 自定义 JPQL/原生 SQL 查询
 
-- [x] **3.3 事件总线实现**（`infra.eventbus`）
-  - CloudEventBus（云端 outbox 模式）+ EdgeEventBus（边缘同步模式）✅
-  - Outbox 持久化 + 定时投递 + 指数退避重试 + 死信队列 ✅
-  - 5 个单元测试覆盖全部组件 ✅
+- [ ] **3.3 事件总线实现**（`infra.eventbus`）
+  - 统一使用 Spring `ApplicationEventPublisher` + `@EventListener` / `@TransactionalEventListener`
+  - 同步事件（边缘侧）与异步事件（云端侧）均基于 Spring 内置机制
   - ~~DMS Kafka / Outbox 投递~~ → **课程作业无需，Spring 内置事件完全够用**
 
 - [ ] **3.4 缓存**（`infra.cache`）
@@ -242,13 +240,6 @@
 ## 4. 接口层实现
 
 > 依据：`docs/ood_interface.md`
-
-- [x] **4.0 前端 DTO 模型 + API 客户端**（角色 D）
-  - `frontend/model/` — auth / driver / fleet / guardianship / types / websocket 类型定义 ✅
-  - `frontend/api/` — ApiClient + AuthApi / DriverApi / FleetApi / GuardianshipApi ✅
-  - `frontend/api/` — BaseWebSocket + FleetWebSocket + GuardianshipWebSocket ✅
-  - `frontend/common/JsonParser.ts` — ArkTS 兼容 JSON 解析工具 ✅
-  - ArkTS 严格模式适配，`fromJson` 构造器接入类型化 DTO
 
 - [ ] **4.1 REST 控制器**（`interfaces.rest`）
   - 按六个功能域拆分为 6 个 `@RestController`（`XxxController` 对应各应用服务）
