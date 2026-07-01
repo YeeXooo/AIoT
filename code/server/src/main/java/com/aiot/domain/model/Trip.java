@@ -1,34 +1,132 @@
 package com.aiot.domain.model;
 
+import com.aiot.domain.shared.DriverId;
+import com.aiot.domain.shared.TripId;
+import com.aiot.domain.shared.VehicleId;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 public class Trip {
-    private String tripId;
-    private String driverId;
-    private String vehicleId;
-    private LocalDateTime startedAt;
-    private LocalDateTime endedAt;
-    private Integer hardBrakingCount;
-    private Integer hardAccelerationCount;
-    private Integer scoreValue;
-    private LocalDateTime createdAt;
 
-    public String getTripId() { return tripId; }
-    public void setTripId(String tripId) { this.tripId = tripId; }
-    public String getDriverId() { return driverId; }
-    public void setDriverId(String driverId) { this.driverId = driverId; }
-    public String getVehicleId() { return vehicleId; }
-    public void setVehicleId(String vehicleId) { this.vehicleId = vehicleId; }
-    public LocalDateTime getStartedAt() { return startedAt; }
-    public void setStartedAt(LocalDateTime startedAt) { this.startedAt = startedAt; }
-    public LocalDateTime getEndedAt() { return endedAt; }
-    public void setEndedAt(LocalDateTime endedAt) { this.endedAt = endedAt; }
-    public Integer getHardBrakingCount() { return hardBrakingCount; }
-    public void setHardBrakingCount(Integer hardBrakingCount) { this.hardBrakingCount = hardBrakingCount; }
-    public Integer getHardAccelerationCount() { return hardAccelerationCount; }
-    public void setHardAccelerationCount(Integer hardAccelerationCount) { this.hardAccelerationCount = hardAccelerationCount; }
-    public Integer getScoreValue() { return scoreValue; }
-    public void setScoreValue(Integer scoreValue) { this.scoreValue = scoreValue; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    private final TripId tripId;
+    private final DriverId driverId;
+    private final VehicleId vehicleId;
+    private final LocalDateTime startedAt;
+    private LocalDateTime endedAt;
+    private final List<PhysiologicalSnapshot> physiologicalSnapshots;
+    private DrivingBehaviorCounters drivingBehaviorCounters;
+    private TripScore tripScore;
+    private L3DurationTracker l3DurationTracker;
+    private Integer version;
+    private final LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    private Trip(TripId tripId, DriverId driverId, VehicleId vehicleId, LocalDateTime startedAt) {
+        this.tripId = tripId;
+        this.driverId = driverId;
+        this.vehicleId = vehicleId;
+        this.startedAt = startedAt;
+        this.endedAt = null;
+        this.physiologicalSnapshots = new ArrayList<>();
+        this.drivingBehaviorCounters = DrivingBehaviorCounters.initial();
+        this.tripScore = null;
+        this.l3DurationTracker = null;
+        this.version = 1;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public static Trip start(DriverId driverId, VehicleId vehicleId, LocalDateTime startedAt) {
+        Objects.requireNonNull(driverId, "driverId must not be null");
+        Objects.requireNonNull(vehicleId, "vehicleId must not be null");
+        Objects.requireNonNull(startedAt, "startedAt must not be null");
+
+        return new Trip(TripId.generate(), driverId, vehicleId, startedAt);
+    }
+
+    public void end(LocalDateTime endedAt) {
+        Objects.requireNonNull(endedAt, "endedAt must not be null");
+        if (endedAt.isBefore(startedAt)) {
+            throw new IllegalArgumentException("endedAt must be after startedAt");
+        }
+        this.endedAt = endedAt;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void addPhysiologicalSnapshot(PhysiologicalSnapshot snapshot) {
+        Objects.requireNonNull(snapshot, "snapshot must not be null");
+        if (isEnded()) {
+            throw new IllegalStateException("Cannot add snapshot to ended trip");
+        }
+        this.physiologicalSnapshots.add(snapshot);
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void updateDrivingBehaviorCounters(DrivingBehaviorCounters counters) {
+        Objects.requireNonNull(counters, "counters must not be null");
+        this.drivingBehaviorCounters = counters;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void updateTripScore(TripScore tripScore) {
+        Objects.requireNonNull(tripScore, "tripScore must not be null");
+        if (!isEnded()) {
+            throw new IllegalStateException("Cannot set trip score before trip ends");
+        }
+        this.tripScore = tripScore;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void updateL3DurationTracker(L3DurationTracker tracker) {
+        this.l3DurationTracker = tracker;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public boolean isEnded() {
+        return endedAt != null;
+    }
+
+    public void validate() {
+        Objects.requireNonNull(tripId, "tripId must not be null");
+        Objects.requireNonNull(driverId, "driverId must not be null");
+        Objects.requireNonNull(vehicleId, "vehicleId must not be null");
+        Objects.requireNonNull(startedAt, "startedAt must not be null");
+        if (endedAt != null && endedAt.isBefore(startedAt)) {
+            throw new IllegalStateException("endedAt must be after startedAt");
+        }
+        if (drivingBehaviorCounters == null) {
+            drivingBehaviorCounters = DrivingBehaviorCounters.initial();
+        }
+    }
+
+    public TripId tripId() { return tripId; }
+    public DriverId driverId() { return driverId; }
+    public VehicleId vehicleId() { return vehicleId; }
+    public LocalDateTime startedAt() { return startedAt; }
+    public Optional<LocalDateTime> endedAt() { return Optional.ofNullable(endedAt); }
+    public List<PhysiologicalSnapshot> physiologicalSnapshots() { return List.copyOf(physiologicalSnapshots); }
+    public DrivingBehaviorCounters drivingBehaviorCounters() { return drivingBehaviorCounters; }
+    public Optional<TripScore> tripScore() { return Optional.ofNullable(tripScore); }
+    public Optional<L3DurationTracker> l3DurationTracker() { return Optional.ofNullable(l3DurationTracker); }
+    public Integer version() { return version; }
+    public void version(Integer version) { this.version = version; }
+    public LocalDateTime createdAt() { return createdAt; }
+    public LocalDateTime updatedAt() { return updatedAt; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Trip trip = (Trip) o;
+        return Objects.equals(tripId, trip.tripId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(tripId);
+    }
 }

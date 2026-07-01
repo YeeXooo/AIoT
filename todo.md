@@ -134,12 +134,12 @@
 
 > 依据：`docs/ood_domain.md`
 
-- [ ] **1.1 值对象（23 个 VO）**
+- [x] **1.1 值对象（23 个 VO）**
   - 枚举类：`RiskLevel` / `AlertType` / `SensorStatus` / `AccountRole` / 等 ood_domain.md §3.3 全部枚举
   - 值对象类：`PhysiologicalSnapshot` / `GeoLocation` / `OTAVersion` / `VehicleStateSnapshot` / `TimeRange` / `SensorReading` / `InterventionInstruction` / `RescueAuthorizationToken` / `OTAUpgradeStatus`(含 UpgradeStage) / `DetectionWindow` / `OverrideSignal` / `NotificationPreference` / `Permission` / `TripScore` / `DrivingBehaviorCounters` / `L3DurationTracker` / `DriverStatusSnapshot` / `DriverComprehensiveScore`
   - 全部实现为不可变 `record` 或 `@Embeddable`
 
-- [ ] **1.2 聚合根与实体（5 AR + 2 Entity）**
+- [x] **1.2 聚合根与实体（5 AR + 2 Entity）**
   - `Trip`（AR-01）、`Driver`（AR-02）、`Vehicle`（AR-03）、`SystemAccount`（AR-04）、`RoadRageVoiceRecord`（AR-05）
   - `SafetyAlertEvent`（实体）、`DriverHealthProfile`（实体）
   - 每个聚合根含完整属性、协作关系、不变式校验方法
