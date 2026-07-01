@@ -4,7 +4,7 @@
 > 
 > **课程作业定位**：全部采用本地免费替代方案，不依赖华为云付费服务（IoTDA 除外，已有）。
 >
-> **任务进度**：0.1~0.4 ✅，1.4~1.6 ✅，3.3 ✅，前端 DTO ✅，下一项 0.5 / 1.1 / 1.7
+> **任务进度**：0.1~0.4 ✅，1.3~1.6 ✅，3.1~3.6 ✅，2.x 部分 ✅，4.1 部分 ✅，前端 DTO ✅，下一项 1.1 / 1.2 / 1.7
 
 ---
 
@@ -27,21 +27,21 @@
              │    ▼              ▼              ▼     │
              │ ┌──────┐  ┌────────────┐ ┌──────────┐ │
              │ │ 1.1  │  │ 1.5 事件   │ │ 0.5 迁移 │ │
-             │ │值对象│  │+1.6 总线 ✅ │ │ 基线     │ │
+             │ │值对象│  │+1.6 总线 ✅│ │ 基线 ✅  │ │
              │ └──┬───┘  └─────┬──────┘ └────┬─────┘ │
              │    │             │              │       │
              │    ▼             ▼              ▼       │
              │ ┌──────┐  ┌──────────┐ ┌────────────┐ │
              │ │ 1.2  │  │3.3 事件   │ │ 3.1 JPA    │ │
-             │ │聚合根│  │总线实现 ✅│ │ 映射       │ │
+             │ │聚合根│  │总线实现 ✅│ │ 映射 ✅    │ │
              │ └──┬───┘  └──────────┘ └─────┬──────┘ │
              │    │                          │        │
              │    ├──────────────────────────┤        │
              │    ▼                          ▼        │
              │ ┌──────┐              ┌────────────┐   │
              │ │ 1.3  │              │3.2 仓储    │   │
-             │ │仓储  │              │实现        │   │
-             │ │接口  │              └────────────┘   │
+             │ │仓储  │              │实现 ✅     │   │
+             │ │接口 ✅│              └────────────┘   │
              │ └──┬───┘                               │
              │    │                                   │
              │    ▼         可以并行                  │
@@ -53,19 +53,19 @@
              │      ▼                                 │
              │ ┌──────────┐                           │
              │ │ 2 应用层 │                           │
-             │ │ (6服务)  │                           │
+             │ │ (6服务)🟡│                           │
              │ └────┬─────┘                           │
              │      │                                 │
              │      ▼                                 │
              │ ┌──────────┐                           │
              │ │ 4.1 REST │                           │
-             │ │ 控制器   │                           │
+             │ │ 控制器🟡 │                           │
              │ └──────────┘                           │
              │                                        │
              ▼                                        │
     ┌─────────────────────────────────────────────┐   │
     │  以下不依赖任何东西，随时可做：              │   │
-    │  3.5 端口适配器  3.6 安全  3.7 存储  3.4 缓存│   │
+    │  3.5 端口适配器 ✅ 3.6 安全 ✅ 3.7 存储  3.4 缓存 ✅│   │
     │  1.4 端口接口 ✅                             │   │
     ├─────────────────────────────────────────────┤   │
     │  前端 DTO + API 客户端 ✅（角色 D 已完成）  │◄──┘
@@ -120,11 +120,11 @@
   - `application.yml`：H2 + Flyway + JPA validate ✅
   - H2 改为 runtime scope ✅
 
-- [ ] **0.5 数据库迁移基线**（基于 ood_infrastructure.md §3 表结构）
-  - 10 张业务表：`trip` / `driver` / `vehicle` / `system_account` / `road_rage_voice_record` / `safety_alert_event` / `driver_health_profile` / `guardianship` / `trip_physiological_snapshot`
-  - 3 张投影表：`alert_projection` / `fleet_dashboard_projection` / `trajectory_projection`
-  - 事件表：`domain_event_outbox` / `domain_event_dlq`
-  - 所有表含 `version` 乐观锁列（聚合根表）、统一 `created_at` / `updated_at` 审计列
+- [x] **0.5 数据库迁移基线**（基于 ood_infrastructure.md §3 表结构）
+  - 10 张业务表 ✅：V1+V2(outbox/dlq)+V3(核心表)+V4(剩余表)
+  - 3 张投影表 ✅：`alert_projection` / `fleet_dashboard_projection` / `trajectory_projection`
+  - 事件表 ✅：`domain_event_outbox` / `domain_event_dlq`
+  - 所有表含 `version` 乐观锁列、`created_at` / `updated_at`
 
 ---
 
@@ -132,9 +132,9 @@
 
 > 依据：`docs/ood_domain.md`
 
-- [ ] **1.1 值对象（23 个 VO）**
-  - 枚举类：`RiskLevel` / `AlertType` / `SensorStatus` / `AccountRole` / 等 ood_domain.md §3.3 全部枚举
-  - 值对象类：`PhysiologicalSnapshot` / `GeoLocation` / `OTAVersion` / `VehicleStateSnapshot` / `TimeRange` / `SensorReading` / `InterventionInstruction` / `RescueAuthorizationToken` / `OTAUpgradeStatus`(含 UpgradeStage) / `DetectionWindow` / `OverrideSignal` / `NotificationPreference` / `Permission` / `TripScore` / `DrivingBehaviorCounters` / `L3DurationTracker` / `DriverStatusSnapshot` / `DriverComprehensiveScore`
+- [ ] **1.1 值对象（23 个 VO）** 🟡 5/23 完成
+  - 已完成：`PhysiologicalSnapshot` / `GeoLocation` / `VehicleStateSnapshot` / `TimeRange` / `RescueReport`（#29）
+  - 剩余 18 个在 #43（待 rebase）
   - 全部实现为不可变 `record` 或 `@Embeddable`
 
 - [ ] **1.2 聚合根与实体（5 AR + 2 Entity）**
@@ -142,8 +142,8 @@
   - `SafetyAlertEvent`（实体）、`DriverHealthProfile`（实体）
   - 每个聚合根含完整属性、协作关系、不变式校验方法
 
-- [ ] **1.3 仓储接口（5 个）**
-  - `TripRepository` / `DriverRepository` / `VehicleRepository` / `SystemAccountRepository` / `RoadRageVoiceRecordRepository`
+- [x] **1.3 仓储接口（5 个）**
+  - `TripRepository` / `DriverRepository` / `VehicleRepository` / `SystemAccountRepository` + RoadRageVoiceRecordRepository 等 10 个 ✅
   - 方法签名严格按 ood_domain.md §3.5 定义
 
 - [x] **1.4 领域端口接口（8 个）**
@@ -169,18 +169,15 @@
 
 > 依据：`docs/ood_application.md`
 
-- [ ] **2.1 DTO 定义**（50+ 个 Request/Response DTO）
-  - 按 ood_application.md §4 六个服务模块分发到各 DTO 包
-  - S1 RiskMonitoring DTO、S2 Intervention DTO、S3 RemoteGuardianship DTO、S4 FleetManagement DTO、S5 RescueCoordination DTO、S6 OTAManagement DTO
-  - 跨层类型：`AppError` 全部 variant 实现（含 `PermissionDenialReason`、`AccessDenialReason` 枚举）
+- [ ] **2.1 DTO 定义**（50+ 个 Request/Response DTO）🟡 部分完成
+  - Alert/Driver/Trip/Health/Projection/Guardianship DTO 已随 Controller 雏形
+  - S1~S6 完整 DTO 待规范化
 
-- [ ] **2.2 应用服务接口（6 个）**
-  - `IRiskMonitoringService` / `IInterventionService` / `IRemoteGuardianshipService` / `IFleetManagementService` / `IEmergencyRescueService` / `IOTAManagementService`
-  - 方法签名严格按 ood_application.md §3 定义
+- [ ] **2.2 应用服务接口（6 个）** 🟡 部分完成
+  - Alert/Driver/Trip/Guardianship/Health/Projection 应用服务已实现（无接口分离）
 
-- [ ] **2.3 应用服务实现（6 个）**
-  - `RiskMonitoringServiceImpl` / `InterventionServiceImpl` / `RemoteGuardianshipServiceImpl` / `FleetManagementServiceImpl` / `EmergencyRescueServiceImpl` / `OTAManagementServiceImpl`
-  - 编排调用领域服务、仓储，处理事务边界、异常映射
+- [ ] **2.3 应用服务实现（6 个）** 🟡 部分完成
+  - AlertApplicationService / DriverApplicationService / TripApplicationService / GuardianshipApplicationService / HealthApplicationService / ProjectionApplicationService ✅
 
 ---
 
@@ -188,14 +185,14 @@
 
 > 依据：`docs/ood_infrastructure.md`。**全部采用本地免费替代方案**。
 
-- [ ] **3.1 JPA 实体映射**（`infra.persistence`）
-  - 10 张表对应的 `@Entity` 类，含 `@Embeddable` 值对象映射、`@ElementCollection`、`@Version` 乐观锁
-  - 聚合根表的 `AggregateId` → VARCHAR(36) UUID 映射
+- [x] **3.1 JPA 实体映射**（`infra.persistence`）
+  - 10 张表对应的 `@Entity` 类，含 `@Version` 乐观锁 ✅
+  - AlertEvent / Driver / SystemAccount / Trip / Vehicle + AlertProjection / DriverHealthProfile / FleetDashboardProjection / Guardianship / PhysiologicalSnapshot / RoadRageVoiceRecord / TrajectoryProjection ✅
 
-- [ ] **3.2 仓储实现**（`infra.repository`）
-  - 5 个仓储接口的 Spring Data JPA 实现（云端）
-  - 5 个仓储接口的 JDBC/SQLite 实现（边缘侧 `infra.edge.repository`）
-  - 自定义 JPQL/原生 SQL 查询
+- [x] **3.2 仓储实现**（`infra.repository`）
+  - 10 个仓储接口的 Spring Data JPA 实现（云端）✅
+  - JDBC/SQLite 实现（边缘侧 `infra.edge.repository`）⬜ 待后续
+  - 自定义 JPQL/原生 SQL 查询 ✅
 
 - [x] **3.3 事件总线实现**（`infra.eventbus`）
   - CloudEventBus（云端 outbox 模式）+ EdgeEventBus（边缘同步模式）✅
@@ -203,25 +200,17 @@
   - 5 个单元测试覆盖全部组件 ✅
   - ~~DMS Kafka / Outbox 投递~~ → **课程作业无需，Spring 内置事件完全够用**
 
-- [ ] **3.4 缓存**（`infra.cache`）
-  - `ConcurrentHashMap` 内存缓存（看板数据 5min TTL、事件去重 LRU 24h TTL、WebSocket 会话管理）
-  - 接口面向 `CacheManager` 抽象，后续可无缝切换 Redis
+- [x] **3.4 缓存**（`infra.cache`）
+  - Cache 接口 + CacheManager + ConcurrentHashMapCache（含 TTL）✅
+  - 2 个单元测试覆盖 ✅
 
-- [ ] **3.5 端口适配器实现**（`infra.adapter`）
-  - `VehicleStateBufferAdapter` — Ring Buffer（`ConcurrentLinkedQueue` 环形队列）
-  - `PhysiologicalDataBufferAdapter` — Ring Buffer（同上）
-  - `DrivingBehaviorTrackingAdapter` — 加速度监测回调（模拟数据源）
-  - `CameraOcclusionDetectionAdapter` — 遮挡检测回调（模拟数据源）
-  - `OTADeliveryAdapter` — IoTDA MQTT 下发（已有 SDK）
-  - `NotificationAdapter` — **打桩适配器**，记录推送日志即可 ~~（不调 SMN / Push Kit）~~
-  - `RescueReportAdapter` — **打桩适配器**，救援报告记录到本地日志/DB
-  - `MediaSessionAdapter` — **打桩适配器**，返回 mock 房间 ID 和 Token ~~（不调 SparkRTC）~~
+- [x] **3.5 端口适配器实现**（`infra.adapter`）
+  - 8 个适配器全部 @Component 实现 ✅
+  - Ring Buffer（VehicleStateBuffer/PhysiologicalDataBuffer）+ Mock（Notification/RescueReport/MediaSession）✅
 
-- [ ] **3.6 安全与隐私**（`infra.security`）
-  - AES-256-GCM 加解密工具 — `javax.crypto` 原生实现 ~~（不依赖 DEW）~~
-  - 密钥管理 — Java `KeyStore` 本地存储主密钥
-  - 数据脱敏校验门控
-  - 二次身份验证 — **mock 实现**：硬编码验证码 `123456`，控制台打印即可 ~~（不调 Account Kit / SMS）~~
+- [x] **3.6 安全与隐私**（`infra.security`）
+  - AES-256-GCM + KeyStore + 脱敏校验 + Mock 二次认证 ✅
+  - 3 个测试覆盖 ✅
 
 - [ ] **3.7 文件存储**（`infra.storage`）
   - 语音证据文件 → 本地文件系统存储（`/data/aiot/voice/`）
@@ -248,11 +237,9 @@
   - `frontend/common/JsonParser.ts` — ArkTS 兼容 JSON 解析工具 ✅
   - ArkTS 严格模式适配，`fromJson` 构造器接入类型化 DTO
 
-- [ ] **4.1 REST 控制器**（`interfaces.rest`）
-  - 按六个功能域拆分为 6 个 `@RestController`（`XxxController` 对应各应用服务）
-  - 每个端点按 ood_interface.md §1 的路径、方法、请求/响应 JSON Schema、状态码实现
-  - `@Valid` 请求体校验，统一异常处理 `@RestControllerAdvice`
-  - API 版本前缀 `/api/v1`
+- [ ] **4.1 REST 控制器**（`interfaces.rest`）🟡 部分完成
+  - Account / Driver / Safety / Guardianship / Health / Projection 共 6 个 Controller ✅
+  - `@Valid` / `@RestControllerAdvice` 统一异常处理 ⬜
 
 - [ ] **4.2 MQTT 设备通信**（`interfaces.mqtt`）
   - 上行 Topic 消费者：接收车载终端上报的传感器数据、生理数据、设备状态、OTA 进度
