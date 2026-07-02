@@ -8,8 +8,14 @@ public sealed interface Result<T, E> {
     record Ok<T, E>(T value) implements Result<T, E> { }
     record Err<T, E>(E error) implements Result<T, E> { }
 
+    record Unit() { }
+
     static <T, E> Result<T, E> ok(T value) {
         return new Ok<>(value);
+    }
+
+    static <E> Result<Unit, E> ok() {
+        return new Ok<>(new Unit());
     }
 
     static <T, E> Result<T, E> err(E error) {

@@ -2,10 +2,13 @@ package com.aiot.interfaces.rest;
 
 import com.aiot.application.AlertApplicationService;
 import com.aiot.application.TripApplicationService;
-import com.aiot.domain.model.AlertEvent;
+import com.aiot.domain.model.SafetyAlertEvent;
 import com.aiot.domain.model.Trip;
 import com.aiot.domain.model.Vehicle;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -29,7 +32,7 @@ public class SafetyController {
     }
 
     @GetMapping("/alert/list")
-    public List<AlertEvent> listAlerts(
+    public List<SafetyAlertEvent> listAlerts(
             @RequestParam(required = false) String driverId,
             @RequestParam(required = false) String riskLevel,
             @RequestParam(required = false) String alertType) {

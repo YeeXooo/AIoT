@@ -63,7 +63,7 @@ public class LocalFileStorageService {
 
     public List<String> listFiles(String subDir) throws IOException {
         Path dir = Paths.get(props.getBasePath(), subDir);
-        if (!Files.exists(dir)) return List.of();
+        if (!Files.exists(dir)) { return List.of(); }
         try (Stream<Path> stream = Files.list(dir)) {
             return stream.map(p -> p.getFileName().toString())
                     .collect(Collectors.toList());

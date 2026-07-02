@@ -8,8 +8,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.stream.Stream;
 
@@ -27,7 +25,7 @@ public class FileExpiryService {
 
     public void cleanExpiredVoiceFiles() throws IOException {
         Path voiceDir = Paths.get(props.getBasePath(), "voice");
-        if (!Files.exists(voiceDir)) return;
+        if (!Files.exists(voiceDir)) { return; }
 
         long expiryMillis = props.getVoiceExpiryDays() * 24 * 60 * 60 * 1000L;
         Instant cutoff = Instant.now().minusMillis(expiryMillis);

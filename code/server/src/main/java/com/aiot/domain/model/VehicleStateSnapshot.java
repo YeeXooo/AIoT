@@ -18,7 +18,9 @@ public record VehicleStateSnapshot(
         Double acceleration,
         Boolean doorLocked,
         Boolean fireRisk,
-        Boolean fuelLeak
+        Boolean fuelLeak,
+        Double latitude,
+        Double longitude
 ) {
     public VehicleStateSnapshot {
         Objects.requireNonNull(timestamp, "timestamp must not be null");
