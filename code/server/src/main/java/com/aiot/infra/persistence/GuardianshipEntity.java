@@ -1,6 +1,10 @@
 package com.aiot.infra.persistence;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
 @Entity
@@ -46,7 +50,7 @@ public class GuardianshipEntity {
         private String accountId;
         private LocalDateTime grantedAt;
 
-        public GuardianshipId() {}
+        public GuardianshipId() { }
         public GuardianshipId(String driverId, String accountId, LocalDateTime grantedAt) {
             this.driverId = driverId; this.accountId = accountId; this.grantedAt = grantedAt;
         }
@@ -57,7 +61,7 @@ public class GuardianshipEntity {
         public LocalDateTime getGrantedAt() { return grantedAt; }
         public void setGrantedAt(LocalDateTime grantedAt) { this.grantedAt = grantedAt; }
         @Override public boolean equals(Object o) {
-            if (!(o instanceof GuardianshipId)) return false;
+            if (!(o instanceof GuardianshipId)) { return false; }
             GuardianshipId that = (GuardianshipId) o;
             return driverId.equals(that.driverId) && accountId.equals(that.accountId) && grantedAt.equals(that.grantedAt);
         }

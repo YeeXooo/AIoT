@@ -1,6 +1,12 @@
 package com.aiot.infra.persistence;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -48,7 +54,7 @@ public class FleetDashboardProjectionEntity {
         private String fleetId;
         private String riskLevel;
         private String alertType;
-        public ProjectionId() {}
+        public ProjectionId() { }
         public String getFleetId() { return fleetId; }
         public void setFleetId(String fleetId) { this.fleetId = fleetId; }
         public String getRiskLevel() { return riskLevel; }
@@ -56,7 +62,7 @@ public class FleetDashboardProjectionEntity {
         public String getAlertType() { return alertType; }
         public void setAlertType(String alertType) { this.alertType = alertType; }
         @Override public boolean equals(Object o) {
-            if (!(o instanceof ProjectionId)) return false;
+            if (!(o instanceof ProjectionId)) { return false; }
             ProjectionId that = (ProjectionId) o;
             return fleetId.equals(that.fleetId) && riskLevel.equals(that.riskLevel) && alertType.equals(that.alertType);
         }
