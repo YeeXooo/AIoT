@@ -26,16 +26,19 @@ public class ProjectionApplicationService {
     }
 
     public List<AlertProjectionEntity> getAlerts(String fleetId, String riskLevel) {
-        if (fleetId != null && !fleetId.isEmpty())
+        if (fleetId != null && !fleetId.isEmpty()) {
             return alertRepo.findByFleetId(fleetId);
-        if (riskLevel != null && !riskLevel.isEmpty())
+        }
+        if (riskLevel != null && !riskLevel.isEmpty()) {
             return alertRepo.findByRiskLevel(riskLevel);
+        }
         return alertRepo.findAll();
     }
 
     public List<FleetDashboardProjectionEntity> getDashboard(String fleetId) {
-        if (fleetId != null && !fleetId.isEmpty())
+        if (fleetId != null && !fleetId.isEmpty()) {
             return fleetRepo.findByFleetId(fleetId);
+        }
         return fleetRepo.findAll();
     }
 

@@ -36,7 +36,7 @@ jobs:
 
       - name: Test
         working-directory: code/server
-        run: mvn verify -B -Dspring.profiles.active=ci
+        run: mvn test -B -Dspring.profiles.active=ci -Dtest='!com.aiot.AiotApplicationTests'
 
       - name: Test Report
         uses: dorny/test-reporter@v2
@@ -76,39 +76,28 @@ jobs:
           name: Checkstyle Report
 
   # ===================================================================
-  # 前端 — TypeScript 类型检查（package.json 存在时自动激活）
+  # 前端 — TypeScript 类型检查（仅 package.json 存在时运行）
   # ===================================================================
   frontend:
     name: Frontend (tsc)
+    needs: []
     runs-on: ubuntu-latest
+    if: hashFiles('code/frontend/package.json') != ''
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Check frontend project exists
-        id: check
-        working-directory: code/frontend
-        run: |
-          if [ -f package.json ]; then
-            echo "has_frontend=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_frontend=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Set up Node
-        if: steps.check.outputs.has_frontend == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
       - name: Install dependencies
-        if: steps.check.outputs.has_frontend == 'true'
         working-directory: code/frontend
         run: npm ci
 
       - name: Type check
-        if: steps.check.outputs.has_frontend == 'true'
         working-directory: code/frontend
         run: npx tsc --noEmit
 

@@ -1,0 +1,136 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "车载安全监测系统"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "车载安全监测系统主界面"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "安全监测"
+    },
+    {
+      "name": "app_name",
+      "value": "安全监测"
+    },
+    {
+      "name": "login_title",
+      "value": "车载安全监测"
+    },
+    {
+      "name": "login_subtitle",
+      "value": "守护每一次出行"
+    },
+    {
+      "name": "login_hint_account",
+      "value": "请输入账号"
+    },
+    {
+      "name": "login_hint_password",
+      "value": "请输入密码"
+    },
+    {
+      "name": "login_button",
+      "value": "登 录"
+    },
+    {
+      "name": "tab_dashboard",
+      "value": "监测"
+    },
+    {
+      "name": "tab_guardianship",
+      "value": "监护"
+    },
+    {
+      "name": "tab_fleet",
+      "value": "车队"
+    },
+    {
+      "name": "tab_profile",
+      "value": "我的"
+    },
+    {
+      "name": "driver_status_title",
+      "value": "驾驶员状态"
+    },
+    {
+      "name": "risk_status_title",
+      "value": "风险监测"
+    },
+    {
+      "name": "alert_history_title",
+      "value": "告警记录"
+    },
+    {
+      "name": "quick_actions_title",
+      "value": "快捷操作"
+    },
+    {
+      "name": "action_media_call",
+      "value": "音视频对讲"
+    },
+    {
+      "name": "action_rescue",
+      "value": "手动救援"
+    },
+    {
+      "name": "action_window",
+      "value": "车窗控制"
+    },
+    {
+      "name": "action_notification",
+      "value": "通知偏好"
+    },
+    {
+      "name": "fatigue_title",
+      "value": "疲劳分布"
+    },
+    {
+      "name": "offline_title",
+      "value": "脱线车辆"
+    },
+    {
+      "name": "report_title",
+      "value": "驾驶报告"
+    },
+    {
+      "name": "status_normal",
+      "value": "正常"
+    },
+    {
+      "name": "status_warning",
+      "value": "注意"
+    },
+    {
+      "name": "status_critical",
+      "value": "危险"
+    },
+    {
+      "name": "status_offline",
+      "value": "离线"
+    },
+    {
+      "name": "no_alert",
+      "value": "暂无告警"
+    },
+    {
+      "name": "profile_settings",
+      "value": "设置"
+    },
+    {
+      "name": "profile_about",
+      "value": "关于"
+    },
+    {
+      "name": "profile_logout",
+      "value": "退出登录"
+    },
+    {
+      "name": "reason_internet",
+      "value": "用于访问驾驶安全监测服务接口"
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package ai.edge;
+
+option java_package = "com.aiot.infra.edge.grpc";
+option java_multiple_files = true;
+
+message DmsRequest {
+  string trip_id = 1;
+}
+
+message DmsResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message DmsFeatureFrame {
+  int64 seq = 1;
+  int64 timestamp_ms = 2;
+  string trip_id = 3;
+  string channel = 4;
+  map<string, double> features = 5;
+  bool is_occluded = 6;
+}
+
+message ControlSignal {
+  enum SignalType {
+    PAUSE = 0;
+    RESUME = 1;
+    FRAME_RATE_ADJUST = 2;
+    SHUTDOWN = 3;
+  }
+  SignalType type = 1;
+  FrameRateAdjust rate_adjust = 2;
+}
+
+message FrameRateAdjust {
+  int32 target_fps = 1;
+}
+
+message HealthRequest {
+  string service_name = 1;
+}
+
+message HealthResponse {
+  bool healthy = 1;
+  int64 uptime_seconds = 2;
+  int64 frames_processed = 3;
+}
+
+message Shutdown {
+  string reason = 1;
+}
+
+service DmsPerception {
+  rpc StreamFrames (DmsRequest) returns (stream DmsFeatureFrame);
+  rpc SendControl (stream ControlSignal) returns (DmsResponse);
+  rpc HealthCheck (HealthRequest) returns (HealthResponse);
+  rpc ShutdownService (Shutdown) returns (DmsResponse);
+}

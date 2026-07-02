@@ -1,0 +1,80 @@
+{
+  "color": [
+    {
+      "name": "start_window_background",
+      "value": "#FAFAF7"
+    },
+    {
+      "name": "brand_primary",
+      "value": "#1F4E47"
+    },
+    {
+      "name": "brand_primary_light",
+      "value": "#E6EFEB"
+    },
+    {
+      "name": "brand_accent",
+      "value": "#C8763C"
+    },
+    {
+      "name": "bg_page",
+      "value": "#F4F2EC"
+    },
+    {
+      "name": "bg_card",
+      "value": "#FFFFFF"
+    },
+    {
+      "name": "bg_card_elevated",
+      "value": "#FBFAF6"
+    },
+    {
+      "name": "text_primary",
+      "value": "#22272B"
+    },
+    {
+      "name": "text_secondary",
+      "value": "#5A6166"
+    },
+    {
+      "name": "text_hint",
+      "value": "#9AA0A6"
+    },
+    {
+      "name": "divider",
+      "value": "#E4E1D8"
+    },
+    {
+      "name": "status_green",
+      "value": "#2E6B40"
+    },
+    {
+      "name": "status_green_bg",
+      "value": "#E8F0E9"
+    },
+    {
+      "name": "status_yellow",
+      "value": "#B26B00"
+    },
+    {
+      "name": "status_yellow_bg",
+      "value": "#F7EFD9"
+    },
+    {
+      "name": "status_red",
+      "value": "#A8392A"
+    },
+    {
+      "name": "status_red_bg",
+      "value": "#F6E3DF"
+    },
+    {
+      "name": "shadow_card",
+      "value": "#1A1F1D14"
+    },
+    {
+      "name": "tabbar_bg",
+      "value": "#FFFFFF"
+    }
+  ]
+}

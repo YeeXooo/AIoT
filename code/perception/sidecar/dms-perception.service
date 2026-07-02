@@ -1,0 +1,29 @@
+[Unit]
+Description=AIoT DMS Perception Sidecar (YOLO + MediaPipe FaceMesh)
+After=network.target
+
+[Service]
+Type=simple
+User=aiot
+WorkingDirectory=/opt/aiot/perception/sidecar
+Environment="PYTHONUNBUFFERED=1"
+
+# 默认参数：摄像头模式，10fps，gRPC 端口 50051
+ExecStart=/usr/bin/python3 server.py \
+    --source camera \
+    --device 0 \
+    --fps 10.0 \
+    --port 50051 \
+    --model yolov8n.pt \
+    --conf 0.4
+
+# 崩溃自动拉起
+Restart=always
+RestartSec=3
+
+# 资源限制
+CPUQuota=80%
+MemoryMax=2G
+
+[Install]
+WantedBy=multi-user.target

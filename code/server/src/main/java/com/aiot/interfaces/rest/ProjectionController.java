@@ -4,7 +4,10 @@ import com.aiot.application.ProjectionApplicationService;
 import com.aiot.infra.persistence.AlertProjectionEntity;
 import com.aiot.infra.persistence.FleetDashboardProjectionEntity;
 import com.aiot.infra.persistence.TrajectoryProjectionEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 

@@ -1,5 +1,7 @@
 package com.aiot.infra.repository;
 
+import com.aiot.domain.model.RoadRageVoiceRecord;
+import com.aiot.domain.repository.RoadRageVoiceRecordRepository;
 import com.aiot.infra.persistence.RoadRageVoiceRecordEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

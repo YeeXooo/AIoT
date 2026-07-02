@@ -1,6 +1,10 @@
 package com.aiot.infra.persistence;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.Table;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -60,7 +64,7 @@ public class PhysiologicalSnapshotEntity {
         public LocalDateTime getTimestamp() { return timestamp; }
         public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
         @Override public boolean equals(Object o) {
-            if (!(o instanceof SnapshotId)) return false;
+            if (!(o instanceof SnapshotId)) { return false; }
             SnapshotId that = (SnapshotId) o;
             return tripId.equals(that.tripId) && timestamp.equals(that.timestamp);
         }

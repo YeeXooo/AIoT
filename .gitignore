@@ -27,3 +27,22 @@ out/
 .env.local
 .jdk/
 .maven/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+*.egg
+venv/
+.venv/
+
+# Perception - training artifacts
+code/perception/data/yolo/
+code/perception/runs/
+code/perception/sidecar/yolov8n.pt
+code/perception/sidecar/dms_best.pt
+code/perception/sidecar/dms_perception_pb2*.py
+code/perception/sidecar/*.onnx
+code/perception/sidecar/*.engine

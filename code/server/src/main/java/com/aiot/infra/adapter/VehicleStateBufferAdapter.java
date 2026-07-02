@@ -1,0 +1,105 @@
+package com.aiot.infra.adapter;
+
+import com.aiot.domain.model.TimeRange;
+import com.aiot.domain.model.VehicleStateSnapshot;
+import com.aiot.domain.port.BufferException;
+import com.aiot.domain.port.VehicleStateBuffer;
+import com.aiot.domain.shared.TripId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import java.time.Instant;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 车辆状态滚动缓冲适配器。
+ * <p>
+ * 基于 ArrayDeque 实现定长环形缓冲区，容量按 100ms 采样率 × 30s 时间窗 = 300 槽设计。
+ * </p>
+ * <p>
+ * 设计依据：docs/ood_infrastructure.md §3.4.1
+ * </p>
+ */
+@Component
+public class VehicleStateBufferAdapter implements VehicleStateBuffer {
+
+    private static final Logger log = LoggerFactory.getLogger(VehicleStateBufferAdapter.class);
+
+    /**
+     * 默认容量：100ms 采样率 × 30s = 300 槽
+     */
+    private static final int DEFAULT_CAPACITY = 300;
+
+    private final int capacity;
+    private final ArrayDeque<VehicleStateSnapshot> buffer;
+
+    public VehicleStateBufferAdapter() {
+        this(DEFAULT_CAPACITY);
+    }
+
+    public VehicleStateBufferAdapter(int capacity) {
+        this.capacity = capacity;
+        this.buffer = new ArrayDeque<>(capacity);
+    }
+
+    /**
+     * 添加快照到缓冲区。
+     *
+     * @param snapshot 车辆状态快照
+     */
+    public void addSnapshot(VehicleStateSnapshot snapshot) {
+        if (buffer.size() >= capacity) {
+            buffer.removeFirst();
+        }
+        buffer.addLast(snapshot);
+        log.trace("Added vehicle state snapshot, buffer size: {}", buffer.size());
+    }
+
+    @Override
+    public List<VehicleStateSnapshot> getSnapshots(TripId tripId, TimeRange window) throws BufferException {
+        if (buffer.isEmpty()) {
+            throw new BufferException.WindowNotCoveredException("Buffer is empty");
+        }
+
+        Instant from = window.from();
+        Instant to = window.to();
+
+        // 检查窗口是否在缓冲范围内
+        Instant oldest = buffer.peekFirst().timestamp();
+        Instant newest = buffer.peekLast().timestamp();
+
+        if (from.isBefore(oldest)) {
+            throw new BufferException.WindowNotCoveredException(
+                    String.format("Request window start %s is before buffer oldest %s", from, oldest));
+        }
+
+        List<VehicleStateSnapshot> result = new ArrayList<>();
+        for (VehicleStateSnapshot snapshot : buffer) {
+            Instant timestamp = snapshot.timestamp();
+            if (!timestamp.isBefore(from) && !timestamp.isAfter(to)) {
+                result.add(snapshot);
+            }
+        }
+
+        log.debug("Retrieved {} vehicle state snapshots for window [{}, {}]", result.size(), from, to);
+        return result;
+    }
+
+    /**
+     * 获取当前缓冲区大小。
+     */
+    public int size() {
+        return buffer.size();
+    }
+
+    /**
+     * 清空缓冲区。
+     */
+    public void clear() {
+        buffer.clear();
+        log.debug("Vehicle state buffer cleared");
+    }
+}
