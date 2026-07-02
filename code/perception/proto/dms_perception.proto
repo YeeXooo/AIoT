@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+package aiot.perception.dms;
+
+option java_package = "com.aiot.infra.edge.grpc";
+option java_multiple_files = false;
+
+// ────────────────────────────────────────────
+// DMS 视觉感知 gRPC 契约
+// 依据: docs/ood_perception_yolo.md §2.1, §7.2
+//
+// Python sidecar 作为 gRPC server，Java 边缘侧作为 client。
+// Java 发送 ControlSignal 流（帧率调整/关闭等），
+// Python 响应对应的 DmsFeatureFrame 流（仅数值特征，无图像）。
+// 原始帧仅存于 Python 进程内存（BR-04）。
+// ────────────────────────────────────────────
+
+service DmsPerception {
+  // 双向流：Java → Python 控制信令，Python → Java 特征帧
+  // Java 作为 client 调用此 RPC:
+  //   请求流: ControlSignal（帧率调节、关闭等）
+  //   响应流: DmsFeatureFrame（持续的特征帧推送）
+  rpc StreamFeatures(stream ControlSignal) returns (stream DmsFeatureFrame);
+
+  // 健康检查
+  rpc Health(HealthRequest) returns (HealthResponse);
+}
+
+// ── 单帧 DMS 特征向量 ───────────────────────
+
+message DmsFeatureFrame {
+  // 采集时间戳，毫秒级 epoch (UTC)
+  int64 timestamp_ms = 1;
+
+  // 传感器标识（边缘设备上的摄像头 ID）
+  string sensor_id = 2;
+
+  // PERCLOS：单位时间眼睑闭合比例 [0, 1]
+  double perclos = 3;
+
+  // 打哈欠频率（次/10s）
+  double yawn_freq = 4;
+
+  // 点头频率（次/10s）
+  double head_nod_freq = 5;
+
+  // 视线偏离前方累计时长（滑动窗口内，秒）
+  double gaze_deviation_cumulative = 6;
+
+  // 双手脱离方向盘置信度 [0, 1]
+  double hands_off_wheel = 7;
+
+  // 整体帧特征可信度 [0, 1]
+  double confidence = 8;
+
+  // ── 可选扩展字段 ──────────────────────────
+
+  // 手机检出置信度 [0, 1]，-1 表示未启用
+  double phone_detected = 9;
+
+  // 香烟检出置信度 [0, 1]，-1 表示未启用
+  double smoking_detected = 10;
+
+  // 原始帧的序列号，供 Java 侧检测丢帧
+  uint64 frame_seq = 11;
+}
+
+// ── Java → Python 控制信令 ─────────────────
+
+message ControlSignal {
+  oneof signal {
+    FrameRateAdjust frame_rate_adjust = 1;
+    Shutdown shutdown = 2;
+  }
+}
+
+message FrameRateAdjust {
+  double target_fps = 1;
+}
+
+message Shutdown {
+}
+
+// ── 健康检查 ──────────────────────────────
+
+message HealthRequest {
+}
+
+message HealthResponse {
+  bool alive = 1;
+  int64 start_time_ms = 2;
+  double current_fps = 3;
+  int64 last_frame_ms = 4;
+}

@@ -33,7 +33,8 @@
 │   ├── ood_domain.md                  # 领域层 OOD 设计
 │   ├── ood_application.md             # 应用层 OOD 设计
 │   ├── ood_infrastructure.md          # 基础设施层 OOD 设计
-│   └── ood_interface.md               # 接口/API 层 OOD 设计
+│   ├── ood_interface.md               # 接口/API 层 OOD 设计
+│   └── ood_perception_yolo.md         # 视觉感知层（YOLO）OOD 设计分册
 ├── requirements/
 │   ├── 202606242158_vehicle-safety-monitoring/  # 需求迭代与审查
 │   │   └── (requirement.md, req_v1~4, review_v1~4)

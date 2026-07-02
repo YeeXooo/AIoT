@@ -297,7 +297,7 @@
 **类型形态**：`class`（值对象，JPA `@Embeddable`）。SensorReading 是一个不可变的感知数据切片，无独立标识，由通道类型、时间戳和特征向量的组合值定义相等性。
 
 **协作关系**：
-- 由感知采集层（基础设施层）按固定频率生成并送入领域层。
+- 由感知采集层（基础设施层）按固定频率生成并送入领域层。DMS 视觉通道的特征向量可由「感知数据模拟源」或基于 YOLO 的真实视觉感知实现产出，二者共享本契约、可插拔切换，详见分册 `docs/ood_perception_yolo.md`。
 - 作为 RiskDeterminationService 及其子判定服务的统一输入；后排红外摄像头影像流不流经融合判定门面，而是按消费方路由直接供视频/影像功能模块使用（毫米波雷达流按消费方路由供 LifeDetectionService 使用，与此类似）。
 - 本身不持久化在领域模型中，由 Trip 聚合中的 PhysiologicalSnapshot 和 VehicleStateSnapshot 等提取所需维度后独立存储。
 

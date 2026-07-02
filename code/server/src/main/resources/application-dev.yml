@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:54321/aiot
+    username: kingbase
+    password: kingbase123
+    driver-class-name: org.postgresql.Driver
+  h2:
+    console:
+      enabled: false

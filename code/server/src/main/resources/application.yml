@@ -2,14 +2,9 @@ server:
   port: 8080
 
 spring:
-  datasource:
-    url: jdbc:h2:mem:aiot;DB_CLOSE_DELAY=-1
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
-  h2:
-    console:
-      enabled: true
+  profiles:
+    active: dev
+
   jpa:
     hibernate:
       ddl-auto: validate
@@ -18,3 +13,16 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+
+# ── DMS 视觉感知配置 ────────────────────
+# 依据: docs/ood_perception_yolo.md §6.1
+aiot:
+  perception:
+    dms:
+      mode: mock               # mock | yolo
+      grpc-host: localhost
+      grpc-port: 50051
+      sensor-id: dms_camera_0
+      target-fps: 10.0
+      frame-timeout-ms: 200
+      health-check-interval-sec: 5

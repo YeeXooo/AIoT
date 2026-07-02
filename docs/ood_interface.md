@@ -897,7 +897,7 @@ Token 有效期 10 分钟，与房间最大会话时长一致。由 S3 RemoteGua
 }
 ```
 
-各 `sensorType` 的 `values` 最小字段约定：
+各 `sensorType` 的 `values` 最小字段约定（其中 `DMS_CAMERA` 字段为视觉感知层的预留契约，可由模拟源或基于 YOLO 的真实视觉感知实现填充，详见分册 `docs/ood_perception_yolo.md`）：
 
 | sensorType | values 最小字段 |
 |------|------|
