@@ -1,5 +1,7 @@
 package com.aiot.domain.model;
 
+import com.aiot.domain.event.AlertType;
+import com.aiot.domain.event.RiskLevel;
 import com.aiot.domain.shared.AlertId;
 import com.aiot.domain.shared.DriverId;
 import com.aiot.domain.shared.TripId;
@@ -21,7 +23,7 @@ public class SafetyAlertEvent {
     private final GeoLocation location;
     private final PhysiologicalSnapshot physiologicalSnapshot;
     private final String alertMessage;
-    private final boolean resolved;
+    private boolean resolved;
     private LocalDateTime resolvedAt;
     private final LocalDateTime createdAt;
 
@@ -65,6 +67,7 @@ public class SafetyAlertEvent {
         if (resolved) {
             throw new IllegalStateException("Alert already resolved");
         }
+        this.resolved = true;
         this.resolvedAt = resolvedAt;
     }
 

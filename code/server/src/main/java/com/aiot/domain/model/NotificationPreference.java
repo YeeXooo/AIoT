@@ -1,5 +1,6 @@
 package com.aiot.domain.model;
 
+import com.aiot.domain.event.RiskLevel;
 import jakarta.persistence.Embeddable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

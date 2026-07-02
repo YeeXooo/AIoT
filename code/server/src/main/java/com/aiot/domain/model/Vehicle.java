@@ -30,7 +30,7 @@ public class Vehicle {
         this.vin = vin;
         this.terminalSn = terminalSn;
         this.fleetId = null;
-        this.firmwareVersion = OTAVersion.of("1.0.0");
+        this.firmwareVersion = OTAVersion.of("1.0.0", "", "");
         this.sensorStatusMap = new HashMap<>();
         this.monitoringOffline = false;
         this.otaUpgradeStatus = null;
@@ -105,7 +105,7 @@ public class Vehicle {
     }
 
     public boolean hasFailedSensors() {
-        return sensorStatusMap.values().stream().anyMatch(s -> s == SensorStatus.FAILED);
+        return sensorStatusMap.values().stream().anyMatch(s -> s == SensorStatus.FAULT);
     }
 
     public void validate() {

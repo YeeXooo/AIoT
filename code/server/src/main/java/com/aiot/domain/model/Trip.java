@@ -32,7 +32,7 @@ public class Trip {
         this.startedAt = startedAt;
         this.endedAt = null;
         this.physiologicalSnapshots = new ArrayList<>();
-        this.drivingBehaviorCounters = DrivingBehaviorCounters.initial();
+        this.drivingBehaviorCounters = DrivingBehaviorCounters.init();
         this.tripScore = null;
         this.l3DurationTracker = null;
         this.version = 1;
@@ -99,7 +99,7 @@ public class Trip {
             throw new IllegalStateException("endedAt must be after startedAt");
         }
         if (drivingBehaviorCounters == null) {
-            drivingBehaviorCounters = DrivingBehaviorCounters.initial();
+            drivingBehaviorCounters = DrivingBehaviorCounters.init();
         }
     }
 

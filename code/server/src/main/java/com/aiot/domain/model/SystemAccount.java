@@ -1,5 +1,6 @@
 package com.aiot.domain.model;
 
+import com.aiot.domain.event.RiskLevel;
 import com.aiot.domain.shared.AccountId;
 
 import java.time.LocalDateTime;
@@ -24,8 +25,8 @@ public class SystemAccount {
         this.phone = phone;
         this.email = null;
         this.role = role;
-        this.notificationPreference = NotificationPreference.defaultPreference();
-        this.permission = Permission.none();
+        this.notificationPreference = NotificationPreference.defaultAll();
+        this.permission = Permission.revoked();
         this.version = 1;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
@@ -89,9 +90,9 @@ public class SystemAccount {
         return notificationPreference.shouldNotify(riskLevel);
     }
 
-    public boolean hasPermission(Permission.PermissionType type) {
-        Objects.requireNonNull(type, "type must not be null");
-        return permission.hasPermission(type);
+    public boolean hasPermission(String operation) {
+        Objects.requireNonNull(operation, "operation must not be null");
+        return permission.getOperations().contains(operation);
     }
 
     public void validate() {

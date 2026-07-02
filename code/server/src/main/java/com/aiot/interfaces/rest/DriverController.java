@@ -25,8 +25,8 @@ public class DriverController {
 
     @PostMapping
     public Driver add(@RequestBody Driver driver) {
-        if (driver.getDriverId() == null || driver.getDriverId().isEmpty()) {
-            driver.setDriverId(UUID.randomUUID().toString());
+        if (driver.driverId() == null || driver.driverId().id() == null || driver.driverId().id().isEmpty()) {
+            driver = Driver.create(driver.name(), driver.phone());
         }
         driverService.add(driver);
         return driver;

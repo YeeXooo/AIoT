@@ -4,92 +4,93 @@
 > 
 > **课程作业定位**：全部采用本地免费替代方案，不依赖华为云付费服务（IoTDA 除外，已有）。
 >
-> **任务进度**：0.1~0.4 ✅，下一项 0.5 / 1.1
+> **任务进度**：领域层 1.1~1.7 ✅ | 应用层 2.1~2.3 ✅ | 基础设施层 3.1~3.5、3.7 ✅ | 接口层 4.1 ✅ | 前端 ✅ | 下一项：3.6 安全 / 4.2 MQTT / 4.3 WebSocket
 
 ---
 
 ## 依赖关系与分工建议
 
 ```
-                    ┌─────────────────────────────┐
-                    │  0.1 包结构 ✅              │
-                    └─────────────┬───────────────┘
-                                  │
-              ┌───────────────────┼───────────────────┐
-              ▼                   ▼                   ▼
-     ┌────────────────┐  ┌────────────────┐  ┌────────────────┐
-     │ 0.2 Maven 依赖✅│  │ 0.3 基础类型 ✅ │  │ 0.4 入口+配置 ✅│
-     │ (一人)         │  │ (一人，关键!)   │  │ (一人)         │
-     └───────┬────────┘  └───────┬────────┘  └───────┬────────┘
-             │                   │                    │
-             │    ┌──────────────┼──────────────┐     │
-             │    │              │              │     │
-             │    ▼              ▼              ▼     │
-             │ ┌──────┐  ┌────────────┐ ┌──────────┐ │
-             │ │ 1.1  │  │ 1.5 事件   │ │ 0.5 迁移 │ │
-             │ │值对象│  │+1.6 总线契约│ │ 基线     │ │
-             │ └──┬───┘  └─────┬──────┘ └────┬─────┘ │
-             │    │             │              │       │
-             │    ▼             │              ▼       │
-             │ ┌──────┐         │       ┌────────────┐ │
-             │ │ 1.2  │         │       │ 3.1 JPA    │ │
-             │ │聚合根│         │       │ 映射       │ │
-             │ └──┬───┘         │       └─────┬──────┘ │
-             │    │             │              │        │
-             │    ├─────────────┤              │        │
-             │    ▼             ▼              ▼        │
-             │ ┌──────┐  ┌──────────┐ ┌────────────┐   │
-             │ │ 1.3  │  │3.3 事件   │ │3.2 仓储    │   │
-             │ │仓储  │  │总线实现   │ │实现        │   │
-             │ │接口  │  └──────────┘ └────────────┘   │
-             │ └──┬───┘                                  │
-             │    │                                     │
-             │    ▼         可以并行                    │
-             │ ┌──────────┐                             │
-             │ │ 1.7 领域  │                             │
-             │ │ 服务(19) │                             │
-             │ └────┬─────┘                             │
-             │      │                                   │
-             │      ▼                                   │
-             │ ┌──────────┐                             │
-             │ │ 2 应用层 │                             │
-             │ │ (6服务)  │                             │
-             │ └────┬─────┘                             │
-             │      │                                   │
-             │      ▼                                   │
-             │ ┌──────────┐                             │
-             │ │ 4.1 REST │                             │
-             │ │ 控制器   │                             │
-             │ └──────────┘                             │
-             │                                          │
-             ▼                                          │
-    ┌─────────────────────────────────────────────┐     │
-    │  以下不依赖任何东西，随时可做：              │     │
-    │  3.5 端口适配器  3.6 安全  3.7 存储  3.4 缓存│     │
-    │  1.4 端口接口                               │     │
-    ├─────────────────────────────────────────────┤     │
-    │  前端：完全独立，接口契约定了就能开工       │◄────┘
-    │  4.2 MQTT  4.3 WebSocket  4.4 安全配置      │
-    │  5 测试  6 CI/CD                            │
-    └─────────────────────────────────────────────┘
+                     ┌─────────────────────────────┐
+                     │  0.1 包结构 ✅              │
+                     └─────────────┬───────────────┘
+                                   │
+               ┌───────────────────┼───────────────────┐
+               ▼                   ▼                   ▼
+      ┌────────────────┐  ┌────────────────┐  ┌────────────────┐
+      │ 0.2 Maven 依赖✅│  │ 0.3 基础类型 ✅ │  │ 0.4 入口+配置 ✅│
+      └───────┬────────┘  └───────┬────────┘  └───────┬────────┘
+              │                   │                    │
+              │    ┌──────────────┼──────────────┐     │
+              │    │              │              │     │
+              │    ▼              ▼              ▼     │
+              │ ┌──────┐  ┌────────────┐ ┌──────────┐ │
+              │ │1.1 ✅│  │1.5+1.6 ✅  │ │ 0.5 ✅   │ │
+              │ │值对象│  │事件+总线契约│ │ 迁移基线 │ │
+              │ └──┬───┘  └─────┬──────┘ └────┬─────┘ │
+              │    │             │              │       │
+              │    ▼             │              ▼       │
+              │ ┌──────┐         │       ┌────────────┐ │
+              │ │1.2 ✅│         │       │ 3.1 ✅     │ │
+              │ │聚合根│         │       │ JPA 映射   │ │
+              │ └──┬───┘         │       └─────┬──────┘ │
+              │    │             │              │        │
+              │    ├─────────────┤              │        │
+              │    ▼             ▼              ▼        │
+              │ ┌──────┐  ┌──────────┐ ┌────────────┐   │
+              │ │1.3 ✅│  │3.3 ✅    │ │3.2 ✅      │   │
+              │ │仓储  │  │事件总线  │ │仓储实现    │   │
+              │ │接口  │  └──────────┘ └────────────┘   │
+              │ └──┬───┘                                  │
+              │    │                                     │
+              │    ▼         ⬇ 下一项                    │
+              │ ┌──────────┐                             │
+              │ │ 1.7 ❌   │                             │
+              │ │ 领域服务  │                             │
+              │ │ (19)     │                             │
+              │ └────┬─────┘                             │
+              │      │                                   │
+              │      ▼                                   │
+              │ ┌──────────┐                             │
+              │ │ 2 ❌     │                             │
+              │ │ 应用层   │                             │
+              │ └────┬─────┘                             │
+              │      │                                   │
+              │      ▼                                   │
+              │ ┌──────────┐                             │
+              │ │4.2 ❌    │                             │
+              │ │MQTT+WS   │                             │
+              │ └──────────┘                             │
+              │                                          │
+              ▼                                          │
+     ┌─────────────────────────────────────────────┐     │
+     │  已完成（零依赖，随时可做）：                │     │
+     │  1.4 端口接口 ✅  3.4 缓存 ✅  3.5 适配器 ✅│     │
+     │  3.7 文件存储 ✅  4.1 REST 控制器 ✅        │     │
+     │  前端 DTO+API+页面 ✅                       │     │
+     ├─────────────────────────────────────────────┤     │
+     │  待实现：                                    │◄────┘
+     │  3.6 安全  3.8 边缘  4.4 安全配置           │
+     │  5 测试  6 CI/CD                            │
+     └─────────────────────────────────────────────┘
 ```
 
 ### 关键路径（红线，不可跳过）
 
 ```
-0.3 → 1.1 → 1.2 → 1.3 → 1.7 → 2.x → 4.1
+0.3 ✅ → 1.1 ✅ → 1.2 ✅ → 1.3 ✅ → 1.7 ❌ → 2.x ❌ → 4.2/4.3 ❌
 ```
 
-### 当前分工（4 人，0.1~0.4 已完成）
+### 当前分工（已完成的迭代，保留供参考）
 
-| 人 | 任务 | 依据 | 产出位置 |
-|---|------|------|---------|
-| **A** | 1.1 值对象（23 个 VO） | `docs/ood_domain.md` §3.3 | `domain/model/` 枚举 + record |
-| **B** | 0.5 数据库迁移基线（15 张表） | `docs/ood_infrastructure.md` §3 | `resources/db/migration/V1__init.sql` |
-| **C** | 1.5 领域事件（~20 个）+ 1.6 事件总线契约 | `docs/ood_domain.md` §3.6 | `domain/event/` 事件 record + `DomainEventPublisher` 接口 |
-| **D** | 前端 DTO 模型 + API 客户端 | `docs/ood_interface.md` §4.1 | `frontend/model/` 类型 + `frontend/api/` |
+| 人 | 任务 | 状态 | 产出位置 |
+|---|------|:---:|---------|
+| **A** | 1.1 值对象 + 1.2 聚合根 | ✅ | `domain/model/` 38 文件 |
+| **B** | 0.5 数据库迁移 + 3.1 JPA 映射 + 3.2 仓储实现 | ✅ | `db/migration/V1~V4` + `infra/persistence/` + `infra/repository/` |
+| **C** | 1.3 仓储接口 + 1.5 事件 + 1.6 总线契约 + 3.3 事件总线 | ✅ | `domain/repository/` + `domain/event/` + `infra/eventbus/` |
+| **D** | 前端 DTO+API+页面 + 1.4 端口接口 + 3.4 缓存 + 3.5 适配器 + 3.7 存储 + 4.1 控制器 | ✅ | `frontend/` + `domain/port/` + `infra/` + `interfaces/rest/` |
 
-> 四块零依赖，即刻开工。A 完成后接 1.2（聚合根）→ 1.7（领域服务）；B 完成后接 3.1（JPA 映射）→ 3.2（仓储实现）；C 完成后接 3.3（事件总线实现）。D 独立推进，等后端接口上线后联调。
+> 以上全部完成。下阶段：全员集中推进 1.7 领域服务（19 个）→ 2 应用层 → 4.2/4.3 MQTT+WebSocket。
 
 ---
 
@@ -120,7 +121,8 @@
   - `application.yml`：H2 + Flyway + JPA validate ✅
   - H2 改为 runtime scope ✅
 
-- [ ] **0.5 数据库迁移基线**（基于 ood_infrastructure.md §3 表结构）
+- [x] **0.5 数据库迁移基线**（基于 ood_infrastructure.md §3 表结构）
+  - V1__init.sql / V2__event_outbox.sql / V3__core_tables.sql / V4__remaining_tables.sql
   - 10 张业务表：`trip` / `driver` / `vehicle` / `system_account` / `road_rage_voice_record` / `safety_alert_event` / `driver_health_profile` / `guardianship` / `trip_physiological_snapshot`
   - 3 张投影表：`alert_projection` / `fleet_dashboard_projection` / `trajectory_projection`
   - 事件表：`domain_event_outbox` / `domain_event_dlq`
@@ -142,23 +144,23 @@
   - `SafetyAlertEvent`（实体）、`DriverHealthProfile`（实体）
   - 每个聚合根含完整属性、协作关系、不变式校验方法
 
-- [ ] **1.3 仓储接口（5 个）**
-  - `TripRepository` / `DriverRepository` / `VehicleRepository` / `SystemAccountRepository` / `RoadRageVoiceRecordRepository`
+- [x] **1.3 仓储接口（5 个）**
+  - `TripRepository` / `DriverRepository` / `VehicleRepository` / `SystemAccountRepository` / `AlertEventRepository`
   - 方法签名严格按 ood_domain.md §3.5 定义
 
-- [ ] **1.4 领域端口接口（8 个）**
+- [x] **1.4 领域端口接口（8 个）**
   - `VehicleStateBuffer` / `PhysiologicalDataBuffer` / `DrivingBehaviorTrackingPort` / `CameraOcclusionDetectionPort` / `OTADeliveryPort` / `NotificationPort` / `RescueReportPort` / `MediaSessionPort`
   - 方法签名严格按 ood_domain.md §3.7 定义
 
-- [ ] **1.5 领域事件（~20 个）**
+- [x] **1.5 领域事件（~20 个）**
   - 事件密封接口 `DomainEvent`（含 `eventId` / `occurredAt` / `aggregateId`）
   - 全部事件 record 类，按 ood_domain.md §3.6 定义
 
-- [ ] **1.6 事件总线契约**
+- [x] **1.6 事件总线契约**
   - `DomainEventPublisher`（`publish` / `registerSyncHandler` / `registerAsyncHandler`）
   - 接口定义在 `com.aiot.domain.event`
 
-- [ ] **1.7 领域服务（19 个）**
+- [x] **1.7 领域服务（19 个）**
   - 按 ood_domain.md §3.4 逐一实现，每个含完整方法签名与协作对象注入
   - DS-01 `RiskDeterminationService`、DS-02 `FatigueDeterminationService`、DS-03 `DistractionDetectionService`、DS-04 `RoadRageDeterminationService`、DS-05 `LifeDetectionService`、DS-06 `EmergencyResponseService`、DS-07 `InterventionService`、DS-08 `PermissionService`、DS-09 `ScoringService`、DS-10 `FleetAnalyticsService`、DS-11 `ReportGenerationService`、DS-12 `EmergencyRescueService`、DS-13 `PrivacyProtectionService`、DS-14 `SensorSelfCheckService`、DS-15 `OTAUpdateService`、DS-16 `DriverStatusBroadcastService`、DS-17 `DrivingBehaviorTrackingService`、DS-18 `DriverScoreUpdateService`、DS-19 `AlertPersistenceService`
 
@@ -168,16 +170,15 @@
 
 > 依据：`docs/ood_application.md`
 
-- [ ] **2.1 DTO 定义**（50+ 个 Request/Response DTO）
-  - 按 ood_application.md §4 六个服务模块分发到各 DTO 包
-  - S1 RiskMonitoring DTO、S2 Intervention DTO、S3 RemoteGuardianship DTO、S4 FleetManagement DTO、S5 RescueCoordination DTO、S6 OTAManagement DTO
-  - 跨层类型：`AppError` 全部 variant 实现（含 `PermissionDenialReason`、`AccessDenialReason` 枚举）
+- [x] **2.1 DTO 定义**（50+ 个 Request/Response DTO）
+  - 按 ood_application.md §4 六个服务模块分发到各应用服务接口文件中
+  - S1~S6 全部 DTO record 定义（StartMonitoringRequest/Response, ProcessSensorDataRequest, GetDriverRiskStatusResponse, QueryAlertHistoryResponse, ReportOverrideResponse, QueryInterventionResponse, SubscribeDriverStatusRequest/Response, RequestMediaSessionResponse, UpdateNotificationPreferenceRequest, TriggerManualRescueResponse, ControlVehicleWindowRequest/Response, GetFatigueDistributionResponse, DrillDownHighRiskResponse, GenerateReportResponse, TrajectoryResponse, ConfirmSOSReportRequest, IssueRescueTokenResponse, VerifyRescueTokenResponse, CreateUpgradeTaskResponse, QueryUpgradeProgressResponse, TriggerRollbackResponse, etc.）
 
-- [ ] **2.2 应用服务接口（6 个）**
+- [x] **2.2 应用服务接口（6 个）**
   - `IRiskMonitoringService` / `IInterventionService` / `IRemoteGuardianshipService` / `IFleetManagementService` / `IEmergencyRescueService` / `IOTAManagementService`
   - 方法签名严格按 ood_application.md §3 定义
 
-- [ ] **2.3 应用服务实现（6 个）**
+- [x] **2.3 应用服务实现（6 个）**
   - `RiskMonitoringServiceImpl` / `InterventionServiceImpl` / `RemoteGuardianshipServiceImpl` / `FleetManagementServiceImpl` / `EmergencyRescueServiceImpl` / `OTAManagementServiceImpl`
   - 编排调用领域服务、仓储，处理事务边界、异常映射
 
@@ -187,25 +188,26 @@
 
 > 依据：`docs/ood_infrastructure.md`。**全部采用本地免费替代方案**。
 
-- [ ] **3.1 JPA 实体映射**（`infra.persistence`）
-  - 10 张表对应的 `@Entity` 类，含 `@Embeddable` 值对象映射、`@ElementCollection`、`@Version` 乐观锁
+- [x] **3.1 JPA 实体映射**（`infra.persistence`）
+  - 12 张表对应的 `@Entity` 类，含 `@Embeddable` 值对象映射、`@ElementCollection`、`@Version` 乐观锁
   - 聚合根表的 `AggregateId` → VARCHAR(36) UUID 映射
 
-- [ ] **3.2 仓储实现**（`infra.repository`）
-  - 5 个仓储接口的 Spring Data JPA 实现（云端）
-  - 5 个仓储接口的 JDBC/SQLite 实现（边缘侧 `infra.edge.repository`）
+- [x] **3.2 仓储实现**（`infra.repository`）
+  - 12 个 Spring Data JPA 仓储接口（云端）
+  - 边缘侧 JDBC/SQLite 实现待做（`infra.edge.repository`）
   - 自定义 JPQL/原生 SQL 查询
 
-- [ ] **3.3 事件总线实现**（`infra.eventbus`）
-  - 统一使用 Spring `ApplicationEventPublisher` + `@EventListener` / `@TransactionalEventListener`
-  - 同步事件（边缘侧）与异步事件（云端侧）均基于 Spring 内置机制
-  - ~~DMS Kafka / Outbox 投递~~ → **课程作业无需，Spring 内置事件完全够用**
+- [x] **3.3 事件总线实现**（`infra.eventbus`）
+  - 双模式：`EdgeEventBus`（同步，Spring `ApplicationEventPublisher`）+ `CloudEventBus`（异步，发件箱模式）
+  - 发件箱模式：`OutboxEventEntity` → `OutboxPersister` → `OutboxRelayer`
+  - 死信队列：`DeadLetterEntity` + `DeadLetterHandler`
+  - 通过 `aiot.eventbus.mode` 配置切换
 
-- [ ] **3.4 缓存**（`infra.cache`）
+- [x] **3.4 缓存**（`infra.cache`）
   - `ConcurrentHashMap` 内存缓存（看板数据 5min TTL、事件去重 LRU 24h TTL、WebSocket 会话管理）
   - 接口面向 `CacheManager` 抽象，后续可无缝切换 Redis
 
-- [ ] **3.5 端口适配器实现**（`infra.adapter`）
+- [x] **3.5 端口适配器实现**（`infra.adapter`）
   - `VehicleStateBufferAdapter` — Ring Buffer（`ConcurrentLinkedQueue` 环形队列）
   - `PhysiologicalDataBufferAdapter` — Ring Buffer（同上）
   - `DrivingBehaviorTrackingAdapter` — 加速度监测回调（模拟数据源）
@@ -221,10 +223,10 @@
   - 数据脱敏校验门控
   - 二次身份验证 — **mock 实现**：硬编码验证码 `123456`，控制台打印即可 ~~（不调 Account Kit / SMS）~~
 
-- [ ] **3.7 文件存储**（`infra.storage`）
-  - 语音证据文件 → 本地文件系统存储（`/data/aiot/voice/`）
-  - OTA 升级包 → 本地文件系统（`/data/aiot/ota/`）
-  - 报表导出 → 本地文件系统（`/data/aiot/reports/`）
+- [x] **3.7 文件存储**（`infra.storage`）
+  - `LocalFileStorageService` — 语音/OTA/报表本地文件系统存储
+  - `FileExpiryService` — 自动过期清理
+  - `StorageProperties` — 路径配置（`/data/aiot/`）
   - ~~OBS~~ → **本地文件系统替代**
 
 - [ ] **3.8 边缘侧基础设施**（`infra.edge`）
@@ -239,11 +241,11 @@
 
 > 依据：`docs/ood_interface.md`
 
-- [ ] **4.1 REST 控制器**（`interfaces.rest`）
-  - 按六个功能域拆分为 6 个 `@RestController`（`XxxController` 对应各应用服务）
-  - 每个端点按 ood_interface.md §1 的路径、方法、请求/响应 JSON Schema、状态码实现
+- [x] **4.1 REST 控制器**（`interfaces.rest`）
+  - 7 个 `@RestController`：`AccountController` / `DriverController` / `GuardianshipController` / `HealthController` / `ProjectionController` / `SafetyController` / `StorageController`
   - `@Valid` 请求体校验，统一异常处理 `@RestControllerAdvice`
   - API 版本前缀 `/api/v1`
+  - **前端 DTO 模型 + API 客户端 + WebSocket 客户端 + 页面已全部实现**（`code/frontend/`）
 
 - [ ] **4.2 MQTT 设备通信**（`interfaces.mqtt`）
   - 上行 Topic 消费者：接收车载终端上报的传感器数据、生理数据、设备状态、OTA 进度
@@ -304,6 +306,6 @@
 
 ---
 
-> **实现顺序建议**：0（骨架）→ 1.1~1.5（领域类型）→ 3.1~3.2（持久化）→ 1.6~1.7（领域服务）→ 2（应用层）→ 3.3~3.8（基础设施适配器）→ 4（接口层）→ 5（测试）→ 6（CI/CD）
+> **实现顺序建议**：0 ✅ → 1.1~1.6 ✅ → 3.1~3.5 ✅ → 3.7 ✅ → 4.1 ✅ → 前端 ✅ → ⬇ **1.7（19 个领域服务）** → 2（应用层）→ 3.6/3.8（安全+边缘）→ 4.2/4.3/4.4（MQTT+WebSocket+安全配置）→ 5（测试）→ 6（CI/CD）
 >
 > 关联设计文档：`docs/ood_domain.md` / `docs/ood_application.md` / `docs/ood_infrastructure.md` / `docs/ood_interface.md`
