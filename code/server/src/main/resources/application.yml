@@ -7,7 +7,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
     show-sql: true
     open-in-view: false
   flyway:
@@ -26,3 +26,45 @@ aiot:
       target-fps: 10.0
       frame-timeout-ms: 200
       health-check-interval-sec: 5
+
+  # ── 安全与隐私配置 ────────────────────
+  # 依据: docs/ood_infrastructure.md §3.6
+  security:
+    cipher-algorithm: AES/GCM/NoPadding
+    key-size-bits: 256
+    gcm-tag-length-bits: 128
+    iv-length-bytes: 12
+    keystore-type: PKCS12
+    keystore-path: /data/aiot/security/keystore.p12
+    keystore-password: aiot-keystore-change-me
+    master-key-alias: aiot-master-key
+    master-key-password: aiot-master-key-pwd
+    voice-evidence-retention-days: 90
+    voice-evidence-base-path: /data/aiot/road_rage_evidence
+    mock-verification-code: "123456"
+    mock-code-validity-seconds: 300
+
+  # ── MQTT 设备通信配置 ──────────────────
+  # 依据: docs/ood_interface.md §2、docs/ood_infrastructure.md §3.5.1
+  mqtt:
+    enabled: false
+    broker-url: tcp://localhost:1883
+    client-id-prefix: aiot-edge
+    username: ""
+    password: ""
+    connection-timeout-sec: 30
+    keep-alive-interval-sec: 60
+    default-qos: 1
+    topic-prefix: ""
+
+  # ── WebSocket 信令配置 ─────────────────
+  # 依据: docs/ood_interface.md §3
+  websocket:
+    heartbeat-interval-sec: 30
+    heartbeat-timeout-sec: 10
+    max-missed-heartbeats: 3
+    max-subscriptions-per-driver: 3
+    max-offline-alerts-per-reconnect: 20
+    offline-message-retention-days: 7
+    guardianship-endpoint: /ws/guardianship
+    fleet-endpoint: /ws/fleet

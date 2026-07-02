@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.stereotype.Service;
 
 public record ActiveRiskSet(String tripId, Map<AlertType, RiskEntry> activeRisks) {
 

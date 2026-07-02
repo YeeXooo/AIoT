@@ -7,6 +7,7 @@ import lombok.Getter;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Set;
+import org.springframework.stereotype.Service;
 
 /**
  * 救援授权凭证（VO-23）

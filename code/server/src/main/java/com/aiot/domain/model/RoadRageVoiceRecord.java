@@ -33,6 +33,20 @@ public class RoadRageVoiceRecord {
         this.updatedAt = LocalDateTime.now();
     }
 
+    public static RoadRageVoiceRecord reconstitute(RoadRageVoiceRecordId recordId, AlertId alertId,
+                                                    LocalDateTime recordedAt, String encryptedAudioReference,
+                                                    boolean anonymized, LocalDateTime retentionExpiresAt,
+                                                    boolean sealed, Integer version,
+                                                    LocalDateTime createdAt, LocalDateTime updatedAt) {
+        RoadRageVoiceRecord r = new RoadRageVoiceRecord(recordId, alertId, recordedAt);
+        r.encryptedAudioReference = encryptedAudioReference;
+        r.anonymized = anonymized;
+        r.retentionExpiresAt = retentionExpiresAt;
+        r.sealed = sealed;
+        r.version = version;
+        return r;
+    }
+
     public static RoadRageVoiceRecord create(AlertId alertId, LocalDateTime recordedAt) {
         Objects.requireNonNull(alertId, "alertId must not be null");
         Objects.requireNonNull(recordedAt, "recordedAt must not be null");

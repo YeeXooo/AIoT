@@ -17,7 +17,9 @@ import com.aiot.domain.shared.VehicleId;
 
 import java.time.Instant;
 import java.util.Optional;
+import org.springframework.stereotype.Service;
 
+@Service
 public class OTAUpdateServiceImpl implements OTAUpdateService {
 
     private final VehicleRepository vehicleRepository;

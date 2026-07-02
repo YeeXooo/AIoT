@@ -129,18 +129,18 @@ INSERT INTO t_trip_physiological_snapshot(trip_id, timestamp, heart_rate, blood_
 ('t007-78ab-90cd-12ef-34567890abcd', '2025-12-20 14:55:00', 85, 96.5, 0.55, 0.50, 36.8, 'CASCADE');
 
 INSERT INTO t_alert_projection(alert_id, driver_id, vehicle_id, fleet_id, alert_type, risk_level, resolved_at, occurred_at, alert_msg) VALUES
-('a001-1111-2222-3333-aaaaaaaaaaaa', 'd001-d2e3-4abc-9f01-123456789abc', 'v001-c7e5-4ghi-a011-678901234hij', 'fleet-east-1', 'FATIGUE', 'WARNING', '2025-12-20 09:20:00', '2025-12-20 09:15:00', '驾驶员疲劳预警'),
-('a002-2222-3333-4444-bbbbbbbbbbbb', 'd003-e4b2-6cde-7d03-345678901def', 'v003-e9a7-6ijk-c033-890123456jkl', 'fleet-west-1', 'RAGE', 'DANGER', NULL, '2025-12-20 10:30:00', '路怒检测'),
-('a003-3333-4444-5555-cccccccccccc', 'd003-e4b2-6cde-7d03-345678901def', 'v003-e9a7-6ijk-c033-890123456jkl', 'fleet-west-1', 'DISTRACTION', 'WARNING', '2025-12-20 10:00:00', '2025-12-20 09:45:00', '分心驾驶'),
-('a004-4444-5555-6666-dddddddddddd', 'd003-e4b2-6cde-7d03-345678901def', 'v003-e9a7-6ijk-c033-890123456jkl', 'fleet-west-1', 'FATIGUE', 'DANGER', NULL, '2025-12-20 15:00:00', '重度疲劳'),
-('a005-5555-6666-7777-eeeeeeeeeeee', 'd001-d2e3-4abc-9f01-123456789abc', 'v001-c7e5-4ghi-a011-678901234hij', 'fleet-east-1', 'LIVING_LEFT', 'DANGER', NULL, '2025-12-20 10:05:00', '遗留活体检测');
+('a001-1111-2222-3333-aaaaaaaaaaaa', 'd001-d2e3-4abc-9f01-123456789abc', 'v001-c7e5-4ghi-a011-678901234hij', 'fleet-east-1', 'FATIGUE', 'L2_WARNING', '2025-12-20 09:20:00', '2025-12-20 09:15:00', '驾驶员疲劳预警'),
+('a002-2222-3333-4444-bbbbbbbbbbbb', 'd003-e4b2-6cde-7d03-345678901def', 'v003-e9a7-6ijk-c033-890123456jkl', 'fleet-west-1', 'ROAD_RAGE', 'L3_CRITICAL', NULL, '2025-12-20 10:30:00', '路怒检测'),
+('a003-3333-4444-5555-cccccccccccc', 'd003-e4b2-6cde-7d03-345678901def', 'v003-e9a7-6ijk-c033-890123456jkl', 'fleet-west-1', 'DISTRACTION', 'L2_WARNING', '2025-12-20 10:00:00', '2025-12-20 09:45:00', '分心驾驶'),
+('a004-4444-5555-6666-dddddddddddd', 'd003-e4b2-6cde-7d03-345678901def', 'v003-e9a7-6ijk-c033-890123456jkl', 'fleet-west-1', 'FATIGUE', 'L3_CRITICAL', NULL, '2025-12-20 15:00:00', '重度疲劳'),
+('a005-5555-6666-7777-eeeeeeeeeeee', 'd001-d2e3-4abc-9f01-123456789abc', 'v001-c7e5-4ghi-a011-678901234hij', 'fleet-east-1', 'LIFE_DETECTION', 'L3_CRITICAL', NULL, '2025-12-20 10:05:00', '遗留活体检测');
 
 INSERT INTO t_fleet_dashboard_projection(fleet_id, risk_level, alert_type, alert_count, driver_count) VALUES
-('fleet-east-1', 'WARNING', 'FATIGUE', 1, 1),
-('fleet-east-1', 'DANGER', 'LIVING_LEFT', 1, 1),
-('fleet-west-1', 'DANGER', 'RAGE', 1, 1),
-('fleet-west-1', 'WARNING', 'DISTRACTION', 1, 1),
-('fleet-west-1', 'DANGER', 'FATIGUE', 1, 1);
+('fleet-east-1', 'L2_WARNING', 'FATIGUE', 1, 1),
+('fleet-east-1', 'L3_CRITICAL', 'LIFE_DETECTION', 1, 1),
+('fleet-west-1', 'L3_CRITICAL', 'ROAD_RAGE', 1, 1),
+('fleet-west-1', 'L2_WARNING', 'DISTRACTION', 1, 1),
+('fleet-west-1', 'L3_CRITICAL', 'FATIGUE', 1, 1);
 
 INSERT INTO t_trajectory_projection(trajectory_id, trip_id, vehicle_id, driver_id, gps_latitude, gps_longitude, speed, recorded_at) VALUES
 ('trj-001', 't001-12ab-34cd-56ef-78901234abcd', 'v001-c7e5-4ghi-a011-678901234hij', 'd001-d2e3-4abc-9f01-123456789abc', 39.9042, 116.4074, 60.0, '2025-12-20 08:10:00'),

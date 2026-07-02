@@ -4,6 +4,8 @@
  */
 import { guardianshipVM, GuardianDriver, ActionResult } from '../../viewmodel'
 import { sessionStore } from '../../viewmodel/SessionStore'
+import { guardianshipApi } from '../../api/GuardianshipApi'
+import { rtcClient } from '../../rtc/SparkRTCClient'
 import { AppCard, SectionTitle, StatusBadge } from '../../common/ui'
 import { promptAction } from '@kit.ArkUI'
 
@@ -32,13 +34,51 @@ export struct GuardianshipTab {
     this.actionLoading = true
     let result: ActionResult = { ok: false, msg: '未实现' }
     if (action === 'MEDIA_CALL') {
-      result = await guardianshipVM.requestCall(driver.id, accountId)
+      const reqBody: Record<string, unknown> = {
+        familyAccountId: accountId,
+        driverId: driver.id,
+        sessionType: 'AUDIO',
+        secondaryAuthToken: ''
+      }
+      const resp = await guardianshipApi.requestMediaSession(reqBody)
+      if (resp.success && resp.data !== undefined) {
+        const joinResult = await rtcClient.joinRoom(resp.data.sparkRTCRoomId, accountId, resp.data.sparkRTCJoinToken, 'subscriber')
+        result = { ok: joinResult.ok, msg: joinResult.message }
+      } else {
+        result = { ok: false, msg: resp.error !== undefined ? resp.error : '请求失败' }
+      }
     } else if (action === 'RESCUE') {
-      result = await guardianshipVM.triggerRescue(driver.id, accountId)
+      const reqBody: Record<string, unknown> = {
+        familyAccountId: accountId,
+        driverId: driver.id,
+        secondaryAuthToken: ''
+      }
+      const resp = await guardianshipApi.triggerManualRescue(reqBody)
+      if (resp.success) {
+        result = { ok: true, msg: '救援请求已提交' }
+      } else {
+        result = { ok: false, msg: resp.error !== undefined ? resp.error : '救援请求失败' }
+      }
     } else if (action === 'WINDOW') {
-      result = { ok: true, msg: '车窗控制已打开' }
+      const resp = await guardianshipApi.queryWindowStatus(driver.vehicleId)
+      if (resp.success && resp.data !== undefined) {
+        const count: number = resp.data.windowStatuses.length
+        result = { ok: true, msg: `车窗状态：${count} 个窗户信息已获取` }
+      } else {
+        result = { ok: false, msg: resp.error !== undefined ? resp.error : '查询车窗状态失败' }
+      }
     } else if (action === 'NOTIFY') {
-      result = { ok: true, msg: '通知偏好已打开' }
+      const reqBody: Record<string, unknown> = {
+        familyAccountId: accountId,
+        driverId: driver.id,
+        preferredRiskLevels: ['L1_HINT', 'L2_WARNING', 'L3_CRITICAL']
+      }
+      const resp = await guardianshipApi.updateNotificationPreference(reqBody)
+      if (resp.success) {
+        result = { ok: true, msg: '通知偏好已更新' }
+      } else {
+        result = { ok: false, msg: resp.error !== undefined ? resp.error : '更新失败' }
+      }
     }
     promptAction.showToast({ message: result.msg, duration: 1800 })
     this.actionLoading = false

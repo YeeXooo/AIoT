@@ -1,6 +1,7 @@
 package com.aiot.domain.shared;
 
 import java.util.Objects;
+import org.springframework.stereotype.Service;
 
 /**
  * 路怒语音存证标识。

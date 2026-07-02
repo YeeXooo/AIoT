@@ -1,4 +1,5 @@
 package com.aiot.domain.model;
+import org.springframework.stereotype.Service;
 
 /**
  * 干预指令类型（VO-12 配套枚举）

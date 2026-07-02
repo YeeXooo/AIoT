@@ -1,4 +1,5 @@
 package com.aiot.domain.model;
+import org.springframework.stereotype.Service;
 
 /**
  * 账户角色（VO-14）

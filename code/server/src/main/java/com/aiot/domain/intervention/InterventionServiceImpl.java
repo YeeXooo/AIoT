@@ -11,7 +11,9 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.stereotype.Service;
 
+@Service("domainInterventionService")
 public class InterventionServiceImpl implements InterventionService {
 
     private static final int PRIORITY_LOW = 10;

@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import java.time.Duration;
 import java.time.Instant;
+import org.springframework.stereotype.Service;
 
 /**
  * L3 持续时长追踪器（VO-17）

@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import java.time.Duration;
 import java.time.Instant;
+import org.springframework.stereotype.Service;
 
 /**
  * 活体检测判定窗口（VO-20）

@@ -14,7 +14,9 @@ import com.aiot.domain.shared.Result;
 
 import java.time.Instant;
 import java.util.List;
+import org.springframework.stereotype.Service;
 
+@Service
 public class EmergencyResponseServiceImpl implements EmergencyResponseService {
 
     private static final double COLLISION_ACCELERATION_THRESHOLD = 80.0;

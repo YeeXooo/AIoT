@@ -40,6 +40,23 @@ public class Trip {
         this.updatedAt = LocalDateTime.now();
     }
 
+    public static Trip reconstitute(TripId tripId, DriverId driverId, VehicleId vehicleId,
+                                     LocalDateTime startedAt, LocalDateTime endedAt,
+                                     Integer hardBrakingCount, Integer hardAccelerationCount,
+                                     Integer scoreValue, Integer version,
+                                     LocalDateTime createdAt, LocalDateTime updatedAt) {
+        Trip t = new Trip(tripId, driverId, vehicleId, startedAt);
+        t.endedAt = endedAt;
+        t.drivingBehaviorCounters = DrivingBehaviorCounters.of(
+                hardBrakingCount != null ? hardBrakingCount : 0,
+                hardAccelerationCount != null ? hardAccelerationCount : 0);
+        if (scoreValue != null) {
+            t.tripScore = TripScore.of(scoreValue);
+        }
+        t.version = version;
+        return t;
+    }
+
     public static Trip start(DriverId driverId, VehicleId vehicleId, LocalDateTime startedAt) {
         Objects.requireNonNull(driverId, "driverId must not be null");
         Objects.requireNonNull(vehicleId, "vehicleId must not be null");

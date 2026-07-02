@@ -6,6 +6,7 @@ import com.aiot.domain.shared.VehicleId;
 
 import java.time.Instant;
 import java.util.Objects;
+import org.springframework.stereotype.Service;
 
 /**
  * 车辆熄火且车门落锁事件。

@@ -96,11 +96,11 @@ INSERT INTO t_trip(trip_id, driver_id, vehicle_id, started_at, ended_at, hard_br
 ('t007-78ab-90cd-12ef-34567890abcd', 'd003-e4b2-6cde-7d03-345678901def', 'v003-e9a7-6ijk-c033-890123456jkl', '2025-12-20 14:00:00', '2025-12-20 15:30:00', 4, 6, 42);
 
 INSERT INTO t_safety_alert_event(alert_id, trip_id, driver_id, vehicle_id, alert_type, risk_level, occurred_at, alert_msg) VALUES
-('a001-1111-2222-3333-aaaaaaaaaaaa', 't001-12ab-34cd-56ef-78901234abcd', 'd001-d2e3-4abc-9f01-123456789abc', 'v001-c7e5-4ghi-a011-678901234hij', 'FATIGUE', 'WARNING', '2025-12-20 09:15:00', '驾驶员疲劳预警 — 连续YAW>3s'),
-('a002-2222-3333-4444-bbbbbbbbbbbb', 't003-34cd-56ef-78ab-90123456cdef', 'd003-e4b2-6cde-7d03-345678901def', 'v003-e9a7-6ijk-c033-890123456jkl', 'RAGE', 'DANGER', '2025-12-20 10:30:00', '路怒检测 — 声压>85dB + 谩骂关键词'),
-('a003-3333-4444-5555-cccccccccccc', 't003-34cd-56ef-78ab-90123456cdef', 'd003-e4b2-6cde-7d03-345678901def', 'v003-e9a7-6ijk-c033-890123456jkl', 'DISTRACTION', 'WARNING', '2025-12-20 09:45:00', '分心驾驶 — 手持电话 > 3秒'),
-('a004-4444-5555-6666-dddddddddddd', 't007-78ab-90cd-12ef-34567890abcd', 'd003-e4b2-6cde-7d03-345678901def', 'v003-e9a7-6ijk-c033-890123456jkl', 'FATIGUE', 'DANGER', '2025-12-20 15:00:00', '重度疲劳 — 闭眼>1.5s + 频繁点头'),
-('a005-5555-6666-7777-eeeeeeeeeeee', 't001-12ab-34cd-56ef-78901234abcd', 'd001-d2e3-4abc-9f01-123456789abc', 'v001-c7e5-4ghi-a011-678901234hij', 'LIVING_LEFT', 'DANGER', '2025-12-20 10:05:00', '锁车后雷达检测到后排遗留生命体征微动');
+('a001-1111-2222-3333-aaaaaaaaaaaa', 't001-12ab-34cd-56ef-78901234abcd', 'd001-d2e3-4abc-9f01-123456789abc', 'v001-c7e5-4ghi-a011-678901234hij', 'FATIGUE', 'L2_WARNING', '2025-12-20 09:15:00', '驾驶员疲劳预警 — 连续YAW>3s'),
+('a002-2222-3333-4444-bbbbbbbbbbbb', 't003-34cd-56ef-78ab-90123456cdef', 'd003-e4b2-6cde-7d03-345678901def', 'v003-e9a7-6ijk-c033-890123456jkl', 'ROAD_RAGE', 'L3_CRITICAL', '2025-12-20 10:30:00', '路怒检测 — 声压>85dB + 谩骂关键词'),
+('a003-3333-4444-5555-cccccccccccc', 't003-34cd-56ef-78ab-90123456cdef', 'd003-e4b2-6cde-7d03-345678901def', 'v003-e9a7-6ijk-c033-890123456jkl', 'DISTRACTION', 'L2_WARNING', '2025-12-20 09:45:00', '分心驾驶 — 手持电话 > 3秒'),
+('a004-4444-5555-6666-dddddddddddd', 't007-78ab-90cd-12ef-34567890abcd', 'd003-e4b2-6cde-7d03-345678901def', 'v003-e9a7-6ijk-c033-890123456jkl', 'FATIGUE', 'L3_CRITICAL', '2025-12-20 15:00:00', '重度疲劳 — 闭眼>1.5s + 频繁点头'),
+('a005-5555-6666-7777-eeeeeeeeeeee', 't001-12ab-34cd-56ef-78901234abcd', 'd001-d2e3-4abc-9f01-123456789abc', 'v001-c7e5-4ghi-a011-678901234hij', 'LIFE_DETECTION', 'L3_CRITICAL', '2025-12-20 10:05:00', '锁车后雷达检测到后排遗留生命体征微动');
 
 INSERT INTO t_system_account(account_id, phone, role) VALUES
 ('acct-001-aaa-bbb-ccc-111111111111', '13900000001', 'FAMILY'),

@@ -1,4 +1,5 @@
 package com.aiot.domain.shared;
+import org.springframework.stereotype.Service;
 
 public record AppError(String code, String message, Object... args) {
 

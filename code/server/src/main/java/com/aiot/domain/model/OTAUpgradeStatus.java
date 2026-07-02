@@ -4,6 +4,7 @@ import jakarta.persistence.Embeddable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import java.time.Instant;
+import org.springframework.stereotype.Service;
 
 /**
  * OTA 升级状态（VO-19）

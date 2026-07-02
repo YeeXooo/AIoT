@@ -6,6 +6,7 @@ import com.aiot.domain.shared.DriverId;
 
 import java.time.Instant;
 import java.util.Objects;
+import org.springframework.stereotype.Service;
 
 /**
  * 驾驶员综合风险评分更新事件。

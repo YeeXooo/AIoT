@@ -5,6 +5,7 @@ import com.aiot.domain.shared.DriverId;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
+import org.springframework.stereotype.Service;
 
 /**
  * 救援报告值对象。

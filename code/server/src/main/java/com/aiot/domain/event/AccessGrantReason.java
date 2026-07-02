@@ -1,4 +1,5 @@
 package com.aiot.domain.event;
+import org.springframework.stereotype.Service;
 
 /**
  * 权限授予原因枚举。

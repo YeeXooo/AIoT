@@ -1,4 +1,5 @@
 package com.aiot.domain.model;
+import org.springframework.stereotype.Service;
 
 /**
  * 传感器状态（VO-06）

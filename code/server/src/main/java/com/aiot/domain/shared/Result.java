@@ -2,6 +2,7 @@ package com.aiot.domain.shared;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
+import org.springframework.stereotype.Service;
 
 public sealed interface Result<T, E> {
 

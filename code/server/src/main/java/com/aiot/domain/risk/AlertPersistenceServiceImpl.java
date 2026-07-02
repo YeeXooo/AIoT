@@ -20,7 +20,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.stereotype.Service;
 
+@Service
 public class AlertPersistenceServiceImpl implements AlertPersistenceService {
 
     private final DomainEventPublisher eventPublisher;

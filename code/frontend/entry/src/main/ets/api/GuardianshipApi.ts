@@ -11,11 +11,15 @@ import {
   requestMediaSessionRespFromJson,
   triggerManualRescueRespFromJson,
   queryWindowStatusRespFromJson,
+  queryGuardianshipPermissionsRespFromJson,
+  issueSparkRTCTokenRespFromJson,
 } from '../model/guardianship'
 import type {
   RequestMediaSessionResp,
   TriggerManualRescueResp,
   QueryWindowStatusResp,
+  QueryGuardianshipPermissionsResp,
+  IssueSparkRTCTokenResp,
 } from '../model/guardianship'
 
 export class GuardianshipApi {
@@ -73,14 +77,30 @@ export class GuardianshipApi {
     return { success: false, error: resp.error, status: resp.status }
   }
 
-  /** GET /api/v1/guardianship/{driverId}/permissions — PermissionsResp 暂未提供 fromJson，保留 Record 返回 */
-  async queryGuardianshipPermissions(driverId: string): Promise<ApiResponse<Record<string, unknown>>> {
-    return apiClient.get(`/guardianship/${driverId}/permissions`)
+  /** GET /api/v1/guardianship/{driverId}/permissions */
+  async queryGuardianshipPermissions(driverId: string): Promise<ApiResponse<QueryGuardianshipPermissionsResp>> {
+    const resp = await apiClient.get(`/guardianship/${driverId}/permissions`)
+    if (resp.success && resp.data !== undefined) {
+      return {
+        success: true,
+        data: queryGuardianshipPermissionsRespFromJson(resp.data),
+        status: resp.status,
+      }
+    }
+    return { success: false, error: resp.error, status: resp.status }
   }
 
-  /** POST /api/v1/sparkrtc/token — SparkRTCTokenResp 暂未提供 fromJson，保留 Record 返回 */
-  async issueSparkRTCToken(body: Record<string, unknown>): Promise<ApiResponse<Record<string, unknown>>> {
-    return apiClient.post('/sparkrtc/token', body)
+  /** POST /api/v1/sparkrtc/token */
+  async issueSparkRTCToken(body: Record<string, unknown>): Promise<ApiResponse<IssueSparkRTCTokenResp>> {
+    const resp = await apiClient.post('/sparkrtc/token', body)
+    if (resp.success && resp.data !== undefined) {
+      return {
+        success: true,
+        data: issueSparkRTCTokenRespFromJson(resp.data),
+        status: resp.status,
+      }
+    }
+    return { success: false, error: resp.error, status: resp.status }
   }
 }
 

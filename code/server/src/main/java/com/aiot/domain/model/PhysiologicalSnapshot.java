@@ -2,6 +2,7 @@ package com.aiot.domain.model;
 
 import java.time.Instant;
 import java.util.Objects;
+import org.springframework.stereotype.Service;
 
 /**
  * 生理体征快照值对象。

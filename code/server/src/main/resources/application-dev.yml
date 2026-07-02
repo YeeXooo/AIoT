@@ -7,3 +7,10 @@ spring:
   h2:
     console:
       enabled: false
+
+aiot:
+  security:
+    key-store-path: /tmp/aiot-dev-keystore.p12
+    voice-evidence-base-path: /tmp/aiot-voice-evidence
+  storage:
+    base-path: /tmp/aiot-storage

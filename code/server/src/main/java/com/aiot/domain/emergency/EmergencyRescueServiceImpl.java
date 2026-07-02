@@ -34,7 +34,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.stereotype.Service;
 
+@Service("domainEmergencyRescueService")
 public class EmergencyRescueServiceImpl implements EmergencyRescueService {
 
     private final VehicleRepository vehicleRepository;

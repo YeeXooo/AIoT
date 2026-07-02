@@ -33,6 +33,13 @@ public class SystemAccount {
         this.active = true;
     }
 
+    public static SystemAccount reconstitute(AccountId accountId, String phone, AccountRole role,
+                                             Integer version, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        SystemAccount a = new SystemAccount(accountId, phone, role);
+        a.version = version;
+        return a;
+    }
+
     public static SystemAccount create(String phone, AccountRole role) {
         Objects.requireNonNull(phone, "phone must not be null");
         Objects.requireNonNull(role, "role must not be null");

@@ -7,6 +7,7 @@ import com.aiot.domain.shared.DriverId;
 
 import java.time.Instant;
 import java.util.Objects;
+import org.springframework.stereotype.Service;
 
 /**
  * 家属权限撤销事件。

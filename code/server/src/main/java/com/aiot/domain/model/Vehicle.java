@@ -40,6 +40,18 @@ public class Vehicle {
         this.updatedAt = LocalDateTime.now();
     }
 
+    public static Vehicle reconstitute(VehicleId vehicleId, String licensePlate, String vin,
+                                       String terminalSn, String fleetId, String firmwareVersion,
+                                       Integer version, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        Vehicle v = new Vehicle(vehicleId, licensePlate, vin, terminalSn);
+        v.fleetId = fleetId;
+        if (firmwareVersion != null) {
+            v.firmwareVersion = OTAVersion.of(firmwareVersion, "", "");
+        }
+        v.version = version;
+        return v;
+    }
+
     public static Vehicle register(String licensePlate, String vin, String terminalSn) {
         Objects.requireNonNull(licensePlate, "licensePlate must not be null");
         Objects.requireNonNull(vin, "vin must not be null");

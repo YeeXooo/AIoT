@@ -46,6 +46,17 @@ public class SafetyAlertEvent {
         this.createdAt = LocalDateTime.now();
     }
 
+    public static SafetyAlertEvent reconstitute(AlertId alertId, TripId tripId, DriverId driverId,
+                                                VehicleId vehicleId, AlertType alertType, RiskLevel riskLevel,
+                                                LocalDateTime occurredAt, String alertMessage,
+                                                boolean resolved, LocalDateTime resolvedAt) {
+        SafetyAlertEvent e = new SafetyAlertEvent(alertId, tripId, driverId, vehicleId,
+                alertType, riskLevel, occurredAt, null, null, alertMessage);
+        e.resolved = resolved;
+        e.resolvedAt = resolvedAt;
+        return e;
+    }
+
     public static SafetyAlertEvent create(TripId tripId, DriverId driverId, VehicleId vehicleId,
                                           AlertType alertType, RiskLevel riskLevel, LocalDateTime occurredAt,
                                           GeoLocation location, PhysiologicalSnapshot physiologicalSnapshot,

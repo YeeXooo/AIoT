@@ -5,6 +5,7 @@
 import { dashboardVM, DashboardData, ViewState, AlertSummary } from '../../viewmodel'
 import { AppCard, StatusBadge, RiskBadge, EmptyState, SkeletonRow, ErrorRetry } from '../../common/ui'
 import { alertTypeLabel, formatTime } from '../../common/StatusMap'
+import { wsManager, type DriverStatusSnapshot, type AlertPush } from '../../websocket/WebSocketManager'
 
 @Component
 export struct DashboardTab {
@@ -12,12 +13,27 @@ export struct DashboardTab {
   @State refreshing: boolean = false
   private driverName: string = '张明'
   private vehicleId: string = '京A·88562'
-  private heartRate: number = 72
-  private speed: number = 68
+  @State private heartRate: number = 72
+  @State private speed: number = 68
+  @State private spo2: number = 98
+  @State private emotionIndex: number = 0.72
   private tripDuration: string = '1小时23分'
 
   aboutToAppear(): void {
     this.refresh(false)
+    wsManager.setCallbacks({
+      onDriverStatusSnapshot: (snapshot: DriverStatusSnapshot) => {
+        this.heartRate = snapshot.heartRate > 0 ? snapshot.heartRate : this.heartRate
+        this.speed = snapshot.speed > 0 ? snapshot.speed : this.speed
+        this.spo2 = snapshot.spo2 > 0 ? snapshot.spo2 : this.spo2
+        this.emotionIndex = snapshot.emotionIndex > 0 ? snapshot.emotionIndex : this.emotionIndex
+      },
+      onAlertTriggered: (_alert: AlertPush) => {
+        this.refresh(false)
+      },
+    })
+    wsManager.connect()
+    wsManager.subscribeDriverStatus('d1')
   }
 
   private async refresh(showRefreshing: boolean): Promise<void> {
@@ -123,8 +139,8 @@ export struct DashboardTab {
   VitalRow() {
     Row({ space: 12 }) {
       this.VitalItem('心率', `${this.heartRate}`, 'bpm', $r('app.color.status_green'))
-      this.VitalItem('血氧', '98', '%', $r('app.color.status_green'))
-      this.VitalItem('情绪', '0.72', '', $r('app.color.brand_accent'))
+      this.VitalItem('血氧', `${this.spo2}`, '%', $r('app.color.status_green'))
+      this.VitalItem('情绪', this.emotionIndex.toFixed(2), '', $r('app.color.brand_accent'))
     }
     .width('100%')
     .padding({ left: 16, right: 16 })

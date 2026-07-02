@@ -4,7 +4,9 @@ import com.aiot.domain.event.RiskLevel;
 import com.aiot.domain.model.SensorReading;
 import com.aiot.domain.shared.AppError;
 import com.aiot.domain.shared.Result;
+import org.springframework.stereotype.Service;
 
+@Service
 public class DistractionDetectionServiceImpl implements DistractionDetectionService {
 
     private static final double GAZE_DEVIATION_THRESHOLD_CRITICAL = 35.0;

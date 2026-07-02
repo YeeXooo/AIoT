@@ -17,7 +17,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.stereotype.Service;
 
+@Service
 public class OTAManagementServiceImpl implements IOTAManagementService {
 
     private final OTAUpdateService otaUpdateService;

@@ -6,15 +6,26 @@ import { fleetVM, FleetData, ViewState, OfflineVehicleEntry } from '../../viewmo
 import { AppCard, SectionTitle, StatItem, SkeletonRow, ErrorRetry } from '../../common/ui'
 import { offlineReasonLabel } from '../../common/StatusMap'
 import { promptAction } from '@kit.ArkUI'
+import { wsManager, type FleetAlert, type PerformanceWarning } from '../../websocket/WebSocketManager'
 
 @Component
 export struct FleetTab {
   @State view: ViewState<FleetData> = { state: 'idle', data: null, errorMsg: '' }
   @State refreshing: boolean = false
   @State reportLoading: boolean = false
+  @State reportDownloadUrl: string = ''
+  @State reportFile: string = ''
 
   aboutToAppear(): void {
     this.refresh(false)
+    wsManager.setCallbacks({
+      onL3Alert: (_alert: FleetAlert) => {
+        promptAction.showToast({ message: '收到L3高危告警', duration: 2000 })
+      },
+      onPerformanceWarning: (_warning: PerformanceWarning) => {
+        promptAction.showToast({ message: '收到绩效预警', duration: 2000 })
+      },
+    })
   }
 
   private async refresh(showRefreshing: boolean): Promise<void> {
@@ -28,9 +39,31 @@ export struct FleetTab {
   private async generateReport(): Promise<void> {
     if (this.reportLoading) return
     this.reportLoading = true
-    promptAction.showToast({ message: '报告生成中…', duration: 1500 })
-    this.reportLoading = false
-    promptAction.showToast({ message: '报告已生成', duration: 1500 })
+    try {
+      const resp = await fleetApi.generateReport({
+        'driverId': 'd1',
+        'timeRange': { 'start': '2026-06-25T00:00:00Z', 'end': '2026-07-02T00:00:00Z' },
+        'reportType': 'WEEKLY',
+      })
+      if (resp.success && resp.data !== undefined) {
+        if (resp.data.isEmpty) {
+          promptAction.showToast({ message: '暂无数据生成报告', duration: 1500 })
+        } else {
+          promptAction.showToast({ message: `报告已生成 (${resp.data.reportId})`, duration: 1500 })
+          this.reportDownloadUrl = resp.data.downloadUrl
+          const dlResp = await fleetApi.downloadReport(resp.data.reportId, 'pdf')
+          if (dlResp.success && dlResp.data !== undefined) {
+            this.reportFile = 'report.pdf'
+          }
+        }
+      } else {
+        promptAction.showToast({ message: resp.error?.message ?? '报告生成失败', duration: 1500 })
+      }
+    } catch (_e) {
+      promptAction.showToast({ message: '网络错误', duration: 1500 })
+    } finally {
+      this.reportLoading = false
+    }
   }
 
   build() {

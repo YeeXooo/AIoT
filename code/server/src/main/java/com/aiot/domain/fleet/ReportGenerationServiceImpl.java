@@ -16,7 +16,9 @@ import com.aiot.domain.shared.Result;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.stereotype.Service;
 
+@Service
 public class ReportGenerationServiceImpl implements ReportGenerationService {
 
     private static final double PERFORMANCE_WARNING_THRESHOLD = 60.0;

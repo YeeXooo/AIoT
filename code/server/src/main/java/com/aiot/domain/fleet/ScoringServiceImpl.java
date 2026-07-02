@@ -18,7 +18,9 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import org.springframework.stereotype.Service;
 
+@Service
 public class ScoringServiceImpl implements ScoringService {
 
     private static final double HEAVY_FATIGUE_WEIGHT = 10.0;

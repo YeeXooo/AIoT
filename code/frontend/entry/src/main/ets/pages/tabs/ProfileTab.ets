@@ -12,12 +12,17 @@ export struct ProfileTab {
   @State userName: string = '家属用户'
   @State role: string = '家属端'
   @State phone: string = '138****6789'
+  @State showSettings: boolean = false
 
   aboutToAppear(): void {
     const acc = sessionStore.account
     if (acc !== null) {
       this.userName = acc.role === 'FAMILY' ? '家属用户' : (acc.role === 'MANAGER' ? '车队管理员' : '救援专员')
     }
+  }
+
+  private toggleSettings(): void {
+    this.showSettings = !this.showSettings
   }
 
   private async logout(): Promise<void> {
@@ -56,8 +61,25 @@ export struct ProfileTab {
           this.ProfileRow('手机号', this.phone)
           Divider().color($r('app.color.divider')).margin({ left: 16 })
           this.ProfileRow($r('app.string.profile_settings'), '')
+            .onClick(() => this.toggleSettings())
+          if (this.showSettings) {
+            Column({ space: 0 }) {
+              this.SettingsRow('接收推送通知', true)
+              Divider().color($r('app.color.divider')).margin({ left: 32 })
+              this.SettingsRow('夜间模式', false)
+              Divider().color($r('app.color.divider')).margin({ left: 32 })
+              this.SettingsRow('清除缓存', false)
+            }
+          }
           Divider().color($r('app.color.divider')).margin({ left: 16 })
           this.ProfileRow($r('app.string.profile_about'), '')
+            .onClick(() => {
+              promptAction.showDialog({
+                title: '关于',
+                message: '车载安全监测 v1.0.0\nBuild 2026\n© 2026 Safety Monitor',
+                buttons: [{ text: '确定', color: '#1677FF' }]
+              })
+            })
         }
 
         Column() {
@@ -103,5 +125,25 @@ export struct ProfileTab {
     .width('100%')
     .height(52)
     .padding({ left: 16, right: 16 })
+  }
+
+  @Builder
+  SettingsRow(label: string, enabled: boolean) {
+    Row() {
+      Text(label)
+        .fontSize($r('app.float.body_font_size'))
+        .fontColor($r('app.color.text_primary'))
+      Blank()
+      Text(enabled ? '已开启' : '未开启')
+        .fontSize(11)
+        .fontColor($r('app.color.text_secondary'))
+        .margin({ right: 6 })
+    }
+    .width('100%')
+    .height(48)
+    .padding({ left: 32, right: 16 })
+    .onClick(() => {
+      promptAction.showToast({ message: `${label} -- 已${enabled ? '' : '未'}开启`, duration: 1000 })
+    })
   }
 }

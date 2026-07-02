@@ -7,6 +7,7 @@
  */
 import { preferences } from '@kit.ArkData'
 import { common } from '@kit.AbilityKit'
+import { apiClient } from '../api/ApiClient'
 
 const PREF_NAME = 'safety_monitor_pref'
 const KEY_ACCESS_TOKEN = 'access_token'
@@ -50,6 +51,7 @@ export class SessionStore {
         const accountId = await this._prefStore.get(KEY_ACCOUNT_ID, '') as string
         const role = await this._prefStore.get(KEY_ROLE, 'FAMILY') as string
         this._account = { accountId, role: role as AccountRole }
+        apiClient.setAccessToken(accessToken)
       }
     } catch (e) {
       // ignore
@@ -66,6 +68,7 @@ export class SessionStore {
 
   async saveSession(accessToken: string, accountId: string, role: AccountRole): Promise<void> {
     this._account = { accountId, role }
+    apiClient.setAccessToken(accessToken)
     if (this._prefStore === null) return
     try {
       await this._prefStore.put(KEY_ACCESS_TOKEN, accessToken)
@@ -79,6 +82,7 @@ export class SessionStore {
 
   async clear(): Promise<void> {
     this._account = null
+    apiClient.setAccessToken(null)
     if (this._prefStore === null) return
     try {
       await this._prefStore.delete(KEY_ACCESS_TOKEN)

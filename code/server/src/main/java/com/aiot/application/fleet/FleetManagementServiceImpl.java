@@ -25,7 +25,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Service;
 
+@Service
 public class FleetManagementServiceImpl implements IFleetManagementService {
 
     private final FleetAnalyticsService fleetAnalyticsService;

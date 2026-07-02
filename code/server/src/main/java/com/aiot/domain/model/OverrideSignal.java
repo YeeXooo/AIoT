@@ -4,6 +4,7 @@ import jakarta.persistence.Embeddable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import java.time.Instant;
+import org.springframework.stereotype.Service;
 
 /**
  * 驾驶员覆盖信号（VO-21）

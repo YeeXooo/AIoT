@@ -6,6 +6,7 @@ import com.aiot.domain.shared.TripId;
 
 import java.time.Instant;
 import java.util.Objects;
+import org.springframework.stereotype.Service;
 
 /**
  * 行程评分完成事件。

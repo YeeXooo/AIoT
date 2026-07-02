@@ -10,7 +10,9 @@ import com.aiot.domain.shared.VehicleId;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.stereotype.Service;
 
+@Service
 public class EmergencyRescueServiceImpl implements IEmergencyRescueService {
 
     private final EmergencyRescueService emergencyRescueService;

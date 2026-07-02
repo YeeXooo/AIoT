@@ -11,7 +11,9 @@ import com.aiot.domain.shared.VehicleId;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
+import org.springframework.stereotype.Service;
 
+@Service
 public class LifeDetectionServiceImpl implements LifeDetectionService {
 
     private static final double MOTION_THRESHOLD = 0.15;

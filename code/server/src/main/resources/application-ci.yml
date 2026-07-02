@@ -8,3 +8,10 @@ spring:
     hibernate:
       ddl-auto: create-drop
     show-sql: true
+
+aiot:
+  security:
+    key-store-path: /tmp/aiot-ci-keystore.p12
+    voice-evidence-base-path: /tmp/aiot-voice-evidence
+  storage:
+    base-path: /tmp/aiot-storage

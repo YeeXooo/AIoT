@@ -6,7 +6,9 @@ import com.aiot.domain.repository.TripRepository;
 import com.aiot.domain.repository.VehicleRepository;
 
 import java.util.List;
+import org.springframework.stereotype.Service;
 
+@Service
 public class TripApplicationService {
 
     private final TripRepository tripRepository;

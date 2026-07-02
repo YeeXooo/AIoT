@@ -6,6 +6,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import java.util.Collections;
 import java.util.Set;
+import org.springframework.stereotype.Service;
 
 /**
  * 通知偏好（VO-18）
