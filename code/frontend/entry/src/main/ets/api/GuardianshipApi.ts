@@ -1,7 +1,7 @@
 /**
  * 车载安全监测系统 — 远程监护 API（S3，ArkTS 兼容）
  *
- * 问题 4 修复：API 层返回具体 DTO 类型而非 ApiResponse<Record<string, unknown>>。
+ * 问题 4 修复：API 层返回具体 DTO 类型而非 ApiResponse<Record<string, Object>>。
  * 仅对有 fromJson 构造器的响应 DTO 接入类型化返回；其余暂保留 Record 返回，
  * 待后续补齐 fromJson 构造器后再升级（避免半成品类型断言）。
  */
@@ -24,7 +24,7 @@ import type {
 
 export class GuardianshipApi {
   /** POST /api/v1/guardianship/media-session */
-  async requestMediaSession(body: Record<string, unknown>): Promise<ApiResponse<RequestMediaSessionResp>> {
+  async requestMediaSession(body: Record<string, Object>): Promise<ApiResponse<RequestMediaSessionResp>> {
     const resp = await apiClient.post('/guardianship/media-session', body)
     if (resp.success && resp.data !== undefined) {
       return {
@@ -37,17 +37,17 @@ export class GuardianshipApi {
   }
 
   /** DELETE /api/v1/guardianship/media-session/{sessionHandle} — 仅返回成功状态，无响应体 */
-  async endMediaSession(sessionHandle: string): Promise<ApiResponse<Record<string, unknown>>> {
+  async endMediaSession(sessionHandle: string): Promise<ApiResponse<Record<string, Object>>> {
     return apiClient.delete(`/guardianship/media-session/${sessionHandle}`)
   }
 
   /** PUT /api/v1/guardianship/notification-preference — 仅返回成功状态，无响应体 */
-  async updateNotificationPreference(body: Record<string, unknown>): Promise<ApiResponse<Record<string, unknown>>> {
+  async updateNotificationPreference(body: Record<string, Object>): Promise<ApiResponse<Record<string, Object>>> {
     return apiClient.put('/guardianship/notification-preference', body)
   }
 
   /** POST /api/v1/guardianship/manual-rescue */
-  async triggerManualRescue(body: Record<string, unknown>): Promise<ApiResponse<TriggerManualRescueResp>> {
+  async triggerManualRescue(body: Record<string, Object>): Promise<ApiResponse<TriggerManualRescueResp>> {
     const resp = await apiClient.post('/guardianship/manual-rescue', body)
     if (resp.success && resp.data !== undefined) {
       return {
@@ -60,7 +60,7 @@ export class GuardianshipApi {
   }
 
   /** POST /api/v1/guardianship/window-control — 仅返回成功状态，无响应体 */
-  async controlVehicleWindow(body: Record<string, unknown>): Promise<ApiResponse<Record<string, unknown>>> {
+  async controlVehicleWindow(body: Record<string, Object>): Promise<ApiResponse<Record<string, Object>>> {
     return apiClient.post('/guardianship/window-control', body)
   }
 

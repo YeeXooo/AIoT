@@ -1,7 +1,7 @@
 /**
  * 车载安全监测系统 — 驾驶员风险监测 API（S1，ArkTS 兼容）
  *
- * 问题 4 修复：API 层返回具体 DTO 类型而非 ApiResponse<Record<string, unknown>>。
+ * 问题 4 修复：API 层返回具体 DTO 类型而非 ApiResponse<Record<string, Object>>。
  */
 
 import { apiClient, type ApiResponse } from './ApiClient'
@@ -28,8 +28,17 @@ export class DriverApi {
     return { success: false, error: resp.error, status: resp.status }
   }
 
+  /** POST /api/v1/guardianship/bind */
+  async bindDriver(accountId: string, driverId: string): Promise<ApiResponse<Record<string, Object>>> {
+    const body: Record<string, Object> = {
+      'familyAccountId': accountId,
+      'driverId': driverId,
+    }
+    return apiClient.post('/guardianship/bind', body)
+  }
+
   /** GET /api/v1/drivers/{driverId}/alerts */
-  async queryAlertHistory(driverId: string, params?: Record<string, unknown>): Promise<ApiResponse<QueryAlertHistoryResponse>> {
+  async queryAlertHistory(driverId: string, params?: Record<string, Object>): Promise<ApiResponse<QueryAlertHistoryResponse>> {
     const resp = await apiClient.get(`/drivers/${driverId}/alerts`, { params })
     if (resp.success && resp.data !== undefined) {
       return {

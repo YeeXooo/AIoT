@@ -18,17 +18,11 @@ import { BaseWebSocket, type BaseWebSocketOptions } from './BaseWebSocket'
 // ===================================================================
 
 export interface FleetWSEvents {
-  /** 连接建立成功 */
   onConnected?: () => void
-  /** 连接断开 */
   onDisconnected?: (code: number, reason: string) => void
-  /** 连接错误 */
   onError?: (code: string, message: string) => void
-  /** L3 高危告警推送 */
-  onL3Alert?: (msg: Record<string, unknown>) => void
-  /** 绩效预警推送 */
-  onPerformanceWarning?: (msg: Record<string, unknown>) => void
-  /** 心跳 */
+  onL3Alert?: (msg: Record<string, Object>) => void
+  onPerformanceWarning?: (msg: Record<string, Object>) => void
   onPing?: (serverTime: string) => void
 }
 
@@ -89,9 +83,9 @@ export class FleetWebSocket extends BaseWebSocket {
     this.events.onError?.('WS_ERROR', 'WebSocket 连接错误')
   }
 
-  protected dispatchMessage(msg: Record<string, unknown>): void {
+  protected dispatchMessage(msg: Record<string, Object>): void {
     const type: string = getStr(msg, 'type')
-    const payload: Record<string, unknown> = getRecord(msg, 'payload')
+    const payload: Record<string, Object> = getRecord(msg, 'payload')
 
     switch (type) {
       case 'l3_alert':

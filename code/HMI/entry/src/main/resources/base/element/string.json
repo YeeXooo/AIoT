@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "车机端HMI人机交互界面"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "车机端HMI主界面"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "车载HMI"
+    }
+  ]
+}
