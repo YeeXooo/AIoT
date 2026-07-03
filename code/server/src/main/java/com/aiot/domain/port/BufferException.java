@@ -1,4 +1,5 @@
 package com.aiot.domain.port;
+import org.springframework.stereotype.Service;
 
 /**
  * 缓冲区异常基类。

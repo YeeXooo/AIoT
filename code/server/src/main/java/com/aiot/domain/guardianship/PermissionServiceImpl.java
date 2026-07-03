@@ -18,7 +18,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
+import org.springframework.stereotype.Service;
 
+@Service
 public class PermissionServiceImpl implements PermissionService {
 
     private static final Duration L3_DURATION_THRESHOLD = Duration.ofSeconds(60);

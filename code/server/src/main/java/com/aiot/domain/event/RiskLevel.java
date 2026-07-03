@@ -1,4 +1,5 @@
 package com.aiot.domain.event;
+import org.springframework.stereotype.Service;
 
 /**
  * 风险等级枚举。

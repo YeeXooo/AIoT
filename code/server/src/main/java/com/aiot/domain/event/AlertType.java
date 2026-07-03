@@ -1,4 +1,5 @@
 package com.aiot.domain.event;
+import org.springframework.stereotype.Service;
 
 /**
  * 告警类型枚举。

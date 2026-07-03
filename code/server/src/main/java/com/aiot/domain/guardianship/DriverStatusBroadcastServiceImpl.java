@@ -13,7 +13,9 @@ import com.aiot.domain.shared.DriverId;
 import com.aiot.domain.shared.Result;
 
 import java.time.Instant;
+import org.springframework.stereotype.Service;
 
+@Service
 public class DriverStatusBroadcastServiceImpl implements DriverStatusBroadcastService {
 
     private final NotificationPort notificationPort;

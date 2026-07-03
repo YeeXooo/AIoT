@@ -1,4 +1,5 @@
 package com.aiot.domain.model;
+import org.springframework.stereotype.Service;
 
 /**
  * 驾驶员覆盖操作类型（VO-21 配套枚举）

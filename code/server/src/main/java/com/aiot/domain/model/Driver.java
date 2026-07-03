@@ -32,6 +32,18 @@ public class Driver {
         this.active = true;
     }
 
+    public static Driver reconstitute(DriverId driverId, String name, String phone,
+                                       Integer comprehensiveScore, Integer version,
+                                       LocalDateTime createdAt, LocalDateTime updatedAt) {
+        Driver d = new Driver(driverId, name, phone);
+        d.version = version;
+        d.active = true;
+        if (comprehensiveScore != null) {
+            d.comprehensiveScore = DriverComprehensiveScore.of(comprehensiveScore);
+        }
+        return d;
+    }
+
     public static Driver create(String name, String phone) {
         Objects.requireNonNull(name, "name must not be null");
         Objects.requireNonNull(phone, "phone must not be null");

@@ -27,8 +27,8 @@ echo "[OK] dependencies installed"
 
 echo ""
 echo "=== 生成合成训练数据 ==="
-python "$SCRIPT_DIR/data_prep.py" synthetic -n 300
-echo "[OK] 300 张合成图已生成"
+python "$SCRIPT_DIR/data_prep.py" synthetic -n 2000
+echo "[OK] 2000 张合成图已生成 (7 类：方向盘/手扶/脱手/手机/香烟/人脸/安全带)"
 
 echo ""
 echo "=== 环境就绪 ==="

@@ -4,7 +4,9 @@ import com.aiot.domain.event.RiskLevel;
 import com.aiot.domain.model.SensorReading;
 import com.aiot.domain.shared.AppError;
 import com.aiot.domain.shared.Result;
+import org.springframework.stereotype.Service;
 
+@Service
 public class FatigueDeterminationServiceImpl implements FatigueDeterminationService {
 
     private static final double PERCLOS_THRESHOLD_CRITICAL = 0.7;

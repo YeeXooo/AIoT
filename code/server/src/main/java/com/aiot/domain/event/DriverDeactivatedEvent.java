@@ -6,6 +6,7 @@ import com.aiot.domain.shared.DriverId;
 
 import java.time.Instant;
 import java.util.Objects;
+import org.springframework.stereotype.Service;
 
 /**
  * 驾驶员注销/账号删除事件。

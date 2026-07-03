@@ -5,7 +5,9 @@ import com.aiot.domain.model.Trip;
 import com.aiot.domain.repository.TripRepository;
 
 import java.util.Optional;
+import org.springframework.stereotype.Service;
 
+@Service
 public class DrivingBehaviorTrackingServiceImpl implements DrivingBehaviorTrackingService {
 
     private final TripRepository tripRepository;

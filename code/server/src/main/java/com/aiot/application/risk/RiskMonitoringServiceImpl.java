@@ -30,7 +30,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.stereotype.Service;
 
+@Service
 public class RiskMonitoringServiceImpl implements IRiskMonitoringService {
 
     private final RiskDeterminationService riskDeterminationService;

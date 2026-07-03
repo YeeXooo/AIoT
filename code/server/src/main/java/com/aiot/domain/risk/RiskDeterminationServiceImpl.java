@@ -14,7 +14,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.springframework.stereotype.Service;
 
+@Service
 public class RiskDeterminationServiceImpl implements RiskDeterminationService {
 
     private final FatigueDeterminationService fatigueService;

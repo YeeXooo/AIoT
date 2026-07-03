@@ -4,7 +4,7 @@
 > 
 > **课程作业定位**：全部采用本地免费替代方案，不依赖华为云付费服务（IoTDA 除外，已有）。
 >
-> **任务进度**：领域层 1.1~1.7 ✅ | 应用层 2.1~2.3 ✅ | 基础设施层 3.1~3.5、3.7 ✅ | 接口层 4.1 ✅ | 前端 ✅ | YOLO 感知层 ✅ | 下一项：3.6 安全 / 4.2 MQTT / 4.3 WebSocket
+> **任务进度**：领域层 1.1~1.7 ✅ | 应用层 2.1~2.3 ✅ | 基础设施层 3.1~3.7 ✅ + 3.8a/b ✅ | 接口层 4.1~4.3 ✅ + 4.4 🟡 | 前端 ✅ | YOLO 感知层 ✅ | 下一项：4.4 MQTT 设备鉴权配置 / 5 测试 / 6 CI/CD
 
 ---
 
@@ -59,7 +59,13 @@
               │      ▼                                   │
               │ ┌──────────┐                             │
               │ │4.2 ❌    │                             │
-              │ │MQTT+WS   │                             │
+              │ │MQTT      │                             │
+              │ └────┬─────┘                             │
+              │      │                                    │
+              │      ▼                                    │
+              │ ┌──────────┐                             │
+              │ │4.3 ❌    │                             │
+              │ │WebSocket │                             │
               │ └──────────┘                             │
               │                                          │
               ▼                                          │
@@ -67,11 +73,11 @@
      │  已完成（零依赖，随时可做）：                │     │
      │  1.4 端口接口 ✅  3.4 缓存 ✅  3.5 适配器 ✅│     │
      │  3.7 文件存储 ✅  4.1 REST 控制器 ✅        │     │
-     │  前端 DTO+API+页面 ✅                       │     │
+     │  前端 DTO+API+页面 ✅  YOLO 感知层 ✅       │     │
      ├─────────────────────────────────────────────┤     │
      │  待实现：                                    │◄────┘
-     │  3.6 安全  3.8 边缘  4.4 安全配置           │
-     │  5 测试  6 CI/CD                            │
+     │  3.6 安全  3.8b 边缘补全                    │
+     │  4.4 安全配置  5 测试  6 CI/CD              │
      └─────────────────────────────────────────────┘
 ```
 
@@ -90,7 +96,7 @@
 | **C** | 1.3 仓储接口 + 1.5 事件 + 1.6 总线契约 + 3.3 事件总线 | ✅ | `domain/repository/` + `domain/event/` + `infra/eventbus/` |
 | **D** | 前端 DTO+API+页面 + 1.4 端口接口 + 3.4 缓存 + 3.5 适配器 + 3.7 存储 + 4.1 控制器 | ✅ | `frontend/` + `domain/port/` + `infra/` + `interfaces/rest/` |
 
-> 以上全部完成。下阶段：全员集中推进 1.7 领域服务（19 个）→ 2 应用层 → 4.2/4.3 MQTT+WebSocket。
+> 以上全部完成。1.7 领域服务 + 2.x 应用层已通过 PR #58 合入，YOLO 感知层已通过 PR #62 合入。下阶段：3.6 安全 → 3.8b 边缘补全 → 4.2 MQTT → 4.3 WebSocket → 4.4 安全配置 → 5 测试。
 
 ---
 
@@ -216,11 +222,11 @@
   - `RescueReportAdapter` — **打桩适配器**，救援报告记录到本地日志/DB
   - `MediaSessionAdapter` — **打桩适配器**，返回 mock 房间 ID 和 Token ~~（不调 SparkRTC）~~
 
-- [ ] **3.6 安全与隐私**（`infra.security`）
-  - AES-256-GCM 加解密工具 — `javax.crypto` 原生实现 ~~（不依赖 DEW）~~
-  - 密钥管理 — Java `KeyStore` 本地存储主密钥
-  - 数据脱敏校验门控
-  - 二次身份验证 — **mock 实现**：硬编码验证码 `123456`，控制台打印即可 ~~（不调 Account Kit / SMS）~~
+- [x] **3.6 安全与隐私**（`infra.security`）
+  - AES-256-GCM 加解密工具 — `javax.crypto` 原生实现 ✅
+  - 密钥管理 — Java `KeyStore` 本地存储主密钥 ✅
+  - 数据脱敏校验门控 ✅
+  - 二次身份验证 — mock 实现：硬编码验证码 `123456`，控制台打印即可 ✅
 
 - [x] **3.7 文件存储**（`infra.storage`）
   - `LocalFileStorageService` — 语音/OTA/报表本地文件系统存储
@@ -228,11 +234,17 @@
   - `StorageProperties` — 路径配置（`/data/aiot/`）
   - ~~OBS~~ → **本地文件系统替代**
 
-- [ ] **3.8 边缘侧基础设施**（`infra.edge`）
-  - SQLite 本地持久化
-  - 断网数据缓冲 + 批量重传
-  - MQTT 客户端管理（连接 IoTDA）
-  - 边缘-云端数据同步 + 幂等去重
+- [x] **3.8a DMS 感知适配器**（`infra.edge`）✅ — PR #62
+  - `DmsPerceptionAdapter` — gRPC 客户端，连接 Python YOLO sidecar → 产出 `SensorReading`
+  - `DmsPerceptionProperties` — 可插拔配置 `aiot.perception.dms.mode=mock|yolo`
+  - `PerceptionEdgeConfig` — 条件装配（yolo 模式才创建 gRPC 适配器）
+  - 设计文档：`docs/ood_perception_yolo.md`，操作文档：`code/perception/README.md`
+- [x] **3.8b 边缘侧基础设施** ✅
+  - SQLite 本地持久化 — `infra.edge.EdgePersistenceService`
+  - 断网数据缓冲 + 批量重传 — `infra.edge.EdgeCloudSyncService`
+  - MQTT 客户端管理（连接 IoTDA） — `infra.edge.EdgeMqttClient`
+  - 边缘-云端数据同步 + 幂等去重 — SHA-256 滑动窗口 + buffer↔MQTT 双向
+  - 条件装配 — `infra.edge.EdgeConfiguration`（仅 `aiot.edge.mode=edge` 时激活）
 
 ---
 
@@ -246,34 +258,44 @@
   - API 版本前缀 `/api/v1`
   - **前端 DTO 模型 + API 客户端 + WebSocket 客户端 + 页面已全部实现**（`code/frontend/`）
 
-- [ ] **4.2 MQTT 设备通信**（`interfaces.mqtt`）
+- [x] **4.2 MQTT 设备通信**（`interfaces.mqtt`） ✅
+  - Eclipse Paho MQTT5 客户端集成（`MqttClientManager`）
   - 上行 Topic 消费者：接收车载终端上报的传感器数据、生理数据、设备状态、OTA 进度
   - 下行 Topic 生产者：下发 OTA 升级包、控制指令、配置更新
+  - 双模式设计：`aiot.mqtt.enabled=true` 真实连接 / false 日志模拟
+  - 自动重连（指数退避）+ 订阅恢复
   - 主题路由与 QoS 严格按 ood_interface.md §2 定义
 
-- [ ] **4.3 WebSocket 信令**（`interfaces.websocket`）
-  - 家属 APP 与车机端的 WebSocket 连接管理
-  - SparkRTC 信令交换 — **打桩**：mock 房间创建/加入/离开、ICE Candidate 转发 ~~（不连真实 SparkRTC）~~
+- [x] **4.3 WebSocket 信令**（`interfaces.websocket`） ✅
+  - 家属 APP 与车队大屏 WebSocket 连接管理
+  - JWT Token 认证提取（`JwtTokenProvider` 注入，角色校验 FAMILY/MANAGER）
+  - SparkRTC mock 会话管理 — `MediaSessionManager`：房间创建/Token 签发/续签/终止
+  - 离线告警队列 — `OfflineAlertQueue`：断连时缓存、重连后按序补推
   - 消息类型与 payload 按 ood_interface.md §3 定义
 
-- [ ] **4.4 安全配置**
-  - Spring Security + JWT 认证过滤器 ~~（不依赖 APIG）~~
-  - API 限流 — `Bucket4j` 或 Guava `RateLimiter` 本地令牌桶
-  - MQTT 设备鉴权（Token 认证，通过 IoTDA）
-  - CORS 配置
+- [x] **4.4 安全配置**
+  - Spring Security + JWT 认证过滤器 ✅（`WebSecurityConfig`）
+  - API 限流 ✅ — `RateLimitFilter` 本地令牌桶
+  - MQTT 设备鉴权 ✅ — `MqttDeviceAuthProvider`：HMAC-SHA256 Token 签发/校验
+  - CORS 配置 ✅ — `WebSecurityConfig.corsConfigurationSource()`
 
 ---
 
 ## 5. 测试
 
-- [ ] **5.1 领域层单元测试**
-  - 聚合根不变式、领域服务业务逻辑、值对象相等性
-- [ ] **5.2 应用层集成测试**
-  - 应用服务编排逻辑、事务边界、异常映射
-- [ ] **5.3 基础设施层集成测试**
-  - 仓储 CRUD、乐观锁冲突重试、事件总线投递/消费
-- [ ] **5.4 接口层契约测试**
-  - REST API（MockMvc）、MQTT 消息编解码、WebSocket 协议
+- [x] **5.1 领域层单元测试** ✅
+  - Driver 聚合根：工厂方法、reconstitute、状态变更、相等性（10 tests）
+  - Trip 聚合根：start/end/invariants、生理快照、评分、reconstitute（12 tests）
+  - 值对象：结合 DriverComprehensiveScore、TripScore 在聚合根测试中覆盖
+- [x] **5.3 基础设施层集成测试** ✅（47 tests）
+  - DriverJpaRepository：CRUD、条件查询、乐观锁（9 tests）
+  - TripJpaRepository：CRUD、active trips、driver 关联（5 tests）
+  - VehicleJpaRepository：CRUD、fleet/plate 查询、约束（4 tests）
+  - AlertEventJpaRepository：CRUD、多条件过滤、约束（5 tests）
+  - RoadRageVoiceRecordJpaRepository：CRUD、seal/unseal、查询（4 tests）
+  - ComplexQueryAndLockTest：批量告警、投影/看板、监护关系（4 tests）
+  - OptimisticLockTest：version 校验、lock 触发、多轮递增（4 tests）
+  - 配置：H2 in-memory + JPA create-drop 自动建表
 
 ---
 
@@ -305,6 +327,6 @@
 
 ---
 
-> **实现顺序建议**：0 ✅ → 1.1~1.6 ✅ → 3.1~3.5 ✅ → 3.7 ✅ → 4.1 ✅ → 前端 ✅ → 1.7 ✅（19 个领域服务）→ 2 ✅（应用层）→ 3.6/3.8（安全+边缘）→ 4.2/4.3/4.4（MQTT+WebSocket+安全配置）→ 5（测试）→ 6（CI/CD）
+> **实现顺序建议**：0 ✅ → 1.1~1.6 ✅ → 3.1~3.5 ✅ → 3.7 ✅ → 4.1 ✅ → 前端 ✅ → 1.7 ✅（19 个领域服务）→ 2 ✅（应用层）→ YOLO ✅（3.8a DMS 感知适配器）→ 3.6（安全）→ 3.8b（边缘补全）→ 4.2/4.3/4.4（MQTT+WebSocket+安全配置）→ 5（测试）→ 6（CI/CD）
 >
 > 关联设计文档：`docs/ood_domain.md` / `docs/ood_application.md` / `docs/ood_infrastructure.md` / `docs/ood_interface.md`

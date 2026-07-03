@@ -6,7 +6,9 @@ import com.aiot.domain.shared.AppError;
 import com.aiot.domain.shared.Result;
 
 import java.util.Map;
+import org.springframework.stereotype.Service;
 
+@Service
 public class RoadRageDeterminationServiceImpl implements RoadRageDeterminationService {
 
     private static final double VOICE_INTENSITY_THRESHOLD_CRITICAL = 80.0;

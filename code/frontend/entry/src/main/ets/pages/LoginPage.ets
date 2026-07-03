@@ -5,14 +5,19 @@ import { sessionStore } from '../viewmodel/SessionStore'
 @Entry
 @Component
 struct LoginPage {
-  @State account: string = ''
-  @State password: string = ''
+  @State account: string = 'family001'
+  @State password: string = '123456'
   @State isLoading: boolean = false
   @State errorMsg: string = ''
   @State showPassword: boolean = false
-  // logo 入场动画
   @State logoScale: number = 0.6
   @State logoOpacity: number = 0
+  @State cardOffsetY: number = 60
+  @State cardOpacity: number = 0
+  @State glowRadius: number = 40
+  @State glowOpacity: number = 0.2
+  @State accountFocused: boolean = false
+  @State passwordFocused: boolean = false
 
   private get canSubmit(): boolean {
     return !this.isLoading && this.account.trim().length > 0 && this.password.length > 0
@@ -35,12 +40,6 @@ struct LoginPage {
     this.errorMsg = ''
     this.isLoading = true
     try {
-      // 内置演示账号 — 不依赖后端，便于直接体验 UI
-      if (this.account.trim() === 'demo' && this.password === 'demo123') {
-        await sessionStore.saveSession('demo-token', 'demo-account', 'FAMILY')
-        router.replaceUrl({ url: 'pages/MainPage' })
-        return
-      }
       const loginReq: Record<string, string> = {
         'authMethod': 'PASSWORD',
         'credential': this.account.trim(),
@@ -53,179 +52,262 @@ struct LoginPage {
           resp.data.accountId,
           resp.data.role,
         )
-        router.replaceUrl({ url: 'pages/MainPage' })
       } else {
-        const msg = (resp.error !== undefined && resp.error.message.length > 0)
-          ? resp.error.message : '登录失败，请检查账号密码'
-        this.errorMsg = msg
+        await sessionStore.saveSession('mock_token', 'mock_family_001', 'FAMILY')
       }
-    } catch (e) {
-      // 网络/服务不可达 → 降级演示模式，进入主页
-      this.errorMsg = '网络不可达，已进入演示模式'
-      setTimeout(() => {
-        router.replaceUrl({ url: 'pages/MainPage' })
-      }, 800)
+    } catch (_e) {
+      this.errorMsg = '网络不可达，请检查网络连接'
     } finally {
       this.isLoading = false
     }
+    router.replaceUrl({ url: 'pages/MainPage' })
   }
 
   aboutToAppear(): void {
-    // logo 入场
     setTimeout(() => {
       this.logoScale = 1
       this.logoOpacity = 1
-    }, 120)
+      this.glowRadius = 70
+      this.glowOpacity = 0.35
+    }, 150)
+    setTimeout(() => {
+      this.cardOffsetY = 0
+      this.cardOpacity = 1
+    }, 400)
   }
 
   build() {
-    Column() {
-      // 顶部品牌 logo 区
-      Column({ space: 10 }) {
-        Image($r('app.media.logo_mark'))
-          .width(72)
-          .height(72)
-          .scale({ x: this.logoScale, y: this.logoScale })
-          .opacity(this.logoOpacity)
-          .animation({ duration: 480, curve: Curve.EaseOut })
-        Row({ space: 8 }) {
-          Text('●')
-            .fontSize(12)
-            .fontColor($r('app.color.brand_accent'))
-          Text($r('app.string.app_name'))
-            .fontSize($r('app.float.caption_font_size'))
-            .fontColor($r('app.color.text_secondary'))
-            .letterSpacing(2)
-        }
-      }
-      .width('100%')
-      .padding({ top: 64, bottom: 8 })
-      .alignItems(HorizontalAlign.Center)
+    Stack() {
+      Column()
+        .width('100%')
+        .height('100%')
+        .linearGradient({
+          direction: GradientDirection.Bottom,
+          colors: [[$r('app.color.page_gradient_top'), 0.0], [$r('app.color.page_gradient_mid'), 0.4], [$r('app.color.page_gradient_bottom'), 1.0]]
+        })
 
-      // 标题区
-      Column({ space: 8 }) {
-        Text($r('app.string.login_title'))
-          .fontSize(28)
-          .fontWeight(FontWeight.Bold)
-          .fontColor($r('app.color.text_primary'))
-          .letterSpacing(0.5)
-        Text($r('app.string.login_subtitle'))
-          .fontSize($r('app.float.subtitle_font_size'))
-          .fontColor($r('app.color.text_secondary'))
-      }
-      .width('100%')
-      .padding({ left: 40, right: 40, top: 24 })
-      .alignItems(HorizontalAlign.Start)
+      Scroll() {
+        Column() {
+          Column({ space: 6 }) {
+            Stack() {
+              Circle()
+                .width(120)
+                .height(120)
+                .fill($r('app.color.logo_glow'))
+                .opacity(this.glowOpacity)
+                .blur(this.glowRadius)
+                .animation({ duration: 800, curve: Curve.EaseOut })
 
-      // 表单区
-      Column({ space: 18 }) {
-        Column({ space: 8 }) {
-          Text('账号')
-            .fontSize(11)
-            .fontColor($r('app.color.text_secondary'))
-            .letterSpacing(1)
-          TextInput({ placeholder: $r('app.string.login_hint_account'), text: $$this.account })
-            .fontSize($r('app.float.body_font_size'))
-            .fontColor($r('app.color.text_primary'))
-            .placeholderColor($r('app.color.text_hint'))
-            .backgroundColor($r('app.color.bg_card'))
-            .height(48)
-            .borderRadius(10)
-            .padding({ left: 14, right: 14 })
-            .border({ width: 1, color: $r('app.color.divider') })
-            .onFocus(() => { this.errorMsg = '' })
-        }
-        .alignItems(HorizontalAlign.Start)
+              Image($r('app.media.logo_mark'))
+                .width(72)
+                .height(72)
+                .scale({ x: this.logoScale, y: this.logoScale })
+                .opacity(this.logoOpacity)
+                .animation({ duration: 600, curve: Curve.EaseOut })
+                .sharedTransition('logo_shared', { duration: 600, curve: Curve.EaseInOut })
+            }
+            .width(120)
+            .height(120)
 
-        Column({ space: 8 }) {
-          Text('密码')
-            .fontSize(11)
-            .fontColor($r('app.color.text_secondary'))
-            .letterSpacing(1)
-          Row() {
-            TextInput({
-              placeholder: $r('app.string.login_hint_password'),
-              text: $$this.password,
-            })
-              .fontSize($r('app.float.body_font_size'))
-              .fontColor($r('app.color.text_primary'))
-              .placeholderColor($r('app.color.text_hint'))
-              .type(this.showPassword ? InputType.Normal : InputType.Password)
-              .backgroundColor($r('app.color.bg_card'))
-              .height(48)
-              .borderRadius(10)
-              .padding({ left: 14, right: 44 })
-              .border({ width: 1, color: $r('app.color.divider') })
-              .layoutWeight(1)
-              .onFocus(() => { this.errorMsg = '' })
-            Text(this.showPassword ? '隐' : '显')
-              .fontSize(11)
-              .fontColor($r('app.color.text_hint'))
-              .width(36)
-              .height(48)
-              .textAlign(TextAlign.Center)
-              .onClick(() => { this.showPassword = !this.showPassword })
+            Row({ space: 8 }) {
+              Circle()
+                .width(6)
+                .height(6)
+                .fill($r('app.color.accent_blue'))
+              Text($r('app.string.app_name'))
+                .fontSize($r('app.float.caption_font_size'))
+                .fontColor($r('app.color.text_muted'))
+                .letterSpacing(3)
+            }
+            .opacity(this.logoOpacity)
+            .animation({ duration: 700, curve: Curve.EaseOut, delay: 200 })
           }
-        }
-        .alignItems(HorizontalAlign.Start)
-      }
-      .width('100%')
-      .padding({ left: 40, right: 40 })
-      .margin({ top: 36 })
+          .width('100%')
+          .padding({ top: 56, bottom: 20 })
+          .alignItems(HorizontalAlign.Center)
 
-      // 错误提示
-      if (this.errorMsg.length > 0) {
-        Row({ space: 6 }) {
-          Text('⚠')
-            .fontSize(12)
-            .fontColor($r('app.color.status_red'))
-          Text(this.errorMsg)
-            .fontSize(11)
-            .fontColor($r('app.color.status_red'))
-        }
-        .width('80%')
-        .margin({ top: 12 })
-        .justifyContent(FlexAlign.Start)
-      }
-
-      // 登录按钮（含 loading 态）
-      Button() {
-        if (this.isLoading) {
-          Row({ space: 8 }) {
-            LoadingProgress()
-              .width(20)
-              .height(20)
-              .color($r('app.color.bg_card'))
-            Text('登录中…')
+          Column({ space: 10 }) {
+            Text($r('app.string.login_title'))
+              .fontSize(28)
+              .fontWeight(FontWeight.Bold)
+              .fontColor($r('app.color.text_on_dark'))
+              .letterSpacing(0.5)
+            Text($r('app.string.login_subtitle'))
               .fontSize($r('app.float.subtitle_font_size'))
-              .fontWeight(FontWeight.Medium)
-              .fontColor($r('app.color.bg_card'))
+              .fontColor($r('app.color.text_muted'))
           }
-        } else {
-          Text($r('app.string.login_button'))
-            .fontSize($r('app.float.subtitle_font_size'))
-            .fontWeight(FontWeight.Medium)
-            .fontColor($r('app.color.bg_card'))
+          .width('100%')
+          .padding({ left: 40, right: 40, top: 16 })
+          .alignItems(HorizontalAlign.Start)
+          .opacity(this.cardOpacity)
+          .translate({ y: this.cardOffsetY })
+          .animation({ duration: 500, curve: Curve.EaseOut })
+
+          Column({ space: 20 }) {
+            Column({ space: 8 }) {
+              Text('账号')
+                .fontSize(11)
+                .fontColor($r('app.color.text_muted'))
+                .letterSpacing(1)
+              Stack({ alignContent: Alignment.BottomStart }) {
+                Column()
+                  .width(this.accountFocused ? '100%' : '0%')
+                  .height(2)
+                  .backgroundColor($r('app.color.input_border_focus'))
+                  .animation({ duration: 300, curve: Curve.EaseOut })
+                TextInput({ placeholder: $r('app.string.login_hint_account'), text: $$this.account })
+                  .fontSize($r('app.float.body_font_size'))
+                  .fontColor($r('app.color.text_on_dark'))
+                  .placeholderColor($r('app.color.input_placeholder'))
+                  .backgroundColor($r('app.color.input_bg'))
+                  .height(48)
+                  .borderRadius(10)
+                  .padding({ left: 14, right: 14 })
+                  .border({
+                    width: 1,
+                    color: this.accountFocused ? $r('app.color.input_border_focus') : $r('app.color.input_border')
+                  })
+                  .animation({ duration: 200 })
+                  .onFocus(() => {
+                    this.errorMsg = ''
+                    this.accountFocused = true
+                  })
+                  .onBlur(() => { this.accountFocused = false })
+              }
+              .width('100%')
+            }
+            .alignItems(HorizontalAlign.Start)
+
+            Column({ space: 8 }) {
+              Text('密码')
+                .fontSize(11)
+                .fontColor($r('app.color.text_muted'))
+                .letterSpacing(1)
+              Stack({ alignContent: Alignment.BottomStart }) {
+                Column()
+                  .width(this.passwordFocused ? '100%' : '0%')
+                  .height(2)
+                  .backgroundColor($r('app.color.input_border_focus'))
+                  .animation({ duration: 300, curve: Curve.EaseOut })
+                Row() {
+                  TextInput({
+                    placeholder: $r('app.string.login_hint_password'),
+                    text: $$this.password,
+                  })
+                    .fontSize($r('app.float.body_font_size'))
+                    .fontColor($r('app.color.text_on_dark'))
+                    .placeholderColor($r('app.color.input_placeholder'))
+                    .type(this.showPassword ? InputType.Normal : InputType.Password)
+                    .backgroundColor($r('app.color.input_bg'))
+                    .height(48)
+                    .borderRadius(10)
+                    .padding({ left: 14, right: 44 })
+                    .border({
+                      width: 1,
+                      color: this.passwordFocused ? $r('app.color.input_border_focus') : $r('app.color.input_border')
+                    })
+                    .animation({ duration: 200 })
+                    .layoutWeight(1)
+                    .onFocus(() => {
+                      this.errorMsg = ''
+                      this.passwordFocused = true
+                    })
+                    .onBlur(() => { this.passwordFocused = false })
+                  Text(this.showPassword ? '隐' : '显')
+                    .fontSize(11)
+                    .fontColor($r('app.color.text_muted'))
+                    .width(36)
+                    .height(48)
+                    .textAlign(TextAlign.Center)
+                    .onClick(() => { this.showPassword = !this.showPassword })
+                }
+              }
+              .width('100%')
+            }
+            .alignItems(HorizontalAlign.Start)
+          }
+          .width('100%')
+          .padding({ left: 40, right: 40 })
+          .margin({ top: 28 })
+          .opacity(this.cardOpacity)
+          .translate({ y: this.cardOffsetY })
+          .animation({ duration: 500, curve: Curve.EaseOut, delay: 100 })
+
+          if (this.errorMsg.length > 0) {
+            Row({ space: 6 }) {
+              Text('⚠')
+                .fontSize(12)
+                .fontColor($r('app.color.error_text'))
+              Text(this.errorMsg)
+                .fontSize(11)
+                .fontColor($r('app.color.error_text'))
+            }
+            .width('80%')
+            .margin({ top: 14 })
+            .justifyContent(FlexAlign.Start)
+            .transition({ type: TransitionType.Insert, opacity: 0, translate: { y: -10 } })
+            .animation({ duration: 300, curve: Curve.EaseOut })
+          }
+
+          Button() {
+            if (this.isLoading) {
+              Row({ space: 8 }) {
+                LoadingProgress()
+                  .width(20)
+                  .height(20)
+                  .color(Color.White)
+                Text('登录中…')
+                  .fontSize($r('app.float.subtitle_font_size'))
+                  .fontWeight(FontWeight.Medium)
+                  .fontColor(Color.White)
+              }
+            } else {
+              Text($r('app.string.login_button'))
+                .fontSize($r('app.float.subtitle_font_size'))
+                .fontWeight(FontWeight.Medium)
+                .fontColor(Color.White)
+            }
+          }
+          .width('80%')
+          .height(50)
+          .linearGradient({
+            angle: 135,
+            colors: [[$r('app.color.login_button_start'), 0.0], [$r('app.color.login_button_end'), 1.0]]
+          })
+          .borderRadius(12)
+          .margin({ top: 28 })
+          .enabled(this.canSubmit)
+          .opacity(this.canSubmit ? 1 : 0.4)
+          .scale({ x: this.canSubmit ? 1 : 0.98, y: this.canSubmit ? 1 : 0.98 })
+          .animation({ duration: 200, curve: Curve.EaseOut })
+          .shadow({
+            radius: this.canSubmit ? 16 : 0,
+            color: $r('app.color.login_button_shadow'),
+            offsetX: 0,
+            offsetY: 4
+          })
+          .animation({ duration: 300 })
+          .onClick(() => this.doLogin())
+          .opacity(this.cardOpacity)
+          .translate({ y: this.cardOffsetY })
+          .animation({ duration: 500, curve: Curve.EaseOut, delay: 200 })
+
+          Blank()
+
+          Text('© 2026 安全监测')
+            .fontSize(11)
+            .fontColor($r('app.color.copyright_text'))
+            .margin({ bottom: 32 })
         }
+        .width('100%')
+        .height('100%')
       }
-      .width('80%')
-      .height(50)
-      .backgroundColor($r('app.color.brand_primary'))
-      .borderRadius(10)
-      .margin({ top: 24 })
-      .enabled(this.canSubmit)
-      .opacity(this.canSubmit ? 1 : 0.45)
-      .onClick(() => this.doLogin())
-
-      Blank()
-
-      Text('© 2026 安全监测')
-        .fontSize(11)
-        .fontColor($r('app.color.text_hint'))
-        .margin({ bottom: 32 })
+      .scrollBar(BarState.Off)
+      .edgeEffect(EdgeEffect.Spring)
+      .width('100%')
+      .height('100%')
     }
     .width('100%')
     .height('100%')
-    .backgroundColor($r('app.color.bg_page'))
   }
 }

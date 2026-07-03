@@ -1,0 +1,80 @@
+{
+  "color": [
+    {
+      "name": "start_window_background",
+      "value": "#000000"
+    },
+    {
+      "name": "risk_green",
+      "value": "#30D158"
+    },
+    {
+      "name": "risk_yellow",
+      "value": "#FFD60A"
+    },
+    {
+      "name": "risk_orange",
+      "value": "#FF9F0A"
+    },
+    {
+      "name": "risk_red",
+      "value": "#FF453A"
+    },
+    {
+      "name": "hmi_bg_dark",
+      "value": "#000000"
+    },
+    {
+      "name": "hmi_card_dark",
+      "value": "#1C1C1E"
+    },
+    {
+      "name": "hmi_card_elevated",
+      "value": "#2C2C2E"
+    },
+    {
+      "name": "hmi_text_primary",
+      "value": "#F5F5F7"
+    },
+    {
+      "name": "hmi_text_secondary",
+      "value": "#86868B"
+    },
+    {
+      "name": "hmi_text_tertiary",
+      "value": "#48484A"
+    },
+    {
+      "name": "hmi_accent_blue",
+      "value": "#0A84FF"
+    },
+    {
+      "name": "hmi_accent_teal",
+      "value": "#64D2FF"
+    },
+    {
+      "name": "hmi_accent_purple",
+      "value": "#BF5AF2"
+    },
+    {
+      "name": "hmi_accent_cyan",
+      "value": "#5AC8FA"
+    },
+    {
+      "name": "hmi_fill_primary",
+      "value": "#48484A"
+    },
+    {
+      "name": "hmi_fill_secondary",
+      "value": "#3A3A3C"
+    },
+    {
+      "name": "hmi_separator",
+      "value": "#38383A"
+    },
+    {
+      "name": "hmi_glass_bg",
+      "value": "#1C1C1E"
+    }
+  ]
+}

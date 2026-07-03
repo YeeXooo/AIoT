@@ -4,7 +4,9 @@ import com.aiot.domain.event.DriverScoreUpdatedEvent;
 import com.aiot.domain.event.DomainEventPublisher;
 import com.aiot.domain.model.DriverComprehensiveScore;
 import com.aiot.domain.repository.DriverRepository;
+import org.springframework.stereotype.Service;
 
+@Service
 public class DriverScoreUpdateService {
 
     private final DriverRepository driverRepository;

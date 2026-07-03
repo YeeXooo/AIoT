@@ -6,6 +6,7 @@ import com.aiot.domain.shared.VehicleId;
 
 import java.time.Instant;
 import java.util.Objects;
+import org.springframework.stereotype.Service;
 
 /**
  * OTA 升级完成事件。

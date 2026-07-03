@@ -4,7 +4,7 @@
   "projectType": "hvigor",
   "uri": {
     "$type": 1,
-    "data": "file:///storage/Users/currentUser/Download/front/front"
+    "data": "file:///storage/Users/currentUser/AIoT/code/frontend"
   },
   "buildTask": "",
   "extendConfigs": {
@@ -18,7 +18,7 @@
       "projectType": "hvigor",
       "uri": {
         "$type": 1,
-        "data": "file:///storage/Users/currentUser/Download/front/front/entry"
+        "data": "file:///storage/Users/currentUser/AIoT/code/frontend/entry"
       },
       "buildTask": "",
       "extendConfigs": {
@@ -44,13 +44,13 @@
         {
           "url": {
             "$type": 1,
-            "data": "file:///storage/Users/currentUser/Download/front/front/entry/src/main/ets"
+            "data": "file:///storage/Users/currentUser/AIoT/code/frontend/entry/src/main/ets"
           }
         },
         {
           "url": {
             "$type": 1,
-            "data": "file:///storage/Users/currentUser/Download/front/front/entry/src/ohosTest/ets"
+            "data": "file:///storage/Users/currentUser/AIoT/code/frontend/entry/src/ohosTest/ets"
           }
         }
       ],
@@ -61,37 +61,37 @@
         {
           "url": {
             "$type": 1,
-            "data": "file:///storage/Users/currentUser/Download/front/front/oh_modules"
+            "data": "file:///storage/Users/currentUser/AIoT/code/frontend/oh_modules"
           }
         },
         {
           "url": {
             "$type": 1,
-            "data": "file:///storage/Users/currentUser/Download/front/front/.hvigor"
+            "data": "file:///storage/Users/currentUser/AIoT/code/frontend/.hvigor"
           }
         },
         {
           "url": {
             "$type": 1,
-            "data": "file:///storage/Users/currentUser/Download/front/front/build"
+            "data": "file:///storage/Users/currentUser/AIoT/code/frontend/build"
           }
         },
         {
           "url": {
             "$type": 1,
-            "data": "file:///storage/Users/currentUser/Download/front/front/entry/.test"
+            "data": "file:///storage/Users/currentUser/AIoT/code/frontend/entry/.test"
           }
         },
         {
           "url": {
             "$type": 1,
-            "data": "file:///storage/Users/currentUser/Download/front/front/entry/oh_modules"
+            "data": "file:///storage/Users/currentUser/AIoT/code/frontend/entry/oh_modules"
           }
         },
         {
           "url": {
             "$type": 1,
-            "data": "file:///storage/Users/currentUser/Download/front/front/entry/build"
+            "data": "file:///storage/Users/currentUser/AIoT/code/frontend/entry/build"
           }
         }
       ]

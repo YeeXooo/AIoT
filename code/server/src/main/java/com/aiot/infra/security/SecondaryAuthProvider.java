@@ -3,8 +3,8 @@ package com.aiot.infra.security;
 /**
  * 二次身份验证提供者接口。
  * <p>
- * 为 PermissionService 的二次身份验证门控提供抽象。
- * 高敏操作（远程对讲、视频监控、远程车窗控制）前须完成二次验证。
+ * 为高敏操作（远程控车、音视频对讲、救援授权等）提供
+ * 二次身份验证门控能力，供领域层 PermissionService 调用。
  * </p>
  * <p>
  * 设计依据：docs/ood_infrastructure.md §3.6.3
@@ -13,37 +13,35 @@ package com.aiot.infra.security;
 public interface SecondaryAuthProvider {
 
     /**
-     * 验证二次身份。
+     * 校验二次身份验证凭证。
      *
-     * @param credential 验证凭据（Token 或验证码）
-     * @param operation  操作类型
-     * @return 验证结果
+     * @param accountId 账户标识
+     * @param token     验证凭证（OTP 验证码 / 生物特征 token）
+     * @param operation 待执行的高敏操作名称
+     * @return 验证是否通过
      */
-    AuthResult verify(String credential, String operation);
+    boolean verify(String accountId, String token, String operation);
 
     /**
-     * 检查操作是否需要二次验证。
+     * 判断指定操作在当前场景下是否需要二次身份验证。
+     * <p>
+     * 高危失能场景（EMERGENCY_ACTIVATED）可豁免二次验证。
+     * </p>
      *
-     * @param operation 操作类型
-     * @param scenario  场景类型
-     * @return 如果需要二次验证则返回 true
+     * @param operation 待执行的高敏操作名称
+     * @param scenario  当前场景标识
+     * @return 是否需要二次身份验证
      */
     boolean requiresSecondaryAuth(String operation, String scenario);
 
     /**
-     * 验证结果。
+     * 生成并发送二次身份验证码。
+     * <p>
+     * 本期 mock 实现：在控制台打印验证码。
+     * </p>
      *
-     * @param isSuccess 是否成功
-     * @param message   结果消息
+     * @param accountId 账户标识
+     * @return 生成的验证码（供验证阶段使用）
      */
-    record AuthResult(boolean isSuccess, String message) {
-
-        public static AuthResult success() {
-            return new AuthResult(true, "Authentication successful");
-        }
-
-        public static AuthResult failure(String message) {
-            return new AuthResult(false, message);
-        }
-    }
+    String sendVerificationCode(String accountId);
 }

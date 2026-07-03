@@ -1,4 +1,5 @@
 package com.aiot.domain.shared;
+import org.springframework.stereotype.Service;
 
 /**
  * 聚合根类型枚举，穷举系统中五类聚合根。

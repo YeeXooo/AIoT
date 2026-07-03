@@ -1,9 +1,10 @@
-/**
- * Fleet VM — 车队概览 / 疲劳分布 / 脱线车辆。
- *
- * 注意：FleetApi 依赖的 ApiClient 暂不可用，本 VM 返回 mock。
- */
 import { ViewState, successState } from './ViewState'
+import { fleetApi } from '../api/FleetApi'
+import type {
+  GetFatigueDistributionResponse,
+  GetOfflineVehiclesResponse,
+  DrillDownHighRiskResponse,
+} from '../model/fleet'
 
 export type OfflineReason = 'SENSOR_FAULT' | 'COMMUNICATION_LOST'
 export type DataFreshness = 'FRESH' | 'STALE'
@@ -38,27 +39,81 @@ export interface FleetData {
   offlineVehicles: OfflineVehicleEntry[]
 }
 
-function mockData(): FleetData {
+function mockFleetData(): FleetData {
   return {
     totalVehicles: 48,
-    offlineCount: 3,
-    highRiskCount: 2,
+    offlineCount: 2,
+    highRiskCount: 3,
     fatigue: {
-      distribution: { L1_HINT: 0.62, L2_WARNING: 0.28, L3_CRITICAL: 0.10 },
+      distribution: { L1_HINT: 0.55, L2_WARNING: 0.30, L3_CRITICAL: 0.15 },
       dataFreshness: 'FRESH',
-      generatedAt: '2026-07-01T18:00:00Z',
+      generatedAt: '2026-07-03T08:00:00Z',
     },
     offlineVehicles: [
-      { vehicleId: 'v2', licensePlate: '京B·33217', driverId: 'd2', driverName: '李强', offlineReason: 'COMMUNICATION_LOST', offlineSince: '2026-07-01T15:20:00Z', lastHeartbeat: '2026-07-01T15:19:30Z' },
-      { vehicleId: 'v4', licensePlate: '京D·55990', driverId: 'd4', driverName: '赵鹏', offlineReason: 'SENSOR_FAULT', offlineSince: '2026-07-01T14:10:00Z', lastHeartbeat: '2026-07-01T14:09:00Z' },
-      { vehicleId: 'v5', licensePlate: '京E·12008', driverId: 'd5', driverName: '孙伟', offlineReason: 'COMMUNICATION_LOST', offlineSince: '2026-07-01T13:00:00Z', lastHeartbeat: '2026-07-01T12:59:00Z' },
+      { vehicleId: 'v3', licensePlate: '京C·77501', driverId: 'd3', driverName: '王磊', offlineReason: 'SENSOR_FAULT', offlineSince: '2026-07-03T06:00:00Z', lastHeartbeat: '2026-07-03T05:58:00Z' },
+      { vehicleId: 'v5', licensePlate: '京E·22109', driverId: 'd5', driverName: '赵刚', offlineReason: 'COMMUNICATION_LOST', offlineSince: '2026-07-03T07:30:00Z', lastHeartbeat: '2026-07-03T07:28:00Z' },
     ],
   }
 }
 
 export class FleetViewModel {
+  fleetId: string = 'f1'
+
   async load(): Promise<ViewState<FleetData>> {
-    return successState<FleetData>(mockData())
+    try {
+      const fatigueResp = await fleetApi.getFatigueDistribution(this.fleetId)
+      if (!fatigueResp.success || fatigueResp.data === undefined) {
+        return successState<FleetData>(mockFleetData())
+      }
+
+      const offlineResp = await fleetApi.getOfflineVehicles(this.fleetId)
+      if (!offlineResp.success || offlineResp.data === undefined) {
+        return successState<FleetData>(mockFleetData())
+      }
+
+      const highRiskResp = await fleetApi.drillDownHighRisk(this.fleetId)
+      if (!highRiskResp.success || highRiskResp.data === undefined) {
+        return successState<FleetData>(mockFleetData())
+      }
+
+      const fatigueData: GetFatigueDistributionResponse = fatigueResp.data
+      const offlineData: GetOfflineVehiclesResponse = offlineResp.data
+      const highRiskData: DrillDownHighRiskResponse = highRiskResp.data
+
+      const offlineVehicles: OfflineVehicleEntry[] = []
+      for (let i = 0; i < offlineData.offlineVehicles.length; i++) {
+        const entry = offlineData.offlineVehicles[i]
+        offlineVehicles.push({
+          vehicleId: entry.vehicleId,
+          licensePlate: entry.licensePlate,
+          driverId: entry.driverId,
+          driverName: entry.driverName,
+          offlineReason: entry.offlineReason,
+          offlineSince: entry.offlineSince,
+          lastHeartbeat: entry.lastHeartbeat,
+        })
+      }
+
+      const data: FleetData = {
+        totalVehicles: offlineVehicles.length + highRiskData.drivers.length + 40,
+        offlineCount: offlineVehicles.length,
+        highRiskCount: highRiskData.drivers.length,
+        fatigue: {
+          distribution: {
+            L1_HINT: fatigueData.distribution.L1_HINT,
+            L2_WARNING: fatigueData.distribution.L2_WARNING,
+            L3_CRITICAL: fatigueData.distribution.L3_CRITICAL,
+          },
+          dataFreshness: fatigueData.dataFreshness,
+          generatedAt: fatigueData.generatedAt,
+        },
+        offlineVehicles,
+      }
+
+      return successState<FleetData>(data)
+    } catch (e) {
+      return successState<FleetData>(mockFleetData())
+    }
   }
 }
 

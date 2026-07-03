@@ -7,7 +7,7 @@
  * 使 API 层可返回具体 DTO 类型而非 ApiResponse<Record<string, unknown>>（问题 4 修复）。
  */
 
-import { getStr, getArray } from '../common/JsonParser'
+import { getStr, getNum, getArray, getRecord } from '../common/JsonParser'
 import type {
   CareRelationshipStatus,
   GuardianshipPermissionType,
@@ -151,7 +151,44 @@ export interface IssueSparkRTCTokenReq {
   role: SparkRTCRole
 }
 
+export function guardianshipPermissionEntryFromJson(raw: Record<string, unknown>): GuardianshipPermissionEntry {
+  return {
+    permissionType: getStr(raw, 'permissionType') as GuardianshipPermissionType,
+    granted: (raw['granted'] !== undefined && raw['granted'] !== null) ? (raw['granted'] as boolean) : false,
+    grantedAt: getStr(raw, 'grantedAt'),
+    expiresAt: (raw['expiresAt'] !== undefined && raw['expiresAt'] !== null) ? getStr(raw, 'expiresAt') : undefined,
+  }
+}
+
+export function careRelationshipSummaryFromJson(raw: Record<string, unknown>): CareRelationshipSummary {
+  return {
+    status: getStr(raw, 'status') as CareRelationshipStatus,
+    establishedAt: getStr(raw, 'establishedAt'),
+  }
+}
+
+export function queryGuardianshipPermissionsRespFromJson(raw: Record<string, unknown>): QueryGuardianshipPermissionsResp {
+  const arr = getArray(raw, 'permissions')
+  const permissions: GuardianshipPermissionEntry[] = []
+  for (let i = 0; i < arr.length; i++) {
+    permissions.push(guardianshipPermissionEntryFromJson(arr[i]))
+  }
+  return {
+    familyAccountId: getStr(raw, 'familyAccountId'),
+    driverId: getStr(raw, 'driverId'),
+    permissions,
+    careRelationship: careRelationshipSummaryFromJson(getRecord(raw, 'careRelationship')),
+  }
+}
+
 export interface IssueSparkRTCTokenResp {
   token: string
   expiresAt: string  // ISO 8601（有效期 10 分钟）
+}
+
+export function issueSparkRTCTokenRespFromJson(raw: Record<string, unknown>): IssueSparkRTCTokenResp {
+  return {
+    token: getStr(raw, 'token'),
+    expiresAt: getStr(raw, 'expiresAt'),
+  }
 }

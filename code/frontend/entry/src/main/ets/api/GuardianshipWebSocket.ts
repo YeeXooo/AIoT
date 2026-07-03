@@ -17,28 +17,18 @@ import { BaseWebSocket, type BaseWebSocketOptions } from './BaseWebSocket'
 // ===================================================================
 
 export interface GuardianshipWSEvents {
-  /** 连接建立成功 */
-  onConnected?: (msg: Record<string, unknown>) => void
-  /** 连接断开 */
+  onConnected?: (msg: Record<string, Object>) => void
   onDisconnected?: (code: number, reason: string) => void
-  /** 连接错误 */
-  onError?: (err: Record<string, unknown>) => void
-  /** 心跳 PING */
+  onError?: (err: Record<string, Object>) => void
   onPing?: (serverTime: string) => void
-  /** 驾驶员状态快照推送（≥1Hz） */
-  onDriverStatusSnapshot?: (snapshot: Record<string, unknown>) => void
-  /** 告警推送 */
-  onAlertTriggered?: (alert: Record<string, unknown>) => void
-  /** 权限授予通知 */
-  onAccessGranted?: (msg: Record<string, unknown>) => void
-  /** 权限撤销通知 */
-  onAccessRevoked?: (msg: Record<string, unknown>) => void
-  /** 订阅确认 */
-  onSubscribeStatusAck?: (msg: Record<string, unknown>) => void
-  /** 救援触发确认 */
-  onRescueTriggered?: (msg: Record<string, unknown>) => void
+  onDriverStatusSnapshot?: (snapshot: Record<string, Object>) => void
+  onAlertTriggered?: (alert: Record<string, Object>) => void
+  onAccessGranted?: (msg: Record<string, Object>) => void
+  onAccessRevoked?: (msg: Record<string, Object>) => void
+  onSubscribeStatusAck?: (msg: Record<string, Object>) => void
+  onRescueTriggered?: (msg: Record<string, Object>) => void
   /** Token 续签推送 */
-  onTokenRenewed?: (msg: Record<string, unknown>) => void
+  onTokenRenewed?: (msg: Record<string, Object>) => void
 }
 
 // ===================================================================
@@ -142,11 +132,12 @@ export class GuardianshipWebSocket extends BaseWebSocket {
     this.events.onError?.({ code: 'WS_ERROR', message: 'WebSocket 连接错误' })
   }
 
-  protected dispatchMessage(msg: Record<string, unknown>): void {
-    const type: string = getStr(msg, 'type')
-    const payload: Record<string, unknown> = getRecord(msg, 'payload')
+  protected dispatchMessage(msg: Record<string, Object>): void {
 
-    switch (type) {
+    const payload: Record<string, Object> = getRecord(msg, 'payload')
+    const msgType: string = getStr(msg, 'type')
+
+    switch (msgType) {
       case 'connection_established':
         this.events.onConnected?.(payload)
         break
@@ -188,7 +179,7 @@ export class GuardianshipWebSocket extends BaseWebSocket {
         break
 
       default:
-        console.warn(`[WS] 未知消息类型: ${type}`)
+        console.warn(`[WS] 未知消息类型: ${msgType}`)
     }
   }
 
@@ -215,7 +206,7 @@ export class GuardianshipWebSocket extends BaseWebSocket {
 
   // ---- 私有方法 ----
 
-  private handlePing(payload: Record<string, unknown>): void {
+  private handlePing(payload: Record<string, Object>): void {
     this.events.onPing?.(getStr(payload, 'serverTime'))
     // 收到 PING → 计数重置，连接活跃
     this.pingMissedCount = 0

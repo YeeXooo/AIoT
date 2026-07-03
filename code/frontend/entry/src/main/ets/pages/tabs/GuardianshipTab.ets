@@ -1,11 +1,10 @@
-/**
- * 监护 Tab — 司机列表 + 快捷操作 + 司机详情。
- * 接 GuardianshipViewModel，快捷操作接 GuardianshipApi。
- */
 import { guardianshipVM, GuardianDriver, ActionResult } from '../../viewmodel'
 import { sessionStore } from '../../viewmodel/SessionStore'
+import { guardianshipApi } from '../../api/GuardianshipApi'
+import { rtcClient } from '../../rtc/SparkRTCClient'
 import { AppCard, SectionTitle, StatusBadge } from '../../common/ui'
 import { promptAction } from '@kit.ArkUI'
+import { router } from '@kit.ArkUI'
 
 @Component
 export struct GuardianshipTab {
@@ -13,10 +12,34 @@ export struct GuardianshipTab {
   @State selectedDriver: number = 0
   @State permissions: string[] = ['MEDIA_CALL', 'WINDOW_CONTROL', 'MANUAL_RESCUE']
   @State actionLoading: boolean = false
+  @State contentOpacity: number = 0
+  @State contentOffsetY: number = 20
+  @State actionScale: number = 1.0
 
   aboutToAppear(): void {
     if (this.drivers.length > 0) {
       this.loadPerms(this.drivers[this.selectedDriver].id)
+      this.syncCurrentDriver()
+    }
+    setTimeout(() => {
+      this.contentOpacity = 1
+      this.contentOffsetY = 0
+    }, 150)
+  }
+
+  private syncCurrentDriver(): void {
+    if (this.selectedDriver < this.drivers.length) {
+      const d = this.drivers[this.selectedDriver]
+      AppStorage.setOrCreate('currentDriverId', d.id)
+      AppStorage.setOrCreate('currentDriverName', d.name)
+      AppStorage.setOrCreate('currentDriverVehicleId', d.vehicleId)
+    }
+  }
+
+  onPageShow(): void {
+    this.drivers = guardianshipVM.drivers
+    if (this.drivers.length > 0 && this.selectedDriver >= this.drivers.length) {
+      this.selectedDriver = this.drivers.length - 1
     }
   }
 
@@ -30,15 +53,62 @@ export struct GuardianshipTab {
     const account = sessionStore.account
     const accountId = account !== null ? account.accountId : 'demo-family'
     this.actionLoading = true
+    animateTo({ duration: 150, curve: Curve.EaseOut }, () => {
+      this.actionScale = 0.92
+    })
+    setTimeout(() => {
+      animateTo({ duration: 200, curve: Curve.EaseOut }, () => {
+        this.actionScale = 1.0
+      })
+    }, 150)
     let result: ActionResult = { ok: false, msg: '未实现' }
     if (action === 'MEDIA_CALL') {
-      result = await guardianshipVM.requestCall(driver.id, accountId)
+      const reqBody: Record<string, Object> = {}
+      reqBody['familyAccountId'] = accountId
+      reqBody['driverId'] = driver.id
+      reqBody['sessionType'] = 'AUDIO'
+      reqBody['secondaryAuthToken'] = ''
+      const resp = await guardianshipApi.requestMediaSession(reqBody)
+      if (resp.success && resp.data !== undefined) {
+        const joinResult = await rtcClient.joinRoom(resp.data.sparkRTCRoomId, accountId, resp.data.sparkRTCJoinToken, 'subscriber')
+        result = { ok: joinResult.ok, msg: joinResult.message }
+      } else {
+        const errMsg = resp.error !== undefined ? resp.error.message : '请求失败'
+        result = { ok: false, msg: errMsg }
+      }
     } else if (action === 'RESCUE') {
-      result = await guardianshipVM.triggerRescue(driver.id, accountId)
+      const reqBody: Record<string, Object> = {}
+      reqBody['familyAccountId'] = accountId
+      reqBody['driverId'] = driver.id
+      reqBody['secondaryAuthToken'] = ''
+      const resp = await guardianshipApi.triggerManualRescue(reqBody)
+      if (resp.success) {
+        result = { ok: true, msg: '救援请求已提交' }
+      } else {
+        const errMsg = resp.error !== undefined ? resp.error.message : '救援请求失败'
+        result = { ok: false, msg: errMsg }
+      }
     } else if (action === 'WINDOW') {
-      result = { ok: true, msg: '车窗控制已打开' }
+      const resp = await guardianshipApi.queryWindowStatus(driver.vehicleId)
+      if (resp.success && resp.data !== undefined) {
+        const count: number = resp.data.windowStatuses.length
+        result = { ok: true, msg: `车窗状态：${count} 个窗户信息已获取` }
+      } else {
+        const errMsg = resp.error !== undefined ? resp.error.message : '查询车窗状态失败'
+        result = { ok: false, msg: errMsg }
+      }
     } else if (action === 'NOTIFY') {
-      result = { ok: true, msg: '通知偏好已打开' }
+      const reqBody: Record<string, Object> = {}
+      reqBody['familyAccountId'] = accountId
+      reqBody['driverId'] = driver.id
+      reqBody['preferredRiskLevels'] = ['L1_HINT', 'L2_WARNING', 'L3_CRITICAL']
+      const resp = await guardianshipApi.updateNotificationPreference(reqBody)
+      if (resp.success) {
+        result = { ok: true, msg: '通知偏好已更新' }
+      } else {
+        const errMsg = resp.error !== undefined ? resp.error.message : '更新失败'
+        result = { ok: false, msg: errMsg }
+      }
     }
     promptAction.showToast({ message: result.msg, duration: 1800 })
     this.actionLoading = false
@@ -49,15 +119,39 @@ export struct GuardianshipTab {
       Text($r('app.string.tab_guardianship'))
         .fontSize($r('app.float.title_font_size'))
         .fontWeight(FontWeight.Bold)
-        .fontColor($r('app.color.text_primary'))
+        .fontColor($r('app.color.text_on_dark'))
         .padding({ left: 20, right: 20, top: 24, bottom: 4 })
         .width('100%')
         .textAlign(TextAlign.Start)
+        .opacity(this.contentOpacity)
+        .translate({ y: this.contentOffsetY })
+        .animation({ duration: 500, curve: Curve.EaseOut })
 
       Scroll() {
         Row({ space: 10 }) {
           ForEach(this.drivers, (driver: GuardianDriver, index: number) => {
-            this.DriverChip(driver, index)
+            Column({ space: 3 }) {
+              Text(this.drivers[index].name)
+                .fontSize($r('app.float.body_font_size'))
+                .fontWeight(this.selectedDriver === index ? FontWeight.Medium : FontWeight.Normal)
+                .fontColor(this.selectedDriver === index ? $r('app.color.icon_active') : $r('app.color.text_on_card'))
+              StatusBadge({ status: this.drivers[index].status })
+            }
+            .padding({ left: 18, right: 18, top: 12, bottom: 12 })
+            .backgroundColor(this.selectedDriver === index ? $r('app.color.chip_selected_bg') : $r('app.color.chip_unselected_bg'))
+            .borderRadius(16)
+            .border({
+              width: 1,
+              color: this.selectedDriver === index ? $r('app.color.chip_selected_border') : $r('app.color.chip_unselected_border'),
+              style: BorderStyle.Solid
+            })
+            .scale({ x: this.selectedDriver === index ? 1.03 : 1.0, y: this.selectedDriver === index ? 1.03 : 1.0 })
+            .animation({ duration: 250, curve: Curve.EaseOut })
+            .onClick(() => {
+              this.selectedDriver = index
+              this.loadPerms(this.drivers[index].id)
+              this.syncCurrentDriver()
+            })
           }, (driver: GuardianDriver) => driver.id)
         }
         .padding({ left: 16, right: 16 })
@@ -65,12 +159,17 @@ export struct GuardianshipTab {
       .scrollable(ScrollDirection.Horizontal)
       .scrollBar(BarState.Off)
       .width('100%')
+      .opacity(this.contentOpacity)
+      .translate({ y: this.contentOffsetY })
+      .animation({ duration: 500, curve: Curve.EaseOut, delay: 80 })
 
       this.QuickActions()
 
       if (this.drivers.length > 0 && this.selectedDriver < this.drivers.length) {
-        this.DriverDetail(this.drivers[this.selectedDriver])
+        this.DriverDetail()
       }
+
+      this.BindDriverButton()
 
       Blank()
     }
@@ -79,33 +178,10 @@ export struct GuardianshipTab {
   }
 
   @Builder
-  DriverChip(driver: GuardianDriver, index: number) {
-    Column({ space: 3 }) {
-      Text(driver.name)
-        .fontSize($r('app.float.body_font_size'))
-        .fontWeight(this.selectedDriver === index ? FontWeight.Medium : FontWeight.Normal)
-        .fontColor(this.selectedDriver === index ? $r('app.color.brand_primary') : $r('app.color.text_primary'))
-      StatusBadge({ status: driver.status })
-    }
-    .padding({ left: 16, right: 16, top: 10, bottom: 10 })
-    .backgroundColor(this.selectedDriver === index ? $r('app.color.brand_primary_light') : $r('app.color.bg_card'))
-    .borderRadius(14)
-    .border({
-      width: 1,
-      color: this.selectedDriver === index ? $r('app.color.brand_primary') : $r('app.color.divider'),
-      style: BorderStyle.Solid
-    })
-    .onClick(() => {
-      this.selectedDriver = index
-      this.loadPerms(driver.id)
-    })
-  }
-
-  @Builder
   QuickActions() {
     Column() {
       SectionTitle({ title: $r('app.string.quick_actions_title') })
-      Row({ space: 12 }) {
+      Row({ space: 10 }) {
         this.ActionItem($r('app.string.action_media_call'), $r('app.media.ic_action_call'), 'MEDIA_CALL', this.permissions.includes('MEDIA_CALL'))
         this.ActionItem($r('app.string.action_rescue'), $r('app.media.ic_action_rescue'), 'RESCUE', this.permissions.includes('MANUAL_RESCUE'))
         this.ActionItem($r('app.string.action_window'), $r('app.media.ic_action_window'), 'WINDOW', this.permissions.includes('WINDOW_CONTROL'))
@@ -114,66 +190,126 @@ export struct GuardianshipTab {
       .width('100%')
       .padding({ left: 16, right: 16 })
     }
+    .opacity(this.contentOpacity)
+    .translate({ y: this.contentOffsetY })
+    .animation({ duration: 500, curve: Curve.EaseOut, delay: 160 })
   }
 
   @Builder
   ActionItem(label: Resource, icon: Resource, action: string, enabled: boolean) {
     Column({ space: 8 }) {
-      Image(icon)
-        .width(28)
-        .height(28)
-        .opacity(enabled ? 1 : 0.35)
+      Stack({ alignContent: Alignment.Center }) {
+        if (enabled) {
+          Circle()
+            .width(44)
+            .height(44)
+            .fill($r('app.color.action_bg_glow'))
+            .opacity(this.actionLoading ? 0.3 : 0.6)
+        }
+        Image(icon)
+          .width(24)
+          .height(24)
+          .opacity(enabled ? 1 : 0.3)
+      }
+      .width(44)
+      .height(44)
       Text(label)
         .fontSize(11)
-        .fontColor(enabled ? $r('app.color.text_primary') : $r('app.color.text_hint'))
+        .fontColor(enabled ? $r('app.color.text_on_card') : $r('app.color.text_faint'))
     }
     .layoutWeight(1)
     .padding({ top: 16, bottom: 16 })
     .justifyContent(FlexAlign.Center)
-    .backgroundColor($r('app.color.bg_card'))
-    .borderRadius($r('app.float.card_radius'))
-    .shadow({ radius: 6, color: $r('app.color.shadow_card'), offsetX: 0, offsetY: 1 })
-    .opacity(this.actionLoading ? 0.6 : 1)
+    .alignItems(HorizontalAlign.Center)
+    .backgroundColor($r('app.color.card_bg_dark'))
+    .borderRadius(16)
+    .border({ width: 1, color: enabled ? $r('app.color.card_border') : $r('app.color.card_bg_dark') })
+    .shadow({ radius: 8, color: $r('app.color.card_shadow_subtle'), offsetX: 0, offsetY: 2 })
+    .scale({ x: this.actionScale, y: this.actionScale })
+    .animation({ duration: 200, curve: Curve.EaseOut })
     .onClick(() => {
       if (enabled) this.onAction(action)
     })
   }
 
   @Builder
-  DriverDetail(driver: GuardianDriver) {
-    AppCard({ space: 12 }) {
+  DriverDetail() {
+    Column({ space: 14 }) {
       Row() {
         Text('车辆')
           .fontSize(11)
-          .fontColor($r('app.color.text_secondary'))
-        Text(driver.vehicleId)
-          .fontSize($r('app.float.body_font_size'))
-          .fontWeight(FontWeight.Medium)
-          .fontColor($r('app.color.text_primary'))
+          .fontColor($r('app.color.text_muted'))
+        if (this.selectedDriver < this.drivers.length) {
+          Text(this.drivers[this.selectedDriver].vehicleId)
+            .fontSize($r('app.float.body_font_size'))
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.text_on_dark'))
+        }
       }
       .width('100%')
       .justifyContent(FlexAlign.SpaceBetween)
-      Divider().color($r('app.color.divider'))
+      Column()
+        .width('100%')
+        .height(1)
+        .backgroundColor($r('app.color.divider_dark'))
       Row() {
         Text('当前状态')
           .fontSize(11)
-          .fontColor($r('app.color.text_secondary'))
-        StatusBadge({ status: driver.status })
+          .fontColor($r('app.color.text_muted'))
+        if (this.selectedDriver < this.drivers.length) {
+          StatusBadge({ status: this.drivers[this.selectedDriver].status })
+        }
       }
       .width('100%')
       .justifyContent(FlexAlign.SpaceBetween)
-      Divider().color($r('app.color.divider'))
+      Column()
+        .width('100%')
+        .height(1)
+        .backgroundColor($r('app.color.divider_dark'))
       Row() {
         Text('监护权限')
           .fontSize(11)
-          .fontColor($r('app.color.text_secondary'))
+          .fontColor($r('app.color.text_muted'))
         Text(this.permLabel())
           .fontSize($r('app.float.body_font_size'))
-          .fontColor($r('app.color.text_primary'))
+          .fontColor($r('app.color.text_on_dark'))
       }
       .width('100%')
       .justifyContent(FlexAlign.SpaceBetween)
     }
+    .width('100%')
+    .padding(16)
+    .backgroundColor($r('app.color.card_bg_dark'))
+    .borderRadius(16)
+    .border({ width: 1, color: $r('app.color.card_border') })
+    .shadow({ radius: 8, color: $r('app.color.card_shadow_subtle'), offsetX: 0, offsetY: 2 })
+    .margin({ left: 16, right: 16 })
+    .opacity(this.contentOpacity)
+    .translate({ y: this.contentOffsetY })
+    .animation({ duration: 500, curve: Curve.EaseOut, delay: 240 })
+  }
+
+  @Builder
+  BindDriverButton() {
+    Column() {
+      Text('+ 添加驾驶员')
+        .fontSize($r('app.float.body_font_size'))
+        .fontWeight(FontWeight.Medium)
+        .fontColor($r('app.color.accent_blue'))
+    }
+    .width('100%')
+    .height(52)
+    .justifyContent(FlexAlign.Center)
+    .backgroundColor($r('app.color.card_bg_dark'))
+    .borderRadius(16)
+    .border({ width: 1, color: $r('app.color.dashed_border'), style: BorderStyle.Dashed })
+    .margin({ left: 16, right: 16 })
+    .opacity(this.contentOpacity)
+    .translate({ y: this.contentOffsetY })
+    .animation({ duration: 500, curve: Curve.EaseOut, delay: 320 })
+    .onClick(() => {
+      router.pushUrl({ url: 'pages/DriverBindPage' })
+    })
   }
 
   private permLabel(): string {

@@ -1,4 +1,5 @@
 package com.aiot.domain.shared;
+import org.springframework.stereotype.Service;
 
 public record AlertId(String id) {
     // AlertId 不是聚合根标识，但为了兼容性保留 generate 方法

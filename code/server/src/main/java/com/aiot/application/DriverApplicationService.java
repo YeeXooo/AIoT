@@ -4,7 +4,9 @@ import com.aiot.domain.model.Driver;
 import com.aiot.domain.repository.DriverRepository;
 
 import java.util.List;
+import org.springframework.stereotype.Service;
 
+@Service
 public class DriverApplicationService {
 
     private final DriverRepository driverRepository;

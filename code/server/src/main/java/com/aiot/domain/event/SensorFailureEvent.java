@@ -7,6 +7,7 @@ import com.aiot.domain.shared.VehicleId;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.List;
+import org.springframework.stereotype.Service;
 
 /**
  * 传感器故障事件。

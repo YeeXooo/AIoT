@@ -2,6 +2,7 @@ package com.aiot.domain.model;
 
 import java.time.Instant;
 import java.util.Objects;
+import org.springframework.stereotype.Service;
 
 /**
  * 车辆状态快照值对象。

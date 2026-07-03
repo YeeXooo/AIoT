@@ -7,6 +7,7 @@ import com.aiot.domain.shared.TripId;
 
 import java.time.Instant;
 import java.util.Objects;
+import org.springframework.stereotype.Service;
 
 /**
  * 告警触发事件。

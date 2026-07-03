@@ -1,4 +1,5 @@
 package com.aiot.domain.model;
+import org.springframework.stereotype.Service;
 
 /**
  * OTA升级阶段（VO-19 配套枚举）

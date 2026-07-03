@@ -17,7 +17,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.stereotype.Service;
 
+@Service
 public class RemoteGuardianshipServiceImpl implements IRemoteGuardianshipService {
 
     private final PermissionService permissionService;
