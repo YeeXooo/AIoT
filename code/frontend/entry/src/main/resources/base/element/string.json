@@ -131,6 +131,22 @@
     {
       "name": "reason_internet",
       "value": "用于访问驾驶安全监测服务接口"
+    },
+    {
+      "name": "bind_driver_title",
+      "value": "绑定驾驶员"
+    },
+    {
+      "name": "bind_driver_hint",
+      "value": "例如 d4"
+    },
+    {
+      "name": "bind_driver_button",
+      "value": "确认绑定"
+    },
+    {
+      "name": "add_driver",
+      "value": "+ 添加驾驶员"
     }
   ]
 }

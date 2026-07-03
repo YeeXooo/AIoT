@@ -39,7 +39,7 @@ type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE'
 export interface RequestOptions {
   headers?: Record<string, string>
   timeout?: number
-  params?: object
+  params?: Object
 }
 
 /** 内部请求结果（避免 untyped object literal） */
@@ -76,7 +76,7 @@ export class ApiClient {
   }
 
   /** 拼 query string（手写，ArkTS 无 URLSearchParams） */
-  private buildUrl(path: string, params?: object): string {
+  private buildUrl(path: string, params?: Object): string {
     const url = `${this.baseUrl}${path.startsWith('/') ? path : `/${path}`}`
     if (!params) return url
     const parts: string[] = []
@@ -104,7 +104,7 @@ export class ApiClient {
   private async doRequest(
     method: HttpMethod,
     url: string,
-    body: object | undefined,
+    body: Object | undefined,
     headers: Record<string, string>,
     timeout: number,
   ): Promise<InternalResult> {
@@ -132,7 +132,7 @@ export class ApiClient {
       const resp = await httpRequest.request(url, options)
       const status: number = resp.responseCode
       // resp.header 是 object；按字符串取 content-type
-      const headerObj: Record<string, unknown> = resp.header as Record<string, unknown>
+      const headerObj: Record<string, Object> = resp.header as Record<string, Object>
       let contentType = ''
       const ct = headerObj['Content-Type']
       if (ct !== undefined && ct !== null) {
@@ -142,7 +142,7 @@ export class ApiClient {
         ? String(resp.result) : ''
       return { ok: status >= 200 && status < 300, status, body: resultStr, contentType }
     } catch (err) {
-      const errObj: Record<string, unknown> = err as Record<string, unknown>
+      const errObj: Record<string, Object> = err as Record<string, Object>
       const msgVal = errObj['message']
       const message: string = (msgVal !== undefined && msgVal !== null) ? String(msgVal) : String(err)
       return { ok: false, status: 0, body: message, contentType: '' }
@@ -154,7 +154,7 @@ export class ApiClient {
   /** 构造错误体（解析 JSON 错误响应） */
   private parseErrorBody(body: string): ApiErrorBody {
     try {
-      const raw: Record<string, unknown> = JSON.parse(body)
+      const raw: Record<string, Object> = JSON.parse(body)
       return {
         errorCode: raw['errorCode'] as string,
         message: raw['message'] as string,
@@ -166,14 +166,14 @@ export class ApiClient {
   }
 
   /**
-   * 通用请求 — 返回 ApiResponse<Record<string, unknown>>
+   * 通用请求 — 返回 ApiResponse<Record<string, Object>>
    */
   private async request(
     method: HttpMethod,
     path: string,
-    body?: object,
+    body?: Object,
     options: RequestOptions = {},
-  ): Promise<ApiResponse<Record<string, unknown>>> {
+  ): Promise<ApiResponse<Record<string, Object>>> {
     const { headers = {}, timeout = 30000, params } = options
     const url = this.buildUrl(path, params)
 
@@ -204,7 +204,7 @@ export class ApiClient {
     }
 
     try {
-      const raw: Record<string, unknown> = JSON.parse(result.body)
+      const raw: Record<string, Object> = JSON.parse(result.body)
       return { success: true, data: raw, status: result.status }
     } catch {
       return {
@@ -255,19 +255,19 @@ export class ApiClient {
 
   // ---- 便捷方法（返回原始 Record，无 as T 断言） ----
 
-  async get(path: string, options?: RequestOptions): Promise<ApiResponse<Record<string, unknown>>> {
+  async get(path: string, options?: RequestOptions): Promise<ApiResponse<Record<string, Object>>> {
     return this.request('GET', path, undefined, options)
   }
 
-  async post(path: string, body?: object, options?: RequestOptions): Promise<ApiResponse<Record<string, unknown>>> {
+  async post(path: string, body?: Object, options?: RequestOptions): Promise<ApiResponse<Record<string, Object>>> {
     return this.request('POST', path, body, options)
   }
 
-  async put(path: string, body?: object, options?: RequestOptions): Promise<ApiResponse<Record<string, unknown>>> {
+  async put(path: string, body?: Object, options?: RequestOptions): Promise<ApiResponse<Record<string, Object>>> {
     return this.request('PUT', path, body, options)
   }
 
-  async delete(path: string, options?: RequestOptions): Promise<ApiResponse<Record<string, unknown>>> {
+  async delete(path: string, options?: RequestOptions): Promise<ApiResponse<Record<string, Object>>> {
     return this.request('DELETE', path, undefined, options)
   }
 }
