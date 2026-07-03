@@ -195,11 +195,14 @@ def convert_state_farm(sfdd_dir: str, val_ratio: float = 0.2):
 
 # ── 合成数据生成（开发阶段快速验证）────────────────
 
-def generate_synthetic_dataset(num_images: int = 200, val_ratio: float = 0.2):
+def generate_synthetic_dataset(num_images: int = 2000, val_ratio: float = 0.2):
     """
-    生成含位置随机性的合成方向盘 + 手部图像，用于训练管线验证。
+    生成含位置随机性的合成方向盘 + 手部 + 手机 + 香烟 + 安全带图像，用于训练管线验证。
 
     避免对真实图像的依赖，适合 CI 和快速迭代。
+    每张图随机组合多类别，模拟真实 DMS 场景的多样性和遮挡关系。
+    支持全部 7 类: steering_wheel, hand_on_wheel, hand_off_wheel,
+                  cell_phone, cigarette, face, seatbelt
     """
     ensure_dirs()
 
@@ -207,66 +210,102 @@ def generate_synthetic_dataset(num_images: int = 200, val_ratio: float = 0.2):
 
     for i in range(num_images):
         h, w = 480, 640
-        img = np.random.randint(40, 80, (h, w, 3), dtype=np.uint8)
+        bg_base = np.random.randint(20, 100)
+        img = np.random.randint(max(0, bg_base - 30), min(255, bg_base + 40),
+                                (h, w, 3), dtype=np.uint8)
 
-        # 方向盘：椭圆在下半部
-        cx = int(w * 0.5 + np.random.randn() * w * 0.05)
-        cy = int(h * 0.65 + np.random.randn() * 10)
-        rx = int(w * 0.25 + np.random.rand() * 20)
-        ry = int(h * 0.15 + np.random.rand() * 10)
-        cv2.ellipse(img, (cx, cy), (rx, ry), 0, 0, 360,
+        labels = []
+
+        # 方向盘：椭圆在下半部，带随机旋转
+        cx = int(w * 0.5 + np.random.randn() * w * 0.06)
+        cy = int(h * 0.65 + np.random.randn() * 15)
+        rx = int(w * 0.25 + np.random.rand() * 30)
+        ry = int(h * 0.15 + np.random.rand() * 15)
+        angle = np.random.randint(0, 360)
+        cv2.ellipse(img, (cx, cy), (rx, ry), angle, 0, 360,
                     (180, 180, 180), -1)
-        cv2.ellipse(img, (cx, cy), (rx, ry), 0, 0, 360,
+        cv2.ellipse(img, (cx, cy), (rx, ry), angle, 0, 360,
                     (100, 100, 100), 3)
 
-        # 方向盘 bbox
         sw_x = (cx - rx) / w
         sw_y = (cy - ry) / h
         sw_w = (2 * rx) / w
         sw_h = (2 * ry) / h
-
-        labels = []
-        # 方向盘
         labels.append(f"{CLASS_TO_ID['steering_wheel']} "
                       f"{sw_x + sw_w/2:.4f} {sw_y + sw_h/2:.4f} "
                       f"{sw_w:.4f} {sw_h:.4f}")
 
-        # 手部：随机位置，70% 概率在方向盘区域
-        has_hand = np.random.random() < 0.9
-        hand_class = CLASS_TO_ID['hand_on_wheel']
+        # 双手：90% 概率出现，70% 在方向盘区域
+        for _ in range(2):
+            if np.random.random() < 0.9:
+                if np.random.random() < 0.7:
+                    hx = int(cx + np.random.randn() * rx * 0.7)
+                    hy = int(cy + np.random.randn() * ry * 0.7)
+                    hand_class = CLASS_TO_ID['hand_on_wheel']
+                else:
+                    hx = int(w * np.random.random())
+                    hy = int(h * np.random.random())
+                    hand_class = CLASS_TO_ID['hand_off_wheel']
+                hr = int(12 + np.random.rand() * 20)
+                cv2.circle(img, (hx, hy), hr, (220, 200, 180), -1)
+                cv2.circle(img, (hx, hy), hr, (100, 80, 60), 2)
+                hx_n, hy_n = hx / w, hy / h
+                hw_n, hh_n = (2 * hr) / w, (2 * hr) / h
+                labels.append(f"{hand_class} {hx_n:.4f} {hy_n:.4f} {hw_n:.4f} {hh_n:.4f}")
 
-        if has_hand:
-            if np.random.random() < 0.7:
-                # 手在方向盘上
-                hx = int(cx + np.random.randn() * rx * 0.6)
-                hy = int(cy + np.random.randn() * ry * 0.6)
-            else:
-                # 手离方向盘
-                hx = int(w * np.random.random())
-                hy = int(h * np.random.random())
-                hand_class = CLASS_TO_ID['hand_off_wheel']
-
-            hr = int(15 + np.random.rand() * 15)
-            cv2.circle(img, (hx, hy), hr, (220, 200, 180), -1)
-            cv2.circle(img, (hx, hy), hr, (100, 80, 60), 2)
-
-            hx_n = hx / w
-            hy_n = hy / h
-            hw_n = (2 * hr) / w
-            hh_n = (2 * hr) / h
-            labels.append(f"{hand_class} {hx_n:.4f} {hy_n:.4f} {hw_n:.4f} {hh_n:.4f}")
-
-        # 人脸：随机在上半部分
+        # 人脸：80% 概率
         if np.random.random() < 0.8:
-            fx = int(w * 0.5 + np.random.randn() * w * 0.1)
-            fy = int(h * 0.25 + np.random.randn() * 20)
-            fr = int(30 + np.random.rand() * 20)
+            fx = int(w * 0.5 + np.random.randn() * w * 0.15)
+            fy = int(h * 0.22 + np.random.randn() * 30)
+            fr = int(25 + np.random.rand() * 30)
             cv2.circle(img, (fx, fy), fr, (150, 180, 210), -1)
-            fx_n = fx / w
-            fy_n = fy / h
-            fw_n = (2 * fr) / w
-            fh_n = (2 * fr) / h
+            cv2.ellipse(img, (fx - int(fr * 0.3), fy - int(fr * 0.2)),
+                        (int(fr * 0.15), int(fr * 0.08)), 0, 0, 360,
+                        (40, 40, 40), -1)
+            cv2.ellipse(img, (fx + int(fr * 0.3), fy - int(fr * 0.2)),
+                        (int(fr * 0.15), int(fr * 0.08)), 0, 0, 360,
+                        (40, 40, 40), -1)
+            fx_n, fy_n = fx / w, fy / h
+            fw_n, fh_n = (2 * fr) / w, (2 * fr) / h
             labels.append(f"{CLASS_TO_ID['face']} {fx_n:.4f} {fy_n:.4f} {fw_n:.4f} {fh_n:.4f}")
+
+        # 手机：30% 概率
+        if np.random.random() < 0.3:
+            px = int(w * (0.2 + np.random.random() * 0.6))
+            py = int(h * (0.4 + np.random.random() * 0.4))
+            pw, ph = int(15 + np.random.rand() * 20), int(30 + np.random.rand() * 40)
+            cv2.rectangle(img, (px, py), (px + pw, py + ph), (50, 50, 200), -1)
+            cv2.rectangle(img, (px, py), (px + pw, py + ph), (30, 30, 150), 2)
+            cv2.rectangle(img, (px + 2, py + 4), (px + pw - 2, py + ph - 4),
+                          (200, 220, 255), -1)
+            px_n, py_n = (px + pw / 2) / w, (py + ph / 2) / h
+            pw_n, ph_n = pw / w, ph / h
+            labels.append(f"{CLASS_TO_ID['cell_phone']} {px_n:.4f} {py_n:.4f} {pw_n:.4f} {ph_n:.4f}")
+
+        # 香烟：15% 概率
+        if np.random.random() < 0.15:
+            sx = int(w * (0.1 + np.random.random() * 0.8))
+            sy = int(h * (0.3 + np.random.random() * 0.5))
+            sw_s = int(20 + np.random.rand() * 30)
+            sh_s = int(4 + np.random.rand() * 4)
+            cv2.rectangle(img, (sx, sy), (sx + sw_s, sy + sh_s),
+                          (200, 200, 200), -1)
+            cv2.rectangle(img, (sx, sy), (sx + int(sw_s * 0.3), sy + sh_s),
+                          (255, 120, 30), -1)
+            sx_n, sy_n = (sx + sw_s / 2) / w, (sy + sh_s / 2) / h
+            sw_n_s, sh_n_s = sw_s / w, sh_s / h
+            labels.append(f"{CLASS_TO_ID['cigarette']} {sx_n:.4f} {sy_n:.4f} {sw_n_s:.4f} {sh_n_s:.4f}")
+
+        # 安全带：60% 概率
+        if np.random.random() < 0.6:
+            bx1, by1 = int(w * 0.35), int(h * 0.2)
+            bx2, by2 = int(w * 0.65), int(h * 0.7)
+            cv2.line(img, (bx1, by1), (bx2, by2), (60, 60, 60), 6)
+            bx_c = (bx1 + bx2) / 2 / w
+            by_c = (by1 + by2) / 2 / h
+            bw_n = abs(bx2 - bx1) / w
+            bh_n = abs(by2 - by1) / h
+            labels.append(f"{CLASS_TO_ID['seatbelt']} {bx_c:.4f} {by_c:.4f} {bw_n:.4f} {bh_n:.4f}")
 
         subset = "val" if i < int(num_images * val_ratio) else "train"
         img_dir = YOLO_DIR / "images" / subset
@@ -278,7 +317,9 @@ def generate_synthetic_dataset(num_images: int = 200, val_ratio: float = 0.2):
         cv2.imwrite(str(img_dir / f"{fname}.jpg"), img)
         (lbl_dir / f"{fname}.txt").write_text("\n".join(labels))
 
-    print(f"[OK] Generated {num_images} synthetic images")
+    n_train = num_images - int(num_images * val_ratio)
+    n_val = int(num_images * val_ratio)
+    print(f"[OK] Generated {num_images} synthetic images (train={n_train}, val={n_val})")
     write_dataset_yaml()
 
 
@@ -290,7 +331,7 @@ def main():
 
     # 合成数据
     p_synth = sub.add_parser("synthetic", help="Generate synthetic DMS dataset")
-    p_synth.add_argument("-n", type=int, default=200, help="Number of images")
+    p_synth.add_argument("-n", type=int, default=2000, help="Number of images")
     p_synth.add_argument("--val-ratio", type=float, default=0.2)
 
     # State Farm 转换
