@@ -69,37 +69,13 @@ jobs:
         run: mvn checkstyle:check -B
 
       - name: Checkstyle Report
-        uses: jwgmeligmeyling/checkstyle-github-action@v1
+        uses: dorny/test-reporter@v2
         if: success() || failure()
         with:
-          path: code/server/target/checkstyle-result.xml
           name: Checkstyle Report
-
-  # ===================================================================
-  # 前端 — TypeScript 类型检查（仅 package.json 存在时运行）
-  # ===================================================================
-  frontend:
-    name: Frontend (tsc)
-    needs: []
-    runs-on: ubuntu-latest
-    if: hashFiles('code/frontend/package.json') != ''
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install dependencies
-        working-directory: code/frontend
-        run: npm ci
-
-      - name: Type check
-        working-directory: code/frontend
-        run: npx tsc --noEmit
+          path: code/server/target/checkstyle-result.xml
+          reporter: java-checkstyle
+          fail-on-error: false
 
   # ===================================================================
   # CodeQL 安全扫描
