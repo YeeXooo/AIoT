@@ -63,12 +63,11 @@ export struct GuardianshipTab {
     }, 150)
     let result: ActionResult = { ok: false, msg: '未实现' }
     if (action === 'MEDIA_CALL') {
-      const reqBody: Record<string, unknown> = {
-        familyAccountId: accountId,
-        driverId: driver.id,
-        sessionType: 'AUDIO',
-        secondaryAuthToken: ''
-      }
+      const reqBody: Record<string, Object> = {}
+      reqBody['familyAccountId'] = accountId
+      reqBody['driverId'] = driver.id
+      reqBody['sessionType'] = 'AUDIO'
+      reqBody['secondaryAuthToken'] = ''
       const resp = await guardianshipApi.requestMediaSession(reqBody)
       if (resp.success && resp.data !== undefined) {
         const joinResult = await rtcClient.joinRoom(resp.data.sparkRTCRoomId, accountId, resp.data.sparkRTCJoinToken, 'subscriber')
@@ -78,11 +77,10 @@ export struct GuardianshipTab {
         result = { ok: false, msg: errMsg }
       }
     } else if (action === 'RESCUE') {
-      const reqBody: Record<string, unknown> = {
-        familyAccountId: accountId,
-        driverId: driver.id,
-        secondaryAuthToken: ''
-      }
+      const reqBody: Record<string, Object> = {}
+      reqBody['familyAccountId'] = accountId
+      reqBody['driverId'] = driver.id
+      reqBody['secondaryAuthToken'] = ''
       const resp = await guardianshipApi.triggerManualRescue(reqBody)
       if (resp.success) {
         result = { ok: true, msg: '救援请求已提交' }
@@ -100,11 +98,10 @@ export struct GuardianshipTab {
         result = { ok: false, msg: errMsg }
       }
     } else if (action === 'NOTIFY') {
-      const reqBody: Record<string, unknown> = {
-        familyAccountId: accountId,
-        driverId: driver.id,
-        preferredRiskLevels: ['L1_HINT', 'L2_WARNING', 'L3_CRITICAL']
-      }
+      const reqBody: Record<string, Object> = {}
+      reqBody['familyAccountId'] = accountId
+      reqBody['driverId'] = driver.id
+      reqBody['preferredRiskLevels'] = ['L1_HINT', 'L2_WARNING', 'L3_CRITICAL']
       const resp = await guardianshipApi.updateNotificationPreference(reqBody)
       if (resp.success) {
         result = { ok: true, msg: '通知偏好已更新' }

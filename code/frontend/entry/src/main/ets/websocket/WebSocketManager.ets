@@ -128,19 +128,19 @@ export class WebSocketManager {
 
   private connectGuardianship(token: string): void {
     const events: GuardianshipWSEvents = {
-      onConnected: (_msg: Record<string, unknown>) => {
+      onConnected: (_msg: Record<string, Object>) => {
         this.callbacks.onConnected?.()
       },
       onDisconnected: (_code: number, _reason: string) => {
         this.callbacks.onDisconnected?.()
       },
-      onError: (_err: Record<string, unknown>) => {
+      onError: (_err: Record<string, Object>) => {
         // 由 WS 自身处理重连，UI 层不感知瞬时错误
       },
-      onDriverStatusSnapshot: (snapshot: Record<string, unknown>) => {
+      onDriverStatusSnapshot: (snapshot: Record<string, Object>) => {
         this.dispatchStatusSnapshot(snapshot)
       },
-      onAlertTriggered: (alert: Record<string, unknown>) => {
+      onAlertTriggered: (alert: Record<string, Object>) => {
         this.dispatchAlert(alert)
       },
     }
@@ -160,10 +160,10 @@ export class WebSocketManager {
       onError: (_code: string, _message: string) => {
         // 由 WS 自身处理重连
       },
-      onL3Alert: (msg: Record<string, unknown>) => {
+      onL3Alert: (msg: Record<string, Object>) => {
         this.dispatchL3Alert(msg)
       },
-      onPerformanceWarning: (msg: Record<string, unknown>) => {
+      onPerformanceWarning: (msg: Record<string, Object>) => {
         this.dispatchPerformanceWarning(msg)
       },
     }
@@ -176,7 +176,7 @@ export class WebSocketManager {
   // 私有：消息解析与回调转发
   // ===================================================================
 
-  private dispatchStatusSnapshot(snapshot: Record<string, unknown>): void {
+  private dispatchStatusSnapshot(snapshot: Record<string, Object>): void {
     const cb = this.callbacks.onDriverStatusSnapshot
     if (cb === undefined) return
 
@@ -200,10 +200,10 @@ export class WebSocketManager {
 
     // 活跃告警级别
     const activeAlertLevels: string[] = []
-    const rawLevels: Record<string, unknown> = getRecord(snapshot, 'activeAlertLevels')
+    const rawLevels: Record<string, Object> = getRecord(snapshot, 'activeAlertLevels')
     const levelKeys = Object.keys(rawLevels)
     for (let i = 0; i < levelKeys.length; i++) {
-      activeAlertLevels.push(rawLevels[levelKeys[i]] as string)
+      activeAlertLevels.push(String(rawLevels[levelKeys[i]]))
     }
 
     cb({
@@ -219,7 +219,7 @@ export class WebSocketManager {
     })
   }
 
-  private dispatchAlert(alert: Record<string, unknown>): void {
+  private dispatchAlert(alert: Record<string, Object>): void {
     const cb = this.callbacks.onAlertTriggered
     if (cb === undefined) return
 
@@ -232,7 +232,7 @@ export class WebSocketManager {
     })
   }
 
-  private dispatchL3Alert(msg: Record<string, unknown>): void {
+  private dispatchL3Alert(msg: Record<string, Object>): void {
     const cb = this.callbacks.onL3Alert
     if (cb === undefined) return
 
@@ -245,16 +245,16 @@ export class WebSocketManager {
     })
   }
 
-  private dispatchPerformanceWarning(msg: Record<string, unknown>): void {
+  private dispatchPerformanceWarning(msg: Record<string, Object>): void {
     const cb = this.callbacks.onPerformanceWarning
     if (cb === undefined) return
 
     const penaltyArr: string[] = []
     const rawArr = msg['primaryPenaltyItems']
     if (rawArr !== undefined && rawArr !== null) {
-      const arr = rawArr as object[]
+      const arr = rawArr as string[]
       for (let i = 0; i < arr.length; i++) {
-        penaltyArr.push(arr[i] as string)
+        penaltyArr.push(arr[i])
       }
     }
 

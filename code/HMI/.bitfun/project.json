@@ -1,10 +1,10 @@
 {
-  "name": "front",
+  "name": "HMI",
   "description": "",
   "projectType": "hvigor",
   "uri": {
     "$type": 1,
-    "data": "file:///storage/Users/currentUser/AIoT/code/frontend"
+    "data": "file:///storage/Users/currentUser/AIoT/code/HMI"
   },
   "buildTask": "",
   "extendConfigs": {
@@ -18,7 +18,7 @@
       "projectType": "hvigor",
       "uri": {
         "$type": 1,
-        "data": "file:///storage/Users/currentUser/AIoT/code/frontend/entry"
+        "data": "file:///storage/Users/currentUser/AIoT/code/HMI/entry"
       },
       "buildTask": "",
       "extendConfigs": {
@@ -44,13 +44,13 @@
         {
           "url": {
             "$type": 1,
-            "data": "file:///storage/Users/currentUser/AIoT/code/frontend/entry/src/main/ets"
+            "data": "file:///storage/Users/currentUser/AIoT/code/HMI/entry/src/main/ets"
           }
         },
         {
           "url": {
             "$type": 1,
-            "data": "file:///storage/Users/currentUser/AIoT/code/frontend/entry/src/ohosTest/ets"
+            "data": "file:///storage/Users/currentUser/AIoT/code/HMI/entry/src/ohosTest/ets"
           }
         }
       ],
@@ -61,37 +61,37 @@
         {
           "url": {
             "$type": 1,
-            "data": "file:///storage/Users/currentUser/AIoT/code/frontend/oh_modules"
+            "data": "file:///storage/Users/currentUser/AIoT/code/HMI/oh_modules"
           }
         },
         {
           "url": {
             "$type": 1,
-            "data": "file:///storage/Users/currentUser/AIoT/code/frontend/.hvigor"
+            "data": "file:///storage/Users/currentUser/AIoT/code/HMI/.hvigor"
           }
         },
         {
           "url": {
             "$type": 1,
-            "data": "file:///storage/Users/currentUser/AIoT/code/frontend/build"
+            "data": "file:///storage/Users/currentUser/AIoT/code/HMI/build"
           }
         },
         {
           "url": {
             "$type": 1,
-            "data": "file:///storage/Users/currentUser/AIoT/code/frontend/entry/.test"
+            "data": "file:///storage/Users/currentUser/AIoT/code/HMI/entry/.test"
           }
         },
         {
           "url": {
             "$type": 1,
-            "data": "file:///storage/Users/currentUser/AIoT/code/frontend/entry/oh_modules"
+            "data": "file:///storage/Users/currentUser/AIoT/code/HMI/entry/oh_modules"
           }
         },
         {
           "url": {
             "$type": 1,
-            "data": "file:///storage/Users/currentUser/AIoT/code/frontend/entry/build"
+            "data": "file:///storage/Users/currentUser/AIoT/code/HMI/entry/build"
           }
         }
       ]
