@@ -1,6 +1,7 @@
 package com.aiot.interfaces.rest;
 
 import com.aiot.application.GuardianshipApplicationService;
+import com.aiot.application.guardianship.IRemoteGuardianshipService;
 import com.aiot.infra.persistence.GuardianshipEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -29,12 +30,15 @@ class GuardianshipControllerTest {
     @Mock
     private GuardianshipApplicationService service;
 
+    @Mock
+    private IRemoteGuardianshipService guardianshipService;
+
     private MockMvc mockMvc;
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(new GuardianshipController(service)).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(new GuardianshipController(service, guardianshipService)).build();
     }
 
     private static GuardianshipEntity buildEntity(String driverId, String accountId, String reason) {
