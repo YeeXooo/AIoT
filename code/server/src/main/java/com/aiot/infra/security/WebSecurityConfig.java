@@ -54,6 +54,10 @@ public class WebSecurityConfig {
                 .requestMatchers("/api/v1/fleet/**").hasRole("MANAGER")
                 // S3 家属监护端点——FAMILY 角色
                 .requestMatchers("/api/v1/guardianship/**").hasRole("FAMILY")
+                // 家属车辆查询——FAMILY 角色
+                .requestMatchers("/api/v1/vehicles/**").hasRole("FAMILY")
+                // SparkRTC Token——FAMILY 角色
+                .requestMatchers("/api/v1/sparkrtc/**").hasRole("FAMILY")
                 // S6 OTA 管理端点——MANAGER 角色
                 .requestMatchers("/api/v1/ota/**").hasRole("MANAGER")
                 // S1/S2 查询端点——已认证用户
