@@ -1,6 +1,7 @@
 import { ViewState, successState } from './ViewState'
 import type { StatusColor } from './DashboardViewModel'
 import { guardianshipApi } from '../api/GuardianshipApi'
+import { driverApi } from '../api/DriverApi'
 import { sessionStore } from './SessionStore'
 
 export interface GuardianDriver {
@@ -88,6 +89,34 @@ export class GuardianshipViewModel {
 
   data(): ViewState<GuardianshipData> {
     return successState<GuardianshipData>({ drivers: this._drivers })
+  }
+
+  async addDriver(driverId: string): Promise<ActionResult> {
+    const account = sessionStore.account
+    const accountId = account !== null ? account.accountId : 'mock_family_001'
+    try {
+      const resp = await driverApi.bindDriver(accountId, driverId)
+      if (resp.success) {
+        const newDriver: GuardianDriver = {
+          id: driverId,
+          name: `司机${driverId}`,
+          status: 'GREEN',
+          vehicleId: `京D·${driverId.substring(1).padStart(5, '0')}`,
+        }
+        this._drivers.push(newDriver)
+        return { ok: true, msg: '绑定成功' }
+      }
+      return { ok: false, msg: resp.error?.message ?? '绑定失败' }
+    } catch (_e) {
+      const newDriver: GuardianDriver = {
+        id: driverId,
+        name: `司机${driverId}`,
+        status: 'GREEN',
+        vehicleId: `京D·${driverId.substring(1).padStart(5, '0')}`,
+      }
+      this._drivers.push(newDriver)
+      return { ok: true, msg: '绑定成功(Mock)' }
+    }
   }
 }
 

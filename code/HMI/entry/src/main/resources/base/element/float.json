@@ -1,0 +1,28 @@
+{
+  "float": [
+    {
+      "name": "hmi_speed_font_size",
+      "value": "120fp"
+    },
+    {
+      "name": "hmi_alert_font_size",
+      "value": "28fp"
+    },
+    {
+      "name": "hmi_status_font_size",
+      "value": "16fp"
+    },
+    {
+      "name": "hmi_body_font_size",
+      "value": "14fp"
+    },
+    {
+      "name": "hmi_caption_font_size",
+      "value": "11fp"
+    },
+    {
+      "name": "hmi_micro_font_size",
+      "value": "9fp"
+    }
+  ]
+}
