@@ -21,9 +21,17 @@ public record VehicleStateSnapshot(
         Boolean fireRisk,
         Boolean fuelLeak,
         Double latitude,
-        Double longitude
+        Double longitude,
+        Integer gpsFix
 ) {
     public VehicleStateSnapshot {
         Objects.requireNonNull(timestamp, "timestamp must not be null");
+    }
+
+    public VehicleStateSnapshot(Instant timestamp, Double speed, Double acceleration,
+            Boolean doorLocked, Boolean fireRisk, Boolean fuelLeak,
+            Double latitude, Double longitude) {
+        this(timestamp, speed, acceleration, doorLocked, fireRisk, fuelLeak,
+             latitude, longitude, null);
     }
 }

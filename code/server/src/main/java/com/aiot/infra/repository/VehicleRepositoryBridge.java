@@ -44,6 +44,11 @@ public class VehicleRepositoryBridge implements VehicleRepository {
     }
 
     @Override
+    public Optional<Vehicle> findByTerminalSn(String terminalSn) {
+        return jpaRepository.findByTerminalSn(terminalSn).map(this::toDomain);
+    }
+
+    @Override
     public List<Vehicle> findByLicensePlateLike(String keyword) {
         return jpaRepository.findByLicensePlateLike(keyword).stream()
                 .map(this::toDomain)

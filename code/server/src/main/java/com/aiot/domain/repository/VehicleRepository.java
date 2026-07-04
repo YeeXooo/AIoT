@@ -9,6 +9,7 @@ public interface VehicleRepository {
     void save(Vehicle vehicle);
     Optional<Vehicle> findById(String id);
     List<Vehicle> findByFleetId(String fleetId);
+    Optional<Vehicle> findByTerminalSn(String terminalSn);
     List<Vehicle> findByLicensePlateLike(String keyword);
     List<Vehicle> findAll();
     void delete(String id);

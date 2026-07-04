@@ -14,7 +14,15 @@ import org.eclipse.paho.mqttv5.common.util.MqttTopicValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import javax.net.ssl.SSLSocketFactory;
 import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.*;
@@ -37,7 +45,7 @@ public class MqttClientManager {
 
     private final MqttProperties mqttProperties;
     private final ObjectMapper objectMapper;
-    private final String clientId;
+    private String clientId;
     private IMqttAsyncClient client;
 
     /** topic → handler 注册表 */
@@ -56,11 +64,20 @@ public class MqttClientManager {
     private int reconnectAttempts = 0;
     private static final int MAX_RECONNECT_DELAY_SEC = 60;
 
+    static final DateTimeFormatter IOTDA_TS_FMT = DateTimeFormatter.ofPattern("yyyyMMddHH");
+
     public MqttClientManager(MqttProperties mqttProperties, ObjectMapper objectMapper) {
         this.mqttProperties = mqttProperties;
         this.objectMapper = objectMapper;
-        this.clientId = mqttProperties.getClientIdPrefix() + "-" +
-                System.currentTimeMillis() % 100000;
+        this.clientId = buildClientId();
+    }
+
+    private String buildClientId() {
+        if (mqttProperties.isIotda()) {
+            String ts = ZonedDateTime.now(ZoneOffset.UTC).format(IOTDA_TS_FMT);
+            return mqttProperties.getClientIdPrefix() + "_0_0_" + ts;
+        }
+        return mqttProperties.getClientIdPrefix() + "-" + System.currentTimeMillis() % 100000;
     }
 
     /**
@@ -156,9 +173,20 @@ public class MqttClientManager {
         options.setCleanStart(true);
         options.setConnectionTimeout(mqttProperties.getConnectionTimeoutSec());
         options.setKeepAliveInterval(mqttProperties.getKeepAliveIntervalSec());
-        if (mqttProperties.getUsername() != null && !mqttProperties.getUsername().isEmpty()) {
-            options.setUserName(mqttProperties.getUsername());
-            options.setPassword(mqttProperties.getPassword().getBytes(StandardCharsets.UTF_8));
+
+        if (mqttProperties.getBrokerUrl().startsWith("ssl")) {
+            options.setSocketFactory(SSLSocketFactory.getDefault());
+        }
+
+        String username = mqttProperties.getUsername();
+        String password = mqttProperties.getPassword();
+        if (mqttProperties.isIotda()) {
+            password = generateIotdaPassword();
+        }
+
+        if (username != null && !username.isEmpty()) {
+            options.setUserName(username);
+            options.setPassword(password.getBytes(StandardCharsets.UTF_8));
         }
 
         log.info("MQTT 连接中: broker={}, clientId={}", mqttProperties.getBrokerUrl(), clientId);
@@ -278,7 +306,19 @@ public class MqttClientManager {
     private void tryReconnect() {
         if (!started || connected) return;
         try {
-            if (client != null && !client.isConnected()) {
+            if (mqttProperties.isIotda()) {
+                IMqttAsyncClient oldClient = client;
+                client = null;
+                if (oldClient != null) {
+                    try {
+                        oldClient.disconnect();
+                        oldClient.close();
+                    } catch (Exception ignored) {}
+                }
+                this.clientId = buildClientId();
+                connect();
+                subscribeAll();
+            } else if (client != null && !client.isConnected()) {
                 client.reconnect();
             } else {
                 connect();
@@ -288,5 +328,63 @@ public class MqttClientManager {
             log.warn("MQTT 重连失败: {}", e.getMessage());
             scheduleReconnect();
         }
+    }
+
+    private String generateIotdaPassword() {
+        String deviceSecret = mqttProperties.getDeviceSecret();
+        if (deviceSecret == null || deviceSecret.isEmpty()) {
+            log.error("IoTDA 设备密钥未配置");
+            return "";
+        }
+        if (mqttProperties.getPassword() != null && !mqttProperties.getPassword().isEmpty()) {
+            return mqttProperties.getPassword();
+        }
+        String ts = ZonedDateTime.now(ZoneOffset.UTC).format(IOTDA_TS_FMT);
+        String signature = hmacSha256PlainKey(deviceSecret, ts);
+        log.debug("IoTDA HMAC 密码已生成: ts={}", ts);
+        return signature;
+    }
+
+    private String hmacSha256PlainKey(String data, String key) {
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            SecretKeySpec keySpec = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+            mac.init(keySpec);
+            byte[] hash = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hash) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+            throw new RuntimeException("IoTDA HMAC-SHA256 计算失败", e);
+        }
+    }
+
+    private String hmacSha256(String data, String hexKey) {
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            byte[] keyBytes = hexToBytes(hexKey);
+            SecretKeySpec keySpec = new SecretKeySpec(keyBytes, "HmacSHA256");
+            mac.init(keySpec);
+            byte[] hash = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hash) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+            throw new RuntimeException("IoTDA HMAC-SHA256 计算失败", e);
+        }
+    }
+
+    private static byte[] hexToBytes(String hex) {
+        int len = hex.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(hex.charAt(i), 16) << 4)
+                    + Character.digit(hex.charAt(i + 1), 16));
+        }
+        return data;
     }
 }

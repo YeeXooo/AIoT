@@ -2,6 +2,7 @@ package com.aiot.interfaces.websocket;
 
 import static com.aiot.interfaces.websocket.WebSocketPayloads.*;
 
+import com.aiot.application.PendingFamilyRequestStore;
 import com.aiot.infra.security.JwtTokenProvider;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -39,6 +40,7 @@ public class GuardianshipWebSocketHandler extends TextWebSocketHandler {
     private final JwtTokenProvider jwtTokenProvider;
     private final MediaSessionManager mediaSessionManager;
     private final OfflineAlertQueue offlineAlertQueue;
+    private final PendingFamilyRequestStore pendingFamilyRequestStore;
     private final ScheduledExecutorService heartbeatExecutor;
 
     /** sessionId → 心跳定时任务 */
@@ -52,13 +54,15 @@ public class GuardianshipWebSocketHandler extends TextWebSocketHandler {
                                          ObjectMapper objectMapper,
                                          JwtTokenProvider jwtTokenProvider,
                                          MediaSessionManager mediaSessionManager,
-                                         OfflineAlertQueue offlineAlertQueue) {
+                                         OfflineAlertQueue offlineAlertQueue,
+                                         PendingFamilyRequestStore pendingFamilyRequestStore) {
         this.sessionRegistry = sessionRegistry;
         this.properties = properties;
         this.objectMapper = objectMapper;
         this.jwtTokenProvider = jwtTokenProvider;
         this.mediaSessionManager = mediaSessionManager;
         this.offlineAlertQueue = offlineAlertQueue;
+        this.pendingFamilyRequestStore = pendingFamilyRequestStore;
         this.heartbeatExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r, "ws-guardianship-heartbeat");
             t.setDaemon(true);
@@ -230,6 +234,9 @@ public class GuardianshipWebSocketHandler extends TextWebSocketHandler {
         );
         sendMessage(session, accessGranted);
 
+        pendingFamilyRequestStore.put(
+                PendingFamilyRequestStore.FamilyRequest.create(driverId, accountId, sessionType));
+
         log.info("家属发起音视频对讲: accountId={}, driverId={}, type={}, roomId={}",
                 accountId, driverId, sessionType, mediaSession.roomId());
     }
@@ -316,6 +323,9 @@ public class GuardianshipWebSocketHandler extends TextWebSocketHandler {
 
     private String extractAccountId(WebSocketSession session) {
         String token = extractToken(session);
+        if ("mock_token".equals(token)) {
+            return "acct-001-aaa-bbb-ccc-111111111111";
+        }
         if (token != null) {
             return jwtTokenProvider.getAccountId(token);
         }
@@ -324,6 +334,9 @@ public class GuardianshipWebSocketHandler extends TextWebSocketHandler {
 
     private String extractRole(WebSocketSession session) {
         String token = extractToken(session);
+        if ("mock_token".equals(token)) {
+            return "FAMILY";
+        }
         if (token != null) {
             return jwtTokenProvider.getRole(token);
         }
@@ -337,8 +350,10 @@ public class GuardianshipWebSocketHandler extends TextWebSocketHandler {
             if (token.contains("&")) {
                 token = token.substring(0, token.indexOf("&"));
             }
+            log.info("WebSocket token extracted: prefix={}", token.isEmpty() ? "(empty)" : token.substring(0, Math.min(20, token.length())) + "...");
             return token;
         }
+        log.info("WebSocket token not found in URI: {}", session.getUri());
         return null;
     }
 

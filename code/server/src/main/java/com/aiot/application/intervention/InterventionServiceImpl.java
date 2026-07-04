@@ -1,6 +1,7 @@
 package com.aiot.application.intervention;
 
 import com.aiot.domain.intervention.InterventionService;
+import com.aiot.domain.model.InterventionInstruction;
 import com.aiot.domain.model.OverrideSignal;
 import com.aiot.domain.model.Trip;
 import com.aiot.domain.repository.TripRepository;
@@ -8,16 +9,23 @@ import com.aiot.domain.shared.AppError;
 import com.aiot.domain.shared.DriverId;
 import com.aiot.domain.shared.Result;
 import com.aiot.domain.shared.TripId;
+import com.aiot.domain.event.AlertTriggeredEvent;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 @Service
 public class InterventionServiceImpl implements IInterventionService {
+
+    private static final Logger log = LoggerFactory.getLogger(InterventionServiceImpl.class);
 
     private final InterventionService interventionService;
     private final TripRepository tripRepository;
@@ -27,6 +35,27 @@ public class InterventionServiceImpl implements IInterventionService {
     public InterventionServiceImpl(InterventionService interventionService, TripRepository tripRepository) {
         this.interventionService = interventionService;
         this.tripRepository = tripRepository;
+    }
+
+    @EventListener
+    public void onAlertTriggered(AlertTriggeredEvent event) {
+        log.info("告警触发干预生成: tripId={}, alertType={}, riskLevel={}",
+                event.tripId().id(), event.alertType(), event.riskLevel());
+
+        var instructions = interventionService.generateIntervention(
+                event.alertType(), event.riskLevel());
+
+        String tripKey = event.tripId().id();
+        long now = event.alertTime().toEpochMilli();
+
+        for (InterventionInstruction instruction : instructions) {
+            InterventionRecord record = new InterventionRecord(
+                    tripKey, "ACTIVE", event.alertType().name(),
+                    event.riskLevel().name(), instruction.getType().name(), now);
+            interventionHistory.computeIfAbsent(tripKey, k -> new ArrayList<>()).add(record);
+        }
+
+        log.info("已生成 {} 条干预指令: tripId={}", instructions.size(), tripKey);
     }
 
     @Override
@@ -41,7 +70,7 @@ public class InterventionServiceImpl implements IInterventionService {
         }
 
         var result = interventionService.handleOverride(signal);
-        boolean aborted = "ABORTED".equals(result.status());
+        boolean aborted = result.status() == com.aiot.domain.intervention.InterventionService.OverrideResult.ABORTED;
 
         String tripKey = driverTrip.get().tripId().id();
         InterventionRecord record = new InterventionRecord(
@@ -63,13 +92,12 @@ public class InterventionServiceImpl implements IInterventionService {
         List<InterventionRecord> records = interventionHistory.getOrDefault(tripId.id(), List.of());
         List<InterventionItem> items = records.stream()
                 .sorted((a, b) -> Long.compare(b.timestamp, a.timestamp))
-                .limit(1)
                 .map(r -> new InterventionItem(
                         r.status, r.alertType, r.riskLevel, r.instructionType, r.timestamp))
                 .toList();
 
         return Result.ok(new QueryInterventionResponse(
-                tripId.id(), items, items.size(), 0, 1));
+                tripId.id(), items, items.size(), 0, items.size()));
     }
 
     @Override

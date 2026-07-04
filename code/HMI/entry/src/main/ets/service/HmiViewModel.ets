@@ -1,5 +1,6 @@
 import { DomainEvent, DomainEventType } from '../model/DomainEvent'
 import { EdgeEventBus } from './EdgeEventBus'
+import { EdgeService } from './EdgeService'
 import { InterventionInstruction } from '../model/InterventionInstruction'
 import { InterventionType } from '../model/InterventionType'
 import { RiskLevel } from '../model/RiskLevel'
@@ -14,6 +15,8 @@ const TAG = 'HmiViewModel'
 
 export class HmiViewModel {
   private eventBus: EdgeEventBus = EdgeEventBus.getInstance()
+  private edgeService: EdgeService = new EdgeService()
+  private pollTimer: number = -1
 
   riskLevel: RiskLevel = RiskLevel.NONE
   activeInstructions: InterventionInstruction[] = []
@@ -87,6 +90,11 @@ export class HmiViewModel {
         this.onEmergencyChanged()
       }
     })
+    this.startPolling()
+  }
+
+  destroy(): void {
+    this.stopPolling()
   }
 
   setCallbacks(
@@ -108,10 +116,40 @@ export class HmiViewModel {
   reportOverride(type: OverrideType): void {
     const signal = new OverrideSignal(type, Date.now())
     hilog.info(DOMAIN, TAG, 'Override reported: ' + type)
+    this.edgeService.reportOverride(signal)
     this.riskLevel = RiskLevel.NONE
     this.activeInstructions = []
     if (this.onRiskResolved !== null) {
       this.onRiskResolved()
+    }
+  }
+
+  acceptFamilyRequest(): void {
+    if (this.familyAccess === null || !this.familyAccess.pending) {
+      return
+    }
+    const requestId = this.familyAccess.requestId
+    const accessType = this.familyAccess.accessType
+    this.edgeService.respondFamilyRequest(requestId, 'accept')
+    this.familyAccess = FamilyAccessInfo.createGranted(accessType)
+    if (this.onFamilyAccessChanged !== null) {
+      this.onFamilyAccessChanged()
+    }
+  }
+
+  declineFamilyRequest(): void {
+    if (this.familyAccess === null || !this.familyAccess.pending) {
+      this.familyAccess = null
+      if (this.onFamilyAccessChanged !== null) {
+        this.onFamilyAccessChanged()
+      }
+      return
+    }
+    const requestId = this.familyAccess.requestId
+    this.edgeService.respondFamilyRequest(requestId, 'decline')
+    this.familyAccess = null
+    if (this.onFamilyAccessChanged !== null) {
+      this.onFamilyAccessChanged()
     }
   }
 
@@ -129,6 +167,51 @@ export class HmiViewModel {
     this.eventBus.publish(
       new DomainEvent(DomainEventType.CAMERA_OCCLUSION_REMOVED, payload, Date.now())
     )
+  }
+
+  private startPolling(): void {
+    this.pollTimer = setInterval(() => {
+      this.edgeService.queryInterventionStatus().then((response) => {
+        this.riskLevel = response.riskLevel
+        this.activeInstructions = response.activeInstructions
+        if (this.onRiskDetermined !== null && response.riskLevel !== RiskLevel.NONE) {
+          this.onRiskDetermined()
+        }
+      }).catch((_e: Error) => {
+        hilog.error(DOMAIN, TAG, 'Polling queryInterventionStatus failed')
+      })
+
+      this.edgeService.getDriverRiskStatus().then((response) => {
+        if (response.riskLevel !== RiskLevel.NONE && this.riskLevel === RiskLevel.NONE) {
+          this.riskLevel = response.riskLevel
+        }
+      }).catch((_e: Error) => {
+        hilog.error(DOMAIN, TAG, 'Polling getDriverRiskStatus failed')
+      })
+
+      this.edgeService.getPendingFamilyRequest().then((req) => {
+        if (req !== null) {
+          if (this.familyAccess !== null && this.familyAccess.pending) {
+            return
+          }
+          const requestId = req['requestId'] as string ?? ''
+          const sessionType = req['sessionType'] as string ?? 'AUDIO'
+          this.familyAccess = FamilyAccessInfo.createPending(requestId, sessionType)
+          if (this.onFamilyAccessChanged !== null) {
+            this.onFamilyAccessChanged()
+          }
+        }
+      }).catch((_e: Error) => {
+        hilog.error(DOMAIN, TAG, 'Polling getPendingFamilyRequest failed')
+      })
+    }, 1500)
+  }
+
+  private stopPolling(): void {
+    if (this.pollTimer !== -1) {
+      clearInterval(this.pollTimer)
+      this.pollTimer = -1
+    }
   }
 
   simulateFatigueL2(): void {

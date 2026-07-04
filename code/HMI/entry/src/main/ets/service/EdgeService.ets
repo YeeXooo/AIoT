@@ -12,9 +12,9 @@ const TAG = 'EdgeService'
 
 export class EdgeService {
   private baseUrl: string = 'http://127.0.0.1:8080/api/v1'
-  private tripId: string = 'trip-default'
-  private driverId: string = 'driver-default'
-  private useMock: boolean = true
+  private tripId: string = 't006-67fa-89bc-01de-23456789fabc'
+  private driverId: string = 'd001-d2e3-4abc-9f01-123456789abc'
+  private useMock: boolean = false
 
   setTripId(tripId: string): void {
     this.tripId = tripId
@@ -50,6 +50,7 @@ export class EdgeService {
   }
 
   async reportOverride(signal: OverrideSignal): Promise<ReportOverrideResponse> {
+    const mappedType = this.mapOverrideType(signal.type)
     if (this.useMock) {
       hilog.info(DOMAIN, TAG, 'reportOverride: ' + signal.type)
       return new ReportOverrideResponse(true, '覆盖信号已接受')
@@ -57,7 +58,7 @@ export class EdgeService {
     try {
       const request = http.createHttp()
       const body = JSON.stringify({
-        type: signal.type,
+        type: mappedType,
         timestamp: signal.timestamp
       })
       const response = await request.request(
@@ -113,11 +114,128 @@ export class EdgeService {
     return new QueryInterventionStatusResponse(this.tripId, RiskLevel.NONE, [])
   }
 
-  private parseInterventionResponse(_json: string): QueryInterventionStatusResponse {
-    return new QueryInterventionStatusResponse(this.tripId, RiskLevel.NONE, [])
+  private parseInterventionResponse(json: string): QueryInterventionStatusResponse {
+    try {
+      const data = JSON.parse(json) as Record<string, Object>
+      const tripId = data['tripId'] as string ?? this.tripId
+      const riskLevelStr = data['riskLevel'] as string ?? 'NONE'
+      let riskLevel = RiskLevel.NONE
+      if (riskLevelStr === 'L1') {
+        riskLevel = RiskLevel.L1
+      } else if (riskLevelStr === 'L2') {
+        riskLevel = RiskLevel.L2
+      } else if (riskLevelStr === 'L3') {
+        riskLevel = RiskLevel.L3
+      }
+      const rawInstructions = data['activeInstructions'] as Array<Record<string, Object>> ?? []
+      const instructions: InterventionInstruction[] = []
+      for (let i = 0; i < rawInstructions.length; i++) {
+        const item = rawInstructions[i]
+        const type = item['type'] as string ?? 'ALERT'
+        const rawParams = item['params'] as Record<string, string> ?? {}
+        const params = new Map<string, string>()
+        const keys = Object.keys(rawParams)
+        for (let j = 0; j < keys.length; j++) {
+          params.set(keys[j], rawParams[keys[j]])
+        }
+        const description = item['description'] as string ?? type
+        instructions.push(new InterventionInstruction(type as string, params, description))
+      }
+      return new QueryInterventionStatusResponse(tripId, riskLevel, instructions)
+    } catch (e) {
+      hilog.error(DOMAIN, TAG, 'parseInterventionResponse error: ' + JSON.stringify(e))
+      return new QueryInterventionStatusResponse(this.tripId, RiskLevel.NONE, [])
+    }
   }
 
-  private parseRiskStatusResponse(_json: string): GetDriverRiskStatusResponse {
-    return new GetDriverRiskStatusResponse(this.driverId, RiskLevel.NONE, '未知')
+  private parseRiskStatusResponse(json: string): GetDriverRiskStatusResponse {
+    try {
+      const data = JSON.parse(json) as Record<string, Object>
+      const activeAlerts = data['activeAlerts'] as Array<Record<string, string>> ?? []
+      let riskLevel = RiskLevel.NONE
+      let riskDescription = '正常驾驶'
+      if (activeAlerts.length > 0) {
+        let hasL3 = false
+        let hasL2 = false
+        for (let i = 0; i < activeAlerts.length; i++) {
+          const rl = activeAlerts[i]['riskLevel'] ?? ''
+          if (rl === 'L3_CRITICAL') {
+            hasL3 = true
+          }
+          if (rl === 'L2_WARNING') {
+            hasL2 = true
+          }
+        }
+        if (hasL3) {
+          riskLevel = RiskLevel.L3
+        } else if (hasL2) {
+          riskLevel = RiskLevel.L2
+        } else {
+          riskLevel = RiskLevel.L1
+        }
+        riskDescription = '活跃告警: ' + activeAlerts.length + '条'
+      }
+      return new GetDriverRiskStatusResponse(this.driverId, riskLevel, riskDescription)
+    } catch (e) {
+      hilog.error(DOMAIN, TAG, 'parseRiskStatusResponse error: ' + JSON.stringify(e))
+      return new GetDriverRiskStatusResponse(this.driverId, RiskLevel.NONE, '未知')
+    }
+  }
+
+  async getPendingFamilyRequest(): Promise<Record<string, Object> | null> {
+    if (this.useMock) {
+      return null
+    }
+    try {
+      const request = http.createHttp()
+      const response = await request.request(
+        this.baseUrl + '/drivers/' + this.driverId + '/family-requests/pending',
+        { method: http.RequestMethod.GET }
+      )
+      if (response.responseCode === 200) {
+        const result = JSON.parse(response.result as string) as Record<string, Object>
+        if (result['hasPendingRequest'] === true) {
+          return result
+        }
+      }
+    } catch (err) {
+      hilog.error(DOMAIN, TAG, 'getPendingFamilyRequest failed: ' + JSON.stringify(err))
+    }
+    return null
+  }
+
+  async respondFamilyRequest(requestId: string, action: string): Promise<boolean> {
+    if (this.useMock) {
+      return true
+    }
+    try {
+      const request = http.createHttp()
+      const body = JSON.stringify({ action: action })
+      const response = await request.request(
+        this.baseUrl + '/drivers/' + this.driverId + '/family-requests/' + requestId + '/respond',
+        {
+          method: http.RequestMethod.POST,
+          header: { 'Content-Type': 'application/json' },
+          extraData: body
+        }
+      )
+      return response.responseCode === 200
+    } catch (err) {
+      hilog.error(DOMAIN, TAG, 'respondFamilyRequest failed: ' + JSON.stringify(err))
+    }
+    return false
+  }
+
+  private mapOverrideType(type: string): string {
+    if (type === 'STEER') {
+      return 'STEER'
+    }
+    if (type === 'BRAKE') {
+      return 'BRAKE'
+    }
+    if (type === 'ACCELERATE') {
+      return 'ACCELERATE'
+    }
+    return type
   }
 }

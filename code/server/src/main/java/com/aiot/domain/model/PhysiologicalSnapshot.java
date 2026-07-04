@@ -22,9 +22,17 @@ public record PhysiologicalSnapshot(
         Integer systolicBp,
         Integer diastolicBp,
         Double fatigueIndex,
-        Double bodyTemperature
+        Double bodyTemperature,
+        Integer restingHr
 ) {
     public PhysiologicalSnapshot {
         Objects.requireNonNull(timestamp, "timestamp must not be null");
+    }
+
+    public PhysiologicalSnapshot(Instant timestamp, Integer heartRate, Double bloodOxygen,
+            Double emotionIndex, Integer respiratoryRate, Integer systolicBp,
+            Integer diastolicBp, Double fatigueIndex, Double bodyTemperature) {
+        this(timestamp, heartRate, bloodOxygen, emotionIndex, respiratoryRate,
+             systolicBp, diastolicBp, fatigueIndex, bodyTemperature, null);
     }
 }

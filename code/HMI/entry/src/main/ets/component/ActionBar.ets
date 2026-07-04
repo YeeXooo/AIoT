@@ -60,6 +60,53 @@ export struct ActionBar {
       .width('100%')
       .padding({ left: 24, right: 24, top: 6, bottom: 10 })
 
+      if (this.familyAccess !== null && !this.familyAccess.granted) {
+        Row({ space: 14 }) {
+          Column({ space: 2 }) {
+            Text('家属对讲请求')
+              .fontSize(14)
+              .fontColor($r('app.color.hmi_text_primary'))
+              .fontWeight(FontWeight.Medium)
+            Text(this.familyAccess.accessType === '视频通话' ? '家属发起视频通话' : '家属发起语音对讲')
+              .fontSize(12)
+              .fontColor($r('app.color.hmi_text_tertiary'))
+          }
+          .layoutWeight(1)
+
+          Button() {
+            Text('拒绝')
+              .fontSize(12)
+              .fontColor($r('app.color.risk_red'))
+              .letterSpacing(1)
+              .fontWeight(FontWeight.Medium)
+          }
+            .height(36)
+            .borderRadius(18)
+            .backgroundColor('rgba(255,69,58,0.12)')
+            .onClick(() => { this.onFamilyReject() })
+
+          Button() {
+            Text('接受')
+              .fontSize(12)
+              .fontColor($r('app.color.risk_green'))
+              .letterSpacing(1)
+              .fontWeight(FontWeight.Medium)
+          }
+            .height(36)
+            .borderRadius(18)
+            .backgroundColor('rgba(48,209,88,0.15)')
+            .onClick(() => { this.onFamilyAccept() })
+        }
+        .width('100%')
+        .padding({ left: 24, right: 24, top: 12, bottom: 12 })
+        .borderRadius(16)
+        .backgroundColor('rgba(10,132,255,0.08)')
+        .border({ width: 1, color: 'rgba(10,132,255,0.12)' })
+        .transition(
+          TransitionEffect.SLIDE.animation({ duration: 400, curve: Curve.EaseOut })
+        )
+      }
+
       if (this.familyAccess !== null && this.familyAccess.granted) {
         Row({ space: 14 }) {
           Column({ space: 2 }) {

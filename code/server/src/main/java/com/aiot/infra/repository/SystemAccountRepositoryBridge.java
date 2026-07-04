@@ -21,7 +21,8 @@ public class SystemAccountRepositoryBridge implements SystemAccountRepository {
 
     @Override
     public void save(SystemAccount account) {
-        SystemAccountJpaEntity entity = new SystemAccountJpaEntity();
+        SystemAccountJpaEntity entity = jpaRepository.findById(account.accountId().id())
+                .orElse(new SystemAccountJpaEntity());
         entity.setAccountId(account.accountId().id());
         entity.setPhone(account.phone());
         entity.setRole(account.role().name());
