@@ -1,6 +1,7 @@
 package com.aiot.interfaces.rest;
 
 import com.aiot.application.GuardianshipApplicationService;
+import com.aiot.application.HmiEventStore;
 import com.aiot.application.guardianship.IRemoteGuardianshipService;
 import com.aiot.domain.shared.AccountId;
 import com.aiot.domain.shared.AppError;
@@ -34,11 +35,14 @@ public class GuardianshipController {
 
     private final GuardianshipApplicationService service;
     private final IRemoteGuardianshipService guardianshipService;
+    private final HmiEventStore hmiEventStore;
 
     public GuardianshipController(GuardianshipApplicationService service,
-                                  IRemoteGuardianshipService guardianshipService) {
+                                  IRemoteGuardianshipService guardianshipService,
+                                  HmiEventStore hmiEventStore) {
         this.service = service;
         this.guardianshipService = guardianshipService;
+        this.hmiEventStore = hmiEventStore;
     }
 
     // ── Original CRUD endpoints ──
@@ -139,6 +143,9 @@ public class GuardianshipController {
                 new AccountId(authAccountId), new DriverId(request.driverId()));
         if (result.isErr()) return errorResponse(result.unwrapErr());
 
+        hmiEventStore.push(request.driverId(), "RESCUE",
+                "紧急救援", "家属已触发紧急救援，已上报救援中心");
+
         var data = result.unwrap();
         return ResponseEntity.ok(new ManualRescueResponse(
                 "rescue-req-" + UUID.randomUUID().toString().substring(0, 8),
@@ -153,6 +160,16 @@ public class GuardianshipController {
                 new AccountId(authAccountId), new DriverId(request.driverId()),
                 request.windowPosition());
         if (result.isErr()) return errorResponse(result.unwrapErr());
+
+        String posLabel = request.windowPosition();
+        if ("FRONT_LEFT".equals(posLabel)) posLabel = "前左窗";
+        else if ("FRONT_RIGHT".equals(posLabel)) posLabel = "前右窗";
+        else if ("REAR_LEFT".equals(posLabel)) posLabel = "后左窗";
+        else if ("REAR_RIGHT".equals(posLabel)) posLabel = "后右窗";
+
+        hmiEventStore.push(request.driverId(), "WINDOW",
+                "车窗控制", "家属远程控制" + posLabel);
+
         return ResponseEntity.ok(Map.of("status", "controlled", "windowPosition", request.windowPosition()));
     }
 

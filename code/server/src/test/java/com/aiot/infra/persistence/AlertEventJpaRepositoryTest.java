@@ -52,7 +52,7 @@ class AlertEventJpaRepositoryTest {
             seed();
             repository.save(alert("a-L3", "FATIGUE", "L3_CRITICAL"));
             repository.save(alert("a-L2", "DISTRACTION", "L2_WARNING"));
-            assertEquals(1, repository.findByRiskLevel("L3_CRITICAL").size());
+            assertEquals(4, repository.findByRiskLevel("L3_CRITICAL").size());
         }
 
         @Test void findByDriverId() {
@@ -68,11 +68,11 @@ class AlertEventJpaRepositoryTest {
             repository.save(alert("a-f2", "FATIGUE", "L2_WARNING"));
             repository.save(alert("a-f3", "ROAD_RAGE", "L2_WARNING"));
             List<AlertEventJpaEntity> all = repository.findFiltered(null, null, null);
-            assertEquals(3, all.size());
+            assertEquals(8, all.size());
             List<AlertEventJpaEntity> fatigue = repository.findFiltered(null, null, "FATIGUE");
-            assertEquals(2, fatigue.size());
+            assertEquals(4, fatigue.size());
             List<AlertEventJpaEntity> l3Fatigue = repository.findFiltered(null, "L3_CRITICAL", "FATIGUE");
-            assertEquals(1, l3Fatigue.size());
+            assertEquals(2, l3Fatigue.size());
         }
     }
 

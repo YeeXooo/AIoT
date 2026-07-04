@@ -15,8 +15,18 @@ export struct GuardianshipTab {
   @State actionLoading: boolean = false
 
   aboutToAppear(): void {
-    if (this.drivers.length > 0) {
-      this.loadPerms(this.drivers[this.selectedDriver].id)
+    this.refreshDrivers()
+  }
+
+  private async refreshDrivers(): Promise<void> {
+    const result = await guardianshipVM.loadDrivers()
+    if (result.state === 'success' && result.data !== null) {
+      this.drivers = result.data.drivers
+      if (this.drivers.length > 0) {
+        this.loadPerms(this.drivers[this.selectedDriver].id)
+      }
+    } else {
+      this.drivers = []
     }
   }
 
@@ -28,7 +38,7 @@ export struct GuardianshipTab {
     if (this.actionLoading || this.drivers.length === 0) return
     const driver = this.drivers[this.selectedDriver]
     const account = sessionStore.account
-    const accountId = account !== null ? account.accountId : 'demo-family'
+    const accountId = account !== null ? account.accountId : ''
     this.actionLoading = true
     let result: ActionResult = { ok: false, msg: '未实现' }
     if (action === 'MEDIA_CALL') {

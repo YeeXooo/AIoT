@@ -17,14 +17,24 @@ export struct GuardianshipTab {
   @State actionScale: number = 1.0
 
   aboutToAppear(): void {
-    if (this.drivers.length > 0) {
-      this.loadPerms(this.drivers[this.selectedDriver].id)
-      this.syncCurrentDriver()
-    }
+    this.refreshDrivers()
     setTimeout(() => {
       this.contentOpacity = 1
       this.contentOffsetY = 0
     }, 150)
+  }
+
+  private async refreshDrivers(): Promise<void> {
+    const result = await guardianshipVM.loadDrivers()
+    if (result.state === 'success' && result.data !== null) {
+      this.drivers = result.data.drivers
+      if (this.drivers.length > 0) {
+        this.loadPerms(this.drivers[this.selectedDriver].id)
+        this.syncCurrentDriver()
+      }
+    } else {
+      this.drivers = []
+    }
   }
 
   private syncCurrentDriver(): void {
@@ -37,21 +47,22 @@ export struct GuardianshipTab {
   }
 
   onPageShow(): void {
-    this.drivers = guardianshipVM.drivers
-    if (this.drivers.length > 0 && this.selectedDriver >= this.drivers.length) {
-      this.selectedDriver = this.drivers.length - 1
-    }
+    this.refreshDrivers()
   }
 
   private async loadPerms(driverId: string): Promise<void> {
-    this.permissions = await guardianshipVM.loadPermissions(driverId)
+    const result = await guardianshipVM.loadPermissions(driverId)
+    // 查询失败（403 等）时保留默认权限，避免后端鉴权异常清空按钮可用态
+    if (result !== undefined) {
+      this.permissions = result
+    }
   }
 
   private async onAction(action: string): Promise<void> {
     if (this.actionLoading || this.drivers.length === 0) return
     const driver = this.drivers[this.selectedDriver]
     const account = sessionStore.account
-    const accountId = account !== null ? account.accountId : 'demo-family'
+    const accountId = account !== null ? account.accountId : ''
     this.actionLoading = true
     animateTo({ duration: 150, curve: Curve.EaseOut }, () => {
       this.actionScale = 0.92
@@ -62,40 +73,55 @@ export struct GuardianshipTab {
       })
     }, 150)
     let result: ActionResult = { ok: false, msg: '未实现' }
-    if (action === 'MEDIA_CALL') {
-      const reqBody: Record<string, Object> = {}
-      reqBody['familyAccountId'] = accountId
-      reqBody['driverId'] = driver.id
-      reqBody['sessionType'] = 'AUDIO'
-      reqBody['secondaryAuthToken'] = ''
-      const resp = await guardianshipApi.requestMediaSession(reqBody)
-      if (resp.success && resp.data !== undefined) {
-        const joinResult = await rtcClient.joinRoom(resp.data.sparkRTCRoomId, accountId, resp.data.sparkRTCJoinToken, 'subscriber')
-        result = { ok: joinResult.ok, msg: joinResult.message }
-      } else {
-        const errMsg = resp.error !== undefined ? resp.error.message : '请求失败'
-        result = { ok: false, msg: errMsg }
+    // 对讲/救援需二次验证 token，先确保 token 有效（自动签发或复用缓存）
+    if (action === 'MEDIA_CALL' || action === 'RESCUE') {
+      const token = await guardianshipVM.ensureSecondaryAuth()
+      if (token.length === 0) {
+        result = { ok: false, msg: '二次验证失败，请稍后重试' }
+        promptAction.showToast({ message: result.msg, duration: 1800 })
+        this.actionLoading = false
+        return
       }
-    } else if (action === 'RESCUE') {
-      const reqBody: Record<string, Object> = {}
-      reqBody['familyAccountId'] = accountId
-      reqBody['driverId'] = driver.id
-      reqBody['secondaryAuthToken'] = ''
-      const resp = await guardianshipApi.triggerManualRescue(reqBody)
-      if (resp.success) {
-        result = { ok: true, msg: '救援请求已提交' }
+      if (action === 'MEDIA_CALL') {
+        const reqBody: Record<string, Object> = {}
+        reqBody['familyAccountId'] = accountId
+        reqBody['driverId'] = driver.id
+        reqBody['sessionType'] = 'AUDIO'
+        reqBody['secondaryAuthToken'] = token
+        const resp = await guardianshipApi.requestMediaSession(reqBody)
+        if (resp.success && resp.data !== undefined) {
+          const joinResult = await rtcClient.joinRoom(resp.data.sparkRTCRoomId, accountId, resp.data.sparkRTCJoinToken, 'subscriber')
+          result = { ok: joinResult.ok, msg: joinResult.message }
+        } else {
+          const errMsg = resp.error !== undefined ? resp.error.message : '请求失败'
+          result = { ok: false, msg: errMsg }
+        }
       } else {
-        const errMsg = resp.error !== undefined ? resp.error.message : '救援请求失败'
-        result = { ok: false, msg: errMsg }
+        const reqBody: Record<string, Object> = {}
+        reqBody['familyAccountId'] = accountId
+        reqBody['driverId'] = driver.id
+        reqBody['secondaryAuthToken'] = token
+        const resp = await guardianshipApi.triggerManualRescue(reqBody)
+        if (resp.success) {
+          result = { ok: true, msg: '救援请求已提交' }
+        } else {
+          const errMsg = resp.error !== undefined ? resp.error.message : '救援请求失败'
+          result = { ok: false, msg: errMsg }
+        }
       }
     } else if (action === 'WINDOW') {
-      const resp = await guardianshipApi.queryWindowStatus(driver.vehicleId)
-      if (resp.success && resp.data !== undefined) {
-        const count: number = resp.data.windowStatuses.length
-        result = { ok: true, msg: `车窗状态：${count} 个窗户信息已获取` }
+      // vehicleId 为空时后端 /guardianship/list 未返回车辆字段，直接提示而非发空请求（避免 /vehicles//windows 400）
+      if (driver.vehicleId.length === 0) {
+        result = { ok: false, msg: '暂无车辆信息，无法查询车窗状态' }
       } else {
-        const errMsg = resp.error !== undefined ? resp.error.message : '查询车窗状态失败'
-        result = { ok: false, msg: errMsg }
+        const resp = await guardianshipApi.queryWindowStatus(driver.vehicleId)
+        if (resp.success && resp.data !== undefined) {
+          const count: number = resp.data.windowStatuses.length
+          result = { ok: true, msg: `车窗状态：${count} 个窗户信息已获取` }
+        } else {
+          const errMsg = resp.error !== undefined ? resp.error.message : '查询车窗状态失败'
+          result = { ok: false, msg: errMsg }
+        }
       }
     } else if (action === 'NOTIFY') {
       const reqBody: Record<string, Object> = {}

@@ -8,6 +8,7 @@
  * fromJson 构造器把原始 Record 转为具体 DTO，再包装为 ApiResponse<具体DTO> 返回。
  */
 
+import { hilog } from '@kit.PerformanceAnalysisKit'
 import { apiClient, type ApiResponse } from './ApiClient'
 import {
   loginResponseFromJson,
@@ -20,6 +21,9 @@ import type {
   SecondaryVerifyResponse,
 } from '../model/auth'
 
+const DOMAIN = 0x0501
+const TAG = 'AuthApi'
+
 export class AuthApi {
   /** POST /api/v1/auth/login */
   async login(request: Record<string, Object>): Promise<ApiResponse<LoginResponse>> {
@@ -30,6 +34,11 @@ export class AuthApi {
         data: loginResponseFromJson(resp.data),
         status: resp.status,
       }
+    }
+    // 防御性日志：success=true 但 data 缺失，说明 ApiClient 把响应当作"非 JSON"
+    // 处理（Content-Type 解析失败），帮助快速定位响应头问题
+    if (resp.success && resp.data === undefined) {
+      hilog.error(DOMAIN, TAG, 'login resp success but data undefined, status=%{public}d (Content-Type 解析失败?)', resp.status)
     }
     return { success: false, error: resp.error, status: resp.status }
   }
@@ -44,6 +53,9 @@ export class AuthApi {
         status: resp.status,
       }
     }
+    if (resp.success && resp.data === undefined) {
+      hilog.error(DOMAIN, TAG, 'refresh resp success but data undefined, status=%{public}d (Content-Type 解析失败?)', resp.status)
+    }
     return { success: false, error: resp.error, status: resp.status }
   }
 
@@ -56,6 +68,9 @@ export class AuthApi {
         data: secondaryVerifyResponseFromJson(resp.data),
         status: resp.status,
       }
+    }
+    if (resp.success && resp.data === undefined) {
+      hilog.error(DOMAIN, TAG, 'secondaryVerify resp success but data undefined, status=%{public}d (Content-Type 解析失败?)', resp.status)
     }
     return { success: false, error: resp.error, status: resp.status }
   }

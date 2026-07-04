@@ -78,6 +78,11 @@ export class GuardianshipApi {
     return apiClient.get(`/guardianship/${driverId}/permissions`)
   }
 
+  /** GET /api/v1/guardianship/drivers — 查询当前家属账户绑定的驾驶员列表 */
+  async queryBoundDrivers(): Promise<ApiResponse<Record<string, unknown>>> {
+    return apiClient.get('/guardianship/drivers')
+  }
+
   /** POST /api/v1/sparkrtc/token — SparkRTCTokenResp 暂未提供 fromJson，保留 Record 返回 */
   async issueSparkRTCToken(body: Record<string, unknown>): Promise<ApiResponse<Record<string, unknown>>> {
     return apiClient.post('/sparkrtc/token', body)

@@ -20,7 +20,10 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
+
 import org.springframework.stereotype.Service;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 
 @Service
 public class AlertPersistenceServiceImpl implements AlertPersistenceService {
@@ -37,6 +40,7 @@ public class AlertPersistenceServiceImpl implements AlertPersistenceService {
         this.tripRepository = tripRepository;
     }
 
+    @PostConstruct
     @Override
     public void start() {
         riskDeterminedSub = eventPublisher.registerAsyncHandler("RiskDeterminedEvent", (RiskDeterminedEvent event) -> {
@@ -52,6 +56,7 @@ public class AlertPersistenceServiceImpl implements AlertPersistenceService {
         });
     }
 
+    @PreDestroy
     @Override
     public void stop() {
         if (riskDeterminedSub != null) {
@@ -85,7 +90,6 @@ public class AlertPersistenceServiceImpl implements AlertPersistenceService {
 
         alert.validate();
 
-        tripRepository.save(trip);
         eventPublisher.publish(new AlertTriggeredEvent(
                 alert.alertId(), alert.tripId(), alert.alertType(), alert.riskLevel(),
                 alert.location().map(GeoLocation::latitude).orElse(0.0),
@@ -116,7 +120,6 @@ public class AlertPersistenceServiceImpl implements AlertPersistenceService {
 
         alert.validate();
 
-        tripRepository.save(trip);
         eventPublisher.publish(new AlertTriggeredEvent(
                 alert.alertId(), alert.tripId(), alert.alertType(), alert.riskLevel(),
                 alert.location().map(GeoLocation::latitude).orElse(0.0),
@@ -149,7 +152,6 @@ public class AlertPersistenceServiceImpl implements AlertPersistenceService {
 
         alert.validate();
 
-        tripRepository.save(trip);
         eventPublisher.publish(new AlertTriggeredEvent(
                 alert.alertId(), alert.tripId(), alert.alertType(), alert.riskLevel(),
                 alert.location().map(GeoLocation::latitude).orElse(0.0),

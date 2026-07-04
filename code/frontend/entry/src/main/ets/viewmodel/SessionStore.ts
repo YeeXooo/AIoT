@@ -26,6 +26,9 @@ export class SessionStore {
   private static _instance: SessionStore | null = null
   private _prefStore: preferences.Preferences | null = null
   private _account: AccountInfo | null = null
+  // 二次验证 token（内存态，5 分钟有效，不持久化——重启重新验证更安全）
+  private _secondaryAuthToken: string = ''
+  private _secondaryAuthExpiresAt: number = 0  // epoch ms
 
   static instance(): SessionStore {
     if (SessionStore._instance === null) {
@@ -64,6 +67,32 @@ export class SessionStore {
 
   get account(): AccountInfo | null {
     return this._account
+  }
+
+  /**
+   * 二次验证 token 是否仍然有效（未过期）。
+   * @param skewMs 提前量（毫秒），默认提前 10s 失效以避免请求竞态
+   */
+  hasValidSecondaryAuth(skewMs: number = 10000): boolean {
+    return this._secondaryAuthToken.length > 0
+      && Date.now() + skewMs < this._secondaryAuthExpiresAt
+  }
+
+  /** 缓存二次验证 token（expiresAt 为 ISO 8601 字符串） */
+  setSecondaryAuthToken(token: string, expiresAt: string): void {
+    this._secondaryAuthToken = token
+    const ts = Date.parse(expiresAt)
+    this._secondaryAuthExpiresAt = isNaN(ts) ? Date.now() + 5 * 60 * 1000 : ts
+  }
+
+  get secondaryAuthToken(): string {
+    return this._secondaryAuthToken
+  }
+
+  /** 清除二次验证 token（操作失败或登出时调用） */
+  clearSecondaryAuth(): void {
+    this._secondaryAuthToken = ''
+    this._secondaryAuthExpiresAt = 0
   }
 
   async saveSession(accessToken: string, accountId: string, role: AccountRole): Promise<void> {

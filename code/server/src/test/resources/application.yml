@@ -1,0 +1,4 @@
+# 测试环境禁用运行时数据注入，避免污染 JPA repository 测试的 seed 数据
+aiot:
+  data:
+    initialize: false

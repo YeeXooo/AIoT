@@ -4,7 +4,7 @@
  * 基于 docs/ood_interface.md §1.1 RiskMonitoringService
  *
  * fromJson 构造器：ArkTS-safe，仅用基础类型断言逐字段提取，
- * 使 API 层可返回具体 DTO 类型而非 ApiResponse<Record<string, unknown>>（问题 4 修复）。
+ * 使 API 层可返回具体 DTO 类型而非 ApiResponse<Record<string, Object>>（问题 4 修复）。
  */
 
 import { getStr, getNum, getBool, getArray, getRecord } from '../common/JsonParser'
@@ -20,7 +20,7 @@ export interface ActiveAlertEntry {
 }
 
 /** ArkTS-safe 构造器：从原始 JSON 构建 ActiveAlertEntry */
-export function activeAlertEntryFromJson(raw: Record<string, unknown>): ActiveAlertEntry {
+export function activeAlertEntryFromJson(raw: Record<string, Object>): ActiveAlertEntry {
   return {
     alertType: getStr(raw, 'alertType') as AlertType,
     riskLevel: getStr(raw, 'riskLevel') as RiskLevel,
@@ -34,7 +34,7 @@ export interface GetDriverRiskStatusResponse {
 }
 
 /** ArkTS-safe 构造器：从原始 JSON 构建 GetDriverRiskStatusResponse */
-export function getDriverRiskStatusResponseFromJson(raw: Record<string, unknown>): GetDriverRiskStatusResponse {
+export function getDriverRiskStatusResponseFromJson(raw: Record<string, Object>): GetDriverRiskStatusResponse {
   const alertArr = getArray(raw, 'activeAlerts')
   const activeAlerts: ActiveAlertEntry[] = []
   for (let i = 0; i < alertArr.length; i++) {
@@ -62,9 +62,12 @@ export interface AlertSummary {
 }
 
 /** ArkTS-safe 构造器：从原始 JSON 构建 AlertSummary */
-export function alertSummaryFromJson(raw: Record<string, unknown>): AlertSummary {
+export function alertSummaryFromJson(raw: Record<string, Object>): AlertSummary {
   const gpsOpt = (raw['gpsLocation'] !== undefined && raw['gpsLocation'] !== null)
-    ? (getRecord(raw, 'gpsLocation') as unknown as GeoPoint)
+    ? {
+        latitude: getNum(getRecord(raw, 'gpsLocation'), 'latitude'),
+        longitude: getNum(getRecord(raw, 'gpsLocation'), 'longitude'),
+      }
     : undefined
   return {
     alertId: getStr(raw, 'alertId'),
@@ -85,7 +88,7 @@ export interface QueryAlertHistoryResponse {
 }
 
 /** ArkTS-safe 构造器：从原始 JSON 构建 QueryAlertHistoryResponse */
-export function queryAlertHistoryResponseFromJson(raw: Record<string, unknown>): QueryAlertHistoryResponse {
+export function queryAlertHistoryResponseFromJson(raw: Record<string, Object>): QueryAlertHistoryResponse {
   const arr = getArray(raw, 'alerts')
   const alerts: AlertSummary[] = []
   for (let i = 0; i < arr.length; i++) {

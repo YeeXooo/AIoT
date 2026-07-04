@@ -4,8 +4,8 @@
  * 基于 docs/ood_interface.md §1.7 Auth 认证服务
  *
  * fromJson 构造器：ArkTS 严格模式禁止 as T（T 为接口），因此为每个 Response DTO
- * 提供静态 fromJson(raw: Record<string, unknown>) 构造器，用基础类型断言逐字段提取，
- * 使 API 层可返回具体 DTO 类型而非 ApiResponse<Record<string, unknown>>（问题 4 修复）。
+ * 提供静态 fromJson(raw: Record<string, Object>) 构造器，用基础类型断言逐字段提取，
+ * 使 API 层可返回具体 DTO 类型而非 ApiResponse<Record<string, Object>>（问题 4 修复）。
  */
 
 import { getStr, getNum } from '../common/JsonParser'
@@ -40,7 +40,7 @@ export interface LoginResponse {
 }
 
 /** ArkTS-safe 构造器：从原始 JSON 构建 LoginResponse（不依赖同名合并声明） */
-export function loginResponseFromJson(raw: Record<string, unknown>): LoginResponse {
+export function loginResponseFromJson(raw: Record<string, Object>): LoginResponse {
   return {
     accessToken: getStr(raw, 'accessToken'),
     refreshToken: getStr(raw, 'refreshToken'),
@@ -72,7 +72,7 @@ export interface RefreshTokenResponse {
 }
 
 /** ArkTS-safe 构造器：从原始 JSON 构建 RefreshTokenResponse */
-export function refreshTokenResponseFromJson(raw: Record<string, unknown>): RefreshTokenResponse {
+export function refreshTokenResponseFromJson(raw: Record<string, Object>): RefreshTokenResponse {
   return {
     accessToken: getStr(raw, 'accessToken'),
     refreshToken: getStr(raw, 'refreshToken'),
@@ -102,7 +102,7 @@ export interface SecondaryVerifyResponse {
 }
 
 /** ArkTS-safe 构造器：从原始 JSON 构建 SecondaryVerifyResponse */
-export function secondaryVerifyResponseFromJson(raw: Record<string, unknown>): SecondaryVerifyResponse {
+export function secondaryVerifyResponseFromJson(raw: Record<string, Object>): SecondaryVerifyResponse {
   return {
     secondaryAuthToken: getStr(raw, 'secondaryAuthToken'),
     expiresAt: getStr(raw, 'expiresAt'),

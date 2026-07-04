@@ -10,11 +10,11 @@ import { alertTypeLabel, formatTime } from '../../common/StatusMap'
 export struct DashboardTab {
   @State view: ViewState<DashboardData> = { state: 'idle', data: null, errorMsg: '' }
   @State refreshing: boolean = false
-  private driverName: string = '张明'
-  private vehicleId: string = '京A·88562'
-  private heartRate: number = 72
-  private speed: number = 68
-  private tripDuration: string = '1小时23分'
+  private driverName: string = ''
+  private vehicleId: string = ''
+  private heartRate: number = 0
+  private speed: number = 0
+  private tripDuration: string = ''
 
   aboutToAppear(): void {
     this.refresh(false)

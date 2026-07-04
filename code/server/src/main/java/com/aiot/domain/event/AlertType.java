@@ -16,5 +16,11 @@ public enum AlertType {
     /** 碰撞失能 */
     COLLISION_DISABILITY,
     /** 绩效预警 */
-    PERFORMANCE_WARNING
+    PERFORMANCE_WARNING,
+    /** 急刹事件 */
+    SUDDEN_BRAKING,
+    /** 电池低电压告警 */
+    LOW_BATTERY,
+    /** IoTDA 上报的系统风险等级告警 */
+    SYSTEM_RISK
 }

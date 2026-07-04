@@ -12,6 +12,10 @@
  */
 
 import { http } from '@kit.NetworkKit'
+import { hilog } from '@kit.PerformanceAnalysisKit'
+
+const DOMAIN = 0x0501
+const TAG = 'ApiClient'
 
 // ===================================================================
 // 通用类型
@@ -59,7 +63,7 @@ export class ApiClient {
   private accessToken: string | null = null
   private onTokenExpired?: () => void
 
-  constructor(baseUrl: string = '/api/v1') {
+  constructor(baseUrl: string = 'http://172.22.103.50:8080/api/v1') {
     this.baseUrl = baseUrl.replace(/\/+$/, '')
   }
 
@@ -129,8 +133,10 @@ export class ApiClient {
 
     const httpRequest = http.createHttp()
     try {
+      hilog.info(DOMAIN, TAG, '→ %{public}s %{public}s', method, url)
       const resp = await httpRequest.request(url, options)
       const status: number = resp.responseCode
+      hilog.info(DOMAIN, TAG, '← %{public}d %{public}s', status, url)
       // resp.header 是 object；按字符串取 content-type
       const headerObj: Record<string, unknown> = resp.header as Record<string, unknown>
       let contentType = ''
@@ -145,6 +151,7 @@ export class ApiClient {
       const errObj: Record<string, unknown> = err as Record<string, unknown>
       const msgVal = errObj['message']
       const message: string = (msgVal !== undefined && msgVal !== null) ? String(msgVal) : String(err)
+      hilog.error(DOMAIN, TAG, '✗ %{public}s %{public}s | err: %{public}s', method, url, message)
       return { ok: false, status: 0, body: message, contentType: '' }
     } finally {
       httpRequest.destroy()

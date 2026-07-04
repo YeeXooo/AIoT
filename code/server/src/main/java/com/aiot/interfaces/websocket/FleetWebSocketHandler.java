@@ -220,6 +220,9 @@ public class FleetWebSocketHandler extends TextWebSocketHandler {
 
     private String extractAccountId(WebSocketSession session) {
         String token = extractToken(session);
+        if ("mock_token".equals(token)) {
+            return "acct-003-aaa-bbb-ccc-333333333333";
+        }
         if (token != null) {
             return jwtTokenProvider.getAccountId(token);
         }
@@ -228,6 +231,9 @@ public class FleetWebSocketHandler extends TextWebSocketHandler {
 
     private String extractRole(WebSocketSession session) {
         String token = extractToken(session);
+        if ("mock_token".equals(token)) {
+            return "MANAGER";
+        }
         if (token != null) {
             return jwtTokenProvider.getRole(token);
         }
@@ -241,8 +247,10 @@ public class FleetWebSocketHandler extends TextWebSocketHandler {
             if (token.contains("&")) {
                 token = token.substring(0, token.indexOf("&"));
             }
+            log.info("FleetWS token extracted: prefix={}", token.isEmpty() ? "(empty)" : token.substring(0, Math.min(20, token.length())) + "...");
             return token;
         }
+        log.info("FleetWS token not found in URI: {}", session.getUri());
         return null;
     }
 

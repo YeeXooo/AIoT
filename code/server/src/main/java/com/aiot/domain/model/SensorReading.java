@@ -28,7 +28,8 @@ public class SensorReading {
         PHYSIOLOGICAL_MONITOR,
         MICROPHONE,
         ACOUSTIC,
-        REAR_IR_CAMERA
+        REAR_IR_CAMERA,
+        ENVIRONMENT
     }
 
     private final SensorType sensorType;
@@ -63,6 +64,12 @@ public class SensorReading {
     public double headNodFreq()      { return get("headNodFreq"); }
     public double gazeDeviationCumulative() { return get("gazeDeviationCumulative"); }
     public double handsOffWheel()    { return get("handsOffWheel"); }
+
+    // ── ENVIRONMENT 通道字段便捷方法 ──
+
+    public double temp() { return get("TEMP"); }
+    public double humi() { return get("HUMI"); }
+    public double lux()  { return get("LUX"); }
 
     @Override
     public boolean equals(Object o) {

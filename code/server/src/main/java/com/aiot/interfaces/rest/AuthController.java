@@ -6,6 +6,9 @@ import com.aiot.infra.security.SecurityProperties;
 
 import io.jsonwebtoken.Claims;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,9 +24,12 @@ import java.util.UUID;
 @RequestMapping("/api/v1/auth")
 public class AuthController {
 
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
+
     private final SystemAccountJpaRepository accountRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final SecurityProperties securityProperties;
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public AuthController(SystemAccountJpaRepository accountRepository,
                           JwtTokenProvider jwtTokenProvider,
@@ -40,14 +46,40 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         var accountOpt = accountRepository.findByPhone(request.credential());
+
+        // Fallback: 支持前端用账号名登录（family001/manager001）
+        if (accountOpt.isEmpty()) {
+            accountOpt = switch (request.credential()) {
+                case "family001" -> accountRepository.findByPhone("13900000001");
+                case "family002" -> accountRepository.findByPhone("13900000002");
+                case "manager001" -> accountRepository.findByPhone("18800000001");
+                default -> accountOpt;
+            };
+        }
+
         if (accountOpt.isEmpty()) {
             return ResponseEntity.status(401).body(errorBody("AuthFailed", "Invalid credentials"));
         }
 
         var account = accountOpt.get();
-        var tokenPair = jwtTokenProvider.createTokenPair(account.getAccountId(), account.getRole());
+        String passwordHash = account.getPasswordHash();
 
-        return ResponseEntity.ok(tokenPair);
+        if (passwordHash == null || !passwordEncoder.matches(request.secret(), passwordHash)) {
+            log.info("登录失败: credential={}", request.credential());
+            return ResponseEntity.status(401).body(errorBody("AuthFailed", "Invalid credentials"));
+        }
+
+        var tokenPair = jwtTokenProvider.createTokenPair(account.getAccountId(), account.getRole());
+        log.info("登录成功: accountId={}, role={}", account.getAccountId(), account.getRole());
+        return ResponseEntity.ok(Map.of(
+                "accessToken", tokenPair.accessToken(),
+                "refreshToken", tokenPair.refreshToken(),
+                "tokenType", tokenPair.tokenType(),
+                "expiresIn", tokenPair.expiresIn(),
+                "accountId", tokenPair.accountId(),
+                "role", tokenPair.role(),
+                "requiresSecondaryVerification", false
+        ));
     }
 
     @PostMapping("/refresh")
@@ -77,6 +109,9 @@ public class AuthController {
 
     @PostMapping("/secondary-verify")
     public ResponseEntity<?> secondaryVerify(@RequestBody SecondaryVerifyRequest request) {
+        log.info("secondary-verify 请求: accountId={}, method={}, otp={}",
+                request.accountId(), request.method(),
+                request.otp() != null ? request.otp().substring(0, Math.min(request.otp().length(), 4)) + "***" : "null");
         String mockCode = securityProperties.getMockVerificationCode();
         int validitySec = securityProperties.getMockCodeValiditySeconds();
 

@@ -1,5 +1,6 @@
 package com.aiot.application.guardianship;
 
+import com.aiot.application.PendingFamilyRequestStore;
 import com.aiot.domain.emergency.EmergencyRescueService;
 import com.aiot.domain.event.RiskLevel;
 import com.aiot.domain.guardianship.DriverStatusBroadcastService;
@@ -12,6 +13,7 @@ import com.aiot.domain.shared.AccountId;
 import com.aiot.domain.shared.AppError;
 import com.aiot.domain.shared.DriverId;
 import com.aiot.domain.shared.Result;
+import com.aiot.infra.repository.GuardianshipJpaRepository;
 
 import java.util.List;
 import java.util.Map;
@@ -28,6 +30,8 @@ public class RemoteGuardianshipServiceImpl implements IRemoteGuardianshipService
     private final SystemAccountRepository systemAccountRepository;
     private final MediaSessionPort mediaSessionPort;
     private final NotificationPort notificationPort;
+    private final GuardianshipJpaRepository guardianshipJpaRepository;
+    private final PendingFamilyRequestStore pendingFamilyRequestStore;
 
     private final Map<String, MediaSessionPort.SessionHandle> activeMediaSessions = new ConcurrentHashMap<>();
 
@@ -37,13 +41,17 @@ public class RemoteGuardianshipServiceImpl implements IRemoteGuardianshipService
             EmergencyRescueService emergencyRescueService,
             SystemAccountRepository systemAccountRepository,
             MediaSessionPort mediaSessionPort,
-            NotificationPort notificationPort) {
+            NotificationPort notificationPort,
+            GuardianshipJpaRepository guardianshipJpaRepository,
+            PendingFamilyRequestStore pendingFamilyRequestStore) {
         this.permissionService = permissionService;
         this.driverStatusBroadcastService = driverStatusBroadcastService;
         this.emergencyRescueService = emergencyRescueService;
         this.systemAccountRepository = systemAccountRepository;
         this.mediaSessionPort = mediaSessionPort;
         this.notificationPort = notificationPort;
+        this.guardianshipJpaRepository = guardianshipJpaRepository;
+        this.pendingFamilyRequestStore = pendingFamilyRequestStore;
     }
 
     @Override
@@ -87,9 +95,14 @@ public class RemoteGuardianshipServiceImpl implements IRemoteGuardianshipService
 
         var permResult = permissionService.checkPermission(driverId.id(), accountId.id());
         if (permResult.isErr()) {
-            return Result.err(permResult.unwrapErr());
-        }
-        if (permResult.unwrap().isRevoked()) {
+            boolean hasGuardianship = guardianshipJpaRepository
+                    .findActive(driverId.id(), accountId.id()).isPresent();
+            if (hasGuardianship) {
+                permissionService.grantAccess(driverId.id(), accountId.id(), "AUTO_SYNC");
+            } else {
+                return Result.err(permResult.unwrapErr());
+            }
+        } else if (permResult.unwrap().isRevoked()) {
             return Result.err(AppError.accessDenied("Account " + accountId.id()
                     + " does not have permission for driver " + driverId.id()));
         }
@@ -105,6 +118,9 @@ public class RemoteGuardianshipServiceImpl implements IRemoteGuardianshipService
         try {
             MediaSessionPort.SessionHandle handle = mediaSessionPort.establishSession(accountId, driverId, type);
             activeMediaSessions.put(handle.sessionId(), handle);
+
+            pendingFamilyRequestStore.put(
+                    PendingFamilyRequestStore.FamilyRequest.create(driverId.id(), accountId.id(), sessionType));
 
             return Result.ok(new MediaSessionResponse(
                     handle.sessionId(), sessionType.toUpperCase(), driverId.id(), "ESTABLISHED"));
@@ -170,9 +186,14 @@ public class RemoteGuardianshipServiceImpl implements IRemoteGuardianshipService
 
         var permResult = permissionService.checkPermission(driverId.id(), accountId.id());
         if (permResult.isErr()) {
-            return Result.err(permResult.unwrapErr());
-        }
-        if (permResult.unwrap().isRevoked()) {
+            boolean hasGuardianship = guardianshipJpaRepository
+                    .findActive(driverId.id(), accountId.id()).isPresent();
+            if (hasGuardianship) {
+                permissionService.grantAccess(driverId.id(), accountId.id(), "MANUAL_RESCUE");
+            } else {
+                return Result.err(permResult.unwrapErr());
+            }
+        } else if (permResult.unwrap().isRevoked()) {
             return Result.err(AppError.accessDenied("Account " + accountId.id()
                     + " does not have guardianship permission for driver " + driverId.id()));
         }

@@ -12,6 +12,10 @@
  */
 
 import { http } from '@kit.NetworkKit'
+import { hilog } from '@kit.PerformanceAnalysisKit'
+
+const DOMAIN = 0x0501
+const TAG = 'ApiClient'
 
 // ===================================================================
 // 通用类型
@@ -59,7 +63,7 @@ export class ApiClient {
   private accessToken: string | null = null
   private onTokenExpired?: () => void
 
-  constructor(baseUrl: string = '/api/v1') {
+  constructor(baseUrl: string = 'http://172.22.103.50:8080/api/v1') {
     this.baseUrl = baseUrl.replace(/\/+$/, '')
   }
 
@@ -129,14 +133,23 @@ export class ApiClient {
 
     const httpRequest = http.createHttp()
     try {
+      hilog.info(DOMAIN, TAG, '→ %{public}s %{public}s', method, url)
       const resp = await httpRequest.request(url, options)
       const status: number = resp.responseCode
-      // resp.header 是 object；按字符串取 content-type
+      hilog.info(DOMAIN, TAG, '← %{public}d %{public}s', status, url)
+      // resp.header 是 object；HTTP header 大小写不敏感，键名可能为
+      // 'Content-Type' / 'content-type' 等，需遍历键做大小写无关匹配
       const headerObj: Record<string, Object> = resp.header as Record<string, Object>
       let contentType = ''
-      const ct = headerObj['Content-Type']
-      if (ct !== undefined && ct !== null) {
-        contentType = String(ct)
+      const headerKeys = Object.keys(headerObj)
+      for (let i = 0; i < headerKeys.length; i++) {
+        if (headerKeys[i].toLowerCase() === 'content-type') {
+          const ctVal = headerObj[headerKeys[i]]
+          if (ctVal !== undefined && ctVal !== null) {
+            contentType = String(ctVal)
+          }
+          break
+        }
       }
       const resultStr: string = (resp.result !== undefined && resp.result !== null)
         ? String(resp.result) : ''
@@ -145,6 +158,7 @@ export class ApiClient {
       const errObj: Record<string, Object> = err as Record<string, Object>
       const msgVal = errObj['message']
       const message: string = (msgVal !== undefined && msgVal !== null) ? String(msgVal) : String(err)
+      hilog.error(DOMAIN, TAG, '✗ %{public}s %{public}s | err: %{public}s', method, url, message)
       return { ok: false, status: 0, body: message, contentType: '' }
     } finally {
       httpRequest.destroy()
@@ -184,8 +198,12 @@ export class ApiClient {
       return { success: true, status: 204 }
     }
 
-    // 非 JSON → 仅凭状态码判断
-    if (!result.contentType.includes('application/json')) {
+    // 非 JSON → 仅凭状态码判断。
+    // 兜底：Content-Type 缺失但 body 以 { 或 [ 开头时仍按 JSON 尝试解析，
+    // 避免部分网关/代理丢失 Content-Type 时误判为非 JSON。
+    const isJson: boolean = result.contentType.toLowerCase().includes('application/json')
+      || (result.body.length > 0 && (result.body.charAt(0) === '{' || result.body.charAt(0) === '['))
+    if (!isJson) {
       return result.ok
         ? { success: true, status: result.status }
         : { success: false, status: result.status }
@@ -204,9 +222,11 @@ export class ApiClient {
     }
 
     try {
-      const raw: Record<string, Object> = JSON.parse(result.body)
+      const raw: Record<string, Object> = JSON.parse(result.body) as Record<string, Object>
       return { success: true, data: raw, status: result.status }
-    } catch {
+    } catch (e) {
+      const errMsg = String(e)
+      hilog.error(DOMAIN, TAG, 'JSON parse failed: %{public}s | body: %{public}s', errMsg, result.body)
       return {
         success: false,
         error: { errorCode: 'ParseError', message: '响应 JSON 解析失败', requestId: '' },

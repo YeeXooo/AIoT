@@ -1,4 +1,4 @@
-import { dashboardVM, DashboardData, ViewState, AlertSummary } from '../../viewmodel'
+import { dashboardVM, guardianshipVM, DashboardData, ViewState, AlertSummary } from '../../viewmodel'
 import { AppCard, StatusBadge, RiskBadge, EmptyState, SkeletonRow, ErrorRetry } from '../../common/ui'
 import { alertTypeLabel, formatTime } from '../../common/StatusMap'
 import { wsManager, type DriverStatusSnapshot, type AlertPush } from '../../websocket/WebSocketManager'
@@ -7,14 +7,14 @@ import { wsManager, type DriverStatusSnapshot, type AlertPush } from '../../webs
 export struct DashboardTab {
   @State view: ViewState<DashboardData> = { state: 'idle', data: null, errorMsg: '' }
   @State refreshing: boolean = false
-  @StorageProp('currentDriverName') @Watch('onDriverChanged') driverName: string = '张明'
-  @StorageProp('currentDriverVehicleId') vehicleId: string = '京A·88562'
-  @StorageProp('currentDriverId') @Watch('onDriverChanged') driverId: string = 'd1'
-  @State private heartRate: number = 72
-  @State private speed: number = 68
-  @State private spo2: number = 98
-  @State private emotionIndex: number = 0.72
-  private tripDuration: string = '1小时23分'
+  @StorageProp('currentDriverName') @Watch('onDriverChanged') driverName: string = ''
+  @StorageProp('currentDriverVehicleId') vehicleId: string = ''
+  @StorageProp('currentDriverId') @Watch('onDriverChanged') driverId: string = ''
+  @State private heartRate: number = 0
+  @State private speed: number = 0
+  @State private spo2: number = 0
+  @State private emotionIndex: number = 0
+  private tripDuration: string = ''
   @State private card1OffsetY: number = 30
   @State private card1Opacity: number = 0
   @State private card2OffsetY: number = 30
@@ -30,7 +30,6 @@ export struct DashboardTab {
 
   aboutToAppear(): void {
     dashboardVM.driverId = this.driverId
-    this.refresh(false)
     wsManager.setCallbacks({
       onDriverStatusSnapshot: (snapshot: DriverStatusSnapshot) => {
         this.heartRate = snapshot.heartRate > 0 ? snapshot.heartRate : this.heartRate
@@ -43,7 +42,19 @@ export struct DashboardTab {
       },
     })
     wsManager.connect()
-    wsManager.subscribeDriverStatus('d1')
+    // 首屏 driverId 为空时，先拉监护绑定列表填充 currentDriverId；
+    // AppStorage 写入会触发 @Watch('onDriverChanged') 自动 refresh，无需手动调
+    if (this.driverId.length > 0) {
+      this.refresh(false)
+      wsManager.subscribeDriverStatus(this.driverId)
+    } else {
+      guardianshipVM.loadDrivers().then((result) => {
+        if (result.state === 'success' && result.data !== null && result.data.drivers.length > 0) {
+          // loadDrivers 内部已写入 AppStorage('currentDriverId')，
+          // @Watch 会触发 onDriverChanged → refresh；这里无需额外动作
+        }
+      })
+    }
     setTimeout(() => {
       this.speedDisplay = this.speed
     }, 600)
