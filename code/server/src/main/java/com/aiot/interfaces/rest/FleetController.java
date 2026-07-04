@@ -72,10 +72,20 @@ public class FleetController {
     record SubscribeRequest(String adminId, String fleetId) {}
     record SubscribeResponse(String subscriptionId) {}
 
+    // 前端 hardcode 的车队 ID → 后端实际车队 ID 映射
+    private static String mapFleetId(String fleetId) {
+        return switch (fleetId) {
+            case "f1" -> "fleet-east-1";
+            case "f2" -> "fleet-west-1";
+            default -> fleetId;
+        };
+    }
+
     // ── Endpoints ──
 
     @GetMapping("/{fleetId}/fatigue-distribution")
     public ResponseEntity<?> getFatigueDistribution(@PathVariable String fleetId) {
+        fleetId = mapFleetId(fleetId);
         var result = fleetService.getFatigueDistribution(fleetId);
         if (result.isErr()) return errorResponse(result.unwrapErr());
 
@@ -94,6 +104,7 @@ public class FleetController {
 
     @GetMapping("/{fleetId}/offline-vehicles")
     public ResponseEntity<?> getOfflineVehicles(@PathVariable String fleetId) {
+        fleetId = mapFleetId(fleetId);
         var result = fleetService.getOfflineVehicles(fleetId);
         if (result.isErr()) return errorResponse(result.unwrapErr());
 
@@ -145,6 +156,7 @@ public class FleetController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
+        fleetId = mapFleetId(fleetId);
         var result = fleetService.drillDownHighRisk(fleetId, riskLevel, page, size);
         if (result.isErr()) return errorResponse(result.unwrapErr());
 

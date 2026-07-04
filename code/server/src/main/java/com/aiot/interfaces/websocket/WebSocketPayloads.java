@@ -22,16 +22,17 @@ public final class WebSocketPayloads {
     // ── 下行消息 (云端 → APP/大屏) ──
 
     /** 连接建立确认 */
-    public record ConnectionEstablished(String type, String connectionId, String accountId) {
+    public record ConnectionEstablished(String type, Map<String, Object> payload) {
         public static ConnectionEstablished of(String connectionId, String accountId) {
-            return new ConnectionEstablished("connection_established", connectionId, accountId);
+            return new ConnectionEstablished("connection_established",
+                    Map.of("connectionId", connectionId, "accountId", accountId));
         }
     }
 
     /** 心跳 Ping */
-    public record Ping(String type, Instant serverTime) {
+    public record Ping(String type, Map<String, Object> payload) {
         public static Ping now() {
-            return new Ping("ping", Instant.now());
+            return new Ping("ping", Map.of("serverTime", Instant.now().toString()));
         }
     }
 

@@ -190,11 +190,8 @@ struct Index {
               this.viewModel.triggerCameraOcclusion()
             }
           },
-          onFamilyAccept: () => { this.familyNoticeVisible = true },
-          onFamilyReject: () => {
-            this.familyAccess = null
-            this.familyNoticeVisible = false
-          }
+          onFamilyAccept: () => { this.viewModel.acceptFamilyRequest(); this.refreshFromViewModel() },
+          onFamilyReject: () => { this.viewModel.declineFamilyRequest(); this.refreshFromViewModel() }
         })
 
         SimulationPanel({

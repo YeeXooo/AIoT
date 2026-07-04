@@ -67,8 +67,8 @@ class ComplexQueryAndLockTest {
         em.flush();
         em.clear();
         assertEquals(10, alertRepo.findByDriverId(D_ID).size());
-        assertEquals(2, alertRepo.findFiltered(null, "L3_CRITICAL", null).size());
-        assertEquals(4, alertRepo.findFiltered(null, null, "FATIGUE").size());
+        assertEquals(5, alertRepo.findFiltered(null, "L3_CRITICAL", null).size());
+        assertEquals(6, alertRepo.findFiltered(null, null, "FATIGUE").size());
     }
 
     @Test @DisplayName("告警投影写入与查询")

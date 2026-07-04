@@ -58,6 +58,12 @@
           }
         ],
       }
+    ],
+    "metadata": [
+      {
+        "name": "ohos.network.security.policy",
+        "value": "{ \"cleartextTraffic\": true, \"trustedCa\": \"system\" }"
+      }
     ]
   }
 }

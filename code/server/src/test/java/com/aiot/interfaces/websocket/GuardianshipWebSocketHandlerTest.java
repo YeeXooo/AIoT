@@ -40,6 +40,8 @@ class GuardianshipWebSocketHandlerTest {
     @Mock
     private OfflineAlertQueue offlineAlertQueue;
     @Mock
+    private com.aiot.application.PendingFamilyRequestStore pendingFamilyRequestStore;
+    @Mock
     private WebSocketSession webSocketSession;
 
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
@@ -54,7 +56,8 @@ class GuardianshipWebSocketHandlerTest {
         when(wsProperties.getOfflineMessageRetentionDays()).thenReturn(7);
 
         handler = new GuardianshipWebSocketHandler(sessionRegistry, wsProperties,
-                objectMapper, jwtTokenProvider, mediaSessionManager, offlineAlertQueue);
+                objectMapper, jwtTokenProvider, mediaSessionManager, offlineAlertQueue,
+                pendingFamilyRequestStore);
     }
 
     private void stubFamilyAuth() {

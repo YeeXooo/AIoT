@@ -12,3 +12,7 @@ export interface ViewState<T> {
 export function successState<T>(data: T): ViewState<T> {
   return { state: 'success', data, errorMsg: '' }
 }
+
+export function errorState<T>(errorMsg: string): ViewState<T> {
+  return { state: 'error', data: null, errorMsg }
+}

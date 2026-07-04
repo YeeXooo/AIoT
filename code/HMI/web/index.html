@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIoT 车机 HMI 仪表盘</title>
+<style>
+:root {
+  --bg: #0a0a0d;
+  --card-bg: #1a1a20;
+  --text: #e5e5e7;
+  --text-dim: #6e6e73;
+  --green: #30D158;
+  --yellow: #FFD60A;
+  --orange: #FF9F0A;
+  --red: #FF453A;
+  --blue: #0A84FF;
+  --teal: #30D0C8;
+  --purple: #BF5AF2;
+  --radius: 12px;
+  --gap: 10px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  height: 100vh;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 12px 16px;
+  gap: var(--gap);
+  position: relative;
+}
+
+/* ─── SensorStatusBar ─── */
+#sensor-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 0;
+  min-height: 32px;
+}
+.sensor-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+  transition: all 0.4s;
+}
+.sensor-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green), 0 0 16px var(--green);
+  transition: all 0.4s;
+}
+.sensor-chip.failed { color: var(--red); border-color: rgba(255,69,58,0.3); }
+.sensor-chip.failed .sensor-dot {
+  background: var(--red);
+  box-shadow: 0 0 8px var(--red), 0 0 16px var(--red);
+}
+
+#monitor-offline-badge {
+  margin-left: auto;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: rgba(255,69,58,0.15);
+  border: 1px solid rgba(255,69,58,0.3);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--red);
+  letter-spacing: 0.5px;
+  display: none;
+}
+#monitor-offline-badge.show { display: flex; }
+#monitor-offline-badge .badge-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+  margin-right: 6px;
+}
+#mode-indicator {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+#mode-indicator.mode-mock  { background: rgba(255,159,10,0.12); color: var(--orange); border: 1px solid rgba(255,159,10,0.25); }
+#mode-indicator.mode-live  { background: rgba(48,209,88,0.12); color: var(--green);  border: 1px solid rgba(48,209,88,0.25); }
+#mode-indicator.mode-error { background: rgba(255,69,58,0.12);  color: var(--red);    border: 1px solid rgba(255,69,58,0.25); }
+
+/* ─── Main area: speedo + PIP ─── */
+#main-area {
+  display: flex;
+  flex: 1;
+  gap: var(--gap);
+  min-height: 0;
+}
+
+/* ─── DrivingInfoPanel (speedometer) ─── */
+#driving-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  border: 1px solid rgba(255,255,255,0.06);
+  position: relative;
+  overflow: hidden;
+}
+#driving-panel .glow-bg {
+  position: absolute;
+  width: 300px; height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(48,209,88,0.15) 0%, transparent 70%);
+  transition: all 0.6s;
+  pointer-events: none;
+}
+#driving-panel .glow-bg.l1 {
+  background: radial-gradient(circle, rgba(255,214,10,0.25) 0%, transparent 70%);
+}
+#driving-panel .glow-bg.l2 {
+  background: radial-gradient(circle, rgba(255,159,10,0.35) 0%, transparent 70%);
+}
+#driving-panel .glow-bg.l3 {
+  background: radial-gradient(circle, rgba(255,69,58,0.45) 0%, transparent 70%);
+}
+.speed-ring {
+  position: relative;
+  width: 220px; height: 220px;
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  transition: border-color 0.6s;
+}
+.speed-ring.l3 { border-color: var(--red); }
+.speed-value {
+  font-size: 96px;
+  font-weight: 200;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -4px;
+  color: var(--green);
+  transition: color 0.6s;
+  line-height: 1;
+}
+.speed-value.l1 { color: var(--yellow); }
+.speed-value.l2 { color: var(--orange); }
+.speed-value.l3 { color: var(--red); }
+.speed-value.fast { color: var(--orange); }
+.speed-value.overfast { color: var(--red); }
+.speed-unit { font-size: 18px; font-weight: 400; color: var(--text-dim); margin-top: 2px; }
+.info-row {
+  display: flex;
+  gap: 24px;
+  margin-top: 12px;
+  z-index: 1;
+}
+.info-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.info-label { font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+.info-value { font-size: 14px; font-weight: 500; color: var(--text); }
+
+/* ─── RearSeatPip ─── */
+#rear-pip {
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  border: 1px solid rgba(255,255,255,0.06);
+  gap: 6px;
+  padding: 10px;
+}
+#pip-video-container {
+  position: relative;
+  width: 160px; height: 120px;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+}
+#pip-video {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: none;
+  z-index: 1;
+}
+#pip-video.active { display: block; }
+#pip-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  display: none;
+  background: transparent;
+  z-index: 2;
+  mix-blend-mode: normal;
+  isolation: isolate;
+}
+#pip-canvas.active { display: block; }
+.pip-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--text-dim);
+  transition: opacity 0.3s;
+}
+.pip-placeholder.hidden { opacity: 0; pointer-events: none; }
+.pip-icon { font-size: 28px; opacity: 0.5; }
+.pip-start-text { font-size: 10px; text-align: center; opacity: 0.6; line-height: 1.4; }
+.pip-placeholder.occluded {
+  color: var(--red);
+}
+.pip-placeholder.occluded .pip-icon { opacity: 0.8; }
+.pip-label {
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.5px;
+}
+.pip-camera-btn {
+  padding: 4px 14px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid rgba(48,209,88,0.25);
+  background: rgba(48,209,88,0.1);
+  color: var(--green);
+  transition: all 0.2s;
+}
+.pip-camera-btn:hover { background: rgba(48,209,88,0.2); }
+.pip-camera-btn.stop { border-color: rgba(255,69,58,0.25); background: rgba(255,69,58,0.1); color: var(--red); }
+.pip-detection-info {
+  display: none;
+  gap: 8px;
+  font-size: 9px;
+  color: var(--text-dim);
+  letter-spacing: 0.3px;
+}
+.pip-detection-info.show { display: flex; }
+.pip-face-conf { color: var(--green); }
+
+/* ─── FamilyAccessNotice ─── */
+#family-notice {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(10,132,255,0.08);
+  border-radius: 8px;
+  border: 1px solid rgba(10,132,255,0.15);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--blue);
+}
+#family-notice.show { display: flex; }
+#family-notice .notice-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--blue);
+  box-shadow: 0 0 8px var(--blue);
+}
+#family-notice.ended {
+  color: var(--text-dim);
+  border-color: rgba(255,255,255,0.08);
+}
+#family-notice.ended .notice-dot { background: var(--text-dim); box-shadow: none; }
+
+/* ─── AmbientLightBar ─── */
+#ambient-bar {
+  height: 3px;
+  border-radius: 2px;
+  background: transparent;
+  transition: all 0.6s;
+  box-shadow: none;
+}
+#ambient-bar.orange { background: var(--orange); box-shadow: 0 0 12px var(--orange); }
+#ambient-bar.red    { background: var(--red);    box-shadow: 0 0 18px var(--red); }
+
+/* ─── RiskStatusBar ─── */
+#risk-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  transition: all 0.6s;
+}
+#risk-bar.l1 { background: var(--yellow); box-shadow: 0 0 10px var(--yellow); }
+#risk-bar.l2 { background: var(--orange); box-shadow: 0 0 14px var(--orange); }
+#risk-bar.l3 { background: var(--red);    box-shadow: 0 0 20px var(--red); }
+
+/* ─── EnvironmentAdjustmentCard ─── */
+#env-card {
+  display: none;
+  gap: var(--gap);
+}
+#env-card.show { display: flex; }
+.env-tile {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.env-tile .env-icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+.env-tile.ac-tile .env-icon { background: rgba(48,208,200,0.12); }
+.env-tile.audio-tile .env-icon { background: rgba(191,90,242,0.12); }
+.env-desc { font-size: 13px; font-weight: 500; }
+.ac-tile .env-desc { color: var(--teal); }
+.audio-tile .env-desc { color: var(--purple); }
+
+/* ─── OtaProgressCard ─── */
+#ota-card {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+#ota-card.show { display: flex; }
+.ota-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.ota-label { font-size: 12px; font-weight: 600; color: var(--blue); text-transform: uppercase; letter-spacing: 1px; }
+.ota-percent { font-size: 14px; font-weight: 700; color: var(--blue); }
+.ota-bar-bg {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.06);
+  overflow: hidden;
+}
+.ota-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--blue);
+  box-shadow: 0 0 10px var(--blue);
+  transition: width 0.6s;
+}
+.ota-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+/* ─── ActionBar ─── */
+#action-bar {
+  display: flex;
+  gap: var(--gap);
+  align-items: center;
+  flex-wrap: wrap;
+}
+.action-chip {
+  padding: 10px 18px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  background: var(--card-bg);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.action-chip:hover { background: rgba(255,255,255,0.08); }
+.action-chip.steer  { color: var(--orange); border-color: rgba(255,159,10,0.3); }
+.action-chip.brake  { color: var(--red); border-color: rgba(255,69,58,0.3); }
+.action-chip.accel  { color: var(--green); border-color: rgba(48,209,88,0.3); }
+.action-chip.camera { color: var(--red); border-color: rgba(255,69,58,0.3); }
+.action-chip.camera.restore { color: var(--green); border-color: rgba(48,209,88,0.3); }
+.intervention-summary {
+  flex: 1;
+  min-width: 120px;
+  font-size: 12px;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Family access card in action bar */
+.family-request {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(10,132,255,0.06);
+  border-radius: var(--radius);
+  border: 1px solid rgba(10,132,255,0.12);
+  font-size: 12px;
+  color: var(--blue);
+  width: 100%;
+}
+.family-request.show { display: flex; }
+.family-request .fr-label { flex: 1; }
+.family-request button {
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+}
+.family-request .decline-btn { background: rgba(255,69,58,0.12); color: var(--red); }
+.family-request .accept-btn { background: rgba(48,209,88,0.12); color: var(--green); }
+
+/* HMI event toast */
+.hmi-event-toast {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  margin-bottom: 6px;
+  animation: toastIn 0.3s ease-out;
+}
+.hmi-event-toast.show { display: flex; }
+.hmi-event-toast.rescue { background: rgba(255,69,58,0.1); border: 1px solid rgba(255,69,58,0.25); color: var(--red); }
+.hmi-event-toast.window { background: rgba(10,132,255,0.08); border: 1px solid rgba(10,132,255,0.2); color: var(--blue); }
+.hmi-event-toast .toast-icon { font-size: 18px; }
+.hmi-event-toast .toast-body { flex: 1; }
+.hmi-event-toast .toast-title { font-weight: 600; font-size: 13px; }
+.hmi-event-toast .toast-desc { font-size: 11px; opacity: 0.8; }
+.hmi-event-toast .toast-close {
+  padding: 2px 8px; border-radius: 4px; font-size: 11px;
+  cursor: pointer; border: 1px solid; background: transparent; opacity: 0.7;
+}
+.hmi-event-toast.rescue .toast-close { color: var(--red); border-color: rgba(255,69,58,0.3); }
+.hmi-event-toast.window .toast-close { color: var(--blue); border-color: rgba(10,132,255,0.3); }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Perception panel */
+.perception-panel {
+  padding: 8px 14px;
+  background: rgba(255,255,255,0.03);
+  border-radius: var(--radius);
+  border: 1px solid rgba(255,255,255,0.06);
+  margin-top: 6px;
+  display: none;
+}
+.perception-panel.show { display: block; }
+.perc-header {
+  font-size: 11px;
+  color: var(--purple);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.perc-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+.perc-item {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.perc-item.warning { color: var(--orange); }
+.perc-item.danger { color: var(--red); }
+.perc-item.ok { color: var(--green); }
+
+/* ─── SimulationPanel ─── */
+#sim-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sim-toggle {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--card-bg);
+  border: 1px solid rgba(255,255,255,0.04);
+  text-align: center;
+  letter-spacing: 1px;
+}
+.sim-toggle:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+.sim-buttons {
+  display: none;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.sim-buttons.show { display: flex; }
+.sim-btn {
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: var(--card-bg);
+  color: var(--text-dim);
+  transition: all 0.2s;
+}
+.sim-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.15); }
+.sim-btn.clear-btn { color: var(--red); border-color: rgba(255,69,58,0.2); }
+
+/* ─── InterventionAlertOverlay ─── */
+#overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  z-index: 100;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 40px;
+}
+#overlay.show { display: flex; }
+.overlay-header {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--red);
+  letter-spacing: 2px;
+  animation: pulse-text 1s ease-in-out infinite alternate;
+}
+@keyframes pulse-text {
+  from { opacity: 0.3; }
+  to   { opacity: 1; }
+}
+.overlay-msg {
+  max-width: 500px;
+  text-align: center;
+  padding: 16px 24px;
+  border: 1px solid rgba(255,69,58,0.2);
+  border-radius: var(--radius);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text);
+  background: rgba(255,69,58,0.06);
+}
+.overlay-indicators {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.overlay-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--red);
+}
+.overlay-indicator .ind-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--red);
+  box-shadow: 0 0 8px var(--red);
+  animation: pulse-dot 0.6s ease-in-out infinite alternate;
+}
+@keyframes pulse-dot {
+  from { opacity: 0.3; transform: scale(0.8); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.overlay-btn {
+  padding: 14px 48px;
+  border-radius: var(--radius);
+  font-size: 16px;
+  font-weight: 700;
+  background: var(--orange);
+  color: #000;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 1px;
+}
+.overlay-btn:hover { background: #ffb340; transform: scale(1.03); }
+
+/* ─── Animations ─── */
+@keyframes breathe {
+  from { opacity: 0.4; }
+  to   { opacity: 1; }
+}
+.breathe { animation: breathe 1s ease-in-out infinite alternate; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- SensorStatusBar -->
+  <div id="sensor-bar">
+    <div class="sensor-chip" id="sensor-cam"><div class="sensor-dot"></div>CAMERA</div>
+    <div class="sensor-chip" id="sensor-radar"><div class="sensor-dot"></div>RADAR</div>
+    <div class="sensor-chip" id="sensor-physio"><div class="sensor-dot"></div>PHYSIO</div>
+    <div id="monitor-offline-badge"><div class="badge-dot"></div>MONITOR OFFLINE</div>
+    <div id="mode-indicator" class="mode-mock">MOCK</div>
+  </div>
+
+  <!-- Main area -->
+  <div id="main-area">
+    <div id="driving-panel">
+      <div class="glow-bg" id="speed-glow"></div>
+      <div class="speed-ring" id="speed-ring">
+        <div class="speed-value" id="speed-value">0</div>
+        <div class="speed-unit">km/h</div>
+      </div>
+      <div class="info-row">
+        <div class="info-item"><span class="info-label">NAV</span><span class="info-value">--</span></div>
+        <div class="info-item"><span class="info-label">RANGE</span><span class="info-value">--</span></div>
+        <div class="info-item"><span class="info-label">DRIVE</span><span class="info-value" id="drive-time">--:--</span></div>
+      </div>
+    </div>
+    <div id="rear-pip">
+      <div id="pip-video-container">
+        <video id="pip-video" autoplay playsinline muted></video>
+        <canvas id="pip-canvas"></canvas>
+        <div class="pip-placeholder" id="pip-placeholder" onclick="hmi.toggleCameraFeed()">
+          <div class="pip-icon">&#x1F4F7;</div>
+          <div class="pip-start-text">Click to start<br>DMS Camera</div>
+        </div>
+      </div>
+      <div class="pip-label" id="pip-label">DMS CAMERA</div>
+      <button class="pip-camera-btn" id="pip-camera-btn" onclick="hmi.toggleCameraFeed()">&#9654; START</button>
+      <div class="pip-detection-info" id="pip-detection-info">
+        <span class="pip-fps" id="pip-fps">-- FPS</span>
+        <span class="pip-face-conf" id="pip-face-conf"></span>
+      </div>
+    </div>
+    <div class="perception-panel" id="perception-panel">
+      <div class="perc-header">YOLO 感知</div>
+      <div class="perc-grid">
+        <div class="perc-item" id="perc-face">人脸: --</div>
+        <div class="perc-item" id="perc-fatigue">疲劳: --</div>
+        <div class="perc-item" id="perc-distraction">分心: --</div>
+        <div class="perc-item" id="perc-emotion">情绪: --</div>
+        <div class="perc-item" id="perc-hands">手握: --</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FamilyAccessNotice -->
+  <div id="family-notice">
+    <div class="notice-dot"></div>
+    <span id="family-notice-text">Family Call Active</span>
+  </div>
+
+  <!-- AmbientLightBar -->
+  <div id="ambient-bar"></div>
+
+  <!-- RiskStatusBar -->
+  <div id="risk-bar"></div>
+
+  <!-- EnvironmentAdjustmentCard -->
+  <div id="env-card">
+    <div class="env-tile ac-tile" id="ac-tile" style="display:none">
+      <div class="env-icon">❄</div>
+      <div class="env-desc" id="ac-desc"></div>
+    </div>
+    <div class="env-tile audio-tile" id="audio-tile" style="display:none">
+      <div class="env-icon">♫</div>
+      <div class="env-desc" id="audio-desc"></div>
+    </div>
+  </div>
+
+  <!-- OtaProgressCard -->
+  <div id="ota-card">
+    <div class="ota-header">
+      <span class="ota-label">OTA Update</span>
+      <span class="ota-percent" id="ota-percent">0%</span>
+    </div>
+    <div class="ota-bar-bg">
+      <div class="ota-bar-fill" id="ota-bar-fill" style="width:0%"></div>
+    </div>
+    <div class="ota-footer">
+      <span id="ota-stage">--</span>
+      <span id="ota-eta">--</span>
+    </div>
+  </div>
+
+  <!-- ActionBar -->
+  <div id="action-bar">
+    <button class="action-chip steer" onclick="hmi.onOverride('STEER')">STEER</button>
+    <button class="action-chip brake" onclick="hmi.onOverride('BRAKE')">BRAKE</button>
+    <button class="action-chip accel" onclick="hmi.onOverride('ACCELERATE')">ACCEL</button>
+    <button class="action-chip camera" id="camera-btn" onclick="hmi.toggleCamera()">BLOCK CAM</button>
+    <div class="intervention-summary" id="intervention-summary">Normal driving</div>
+    <div class="family-request" id="family-card">
+      <span class="fr-label">Family Access Request</span>
+      <button class="accept-btn" onclick="hmi.acceptFamily()">ACCEPT</button>
+      <button class="decline-btn" onclick="hmi.declineFamily()">DECLINE</button>
+    </div>
+    <div class="hmi-event-toast" id="hmi-event-toast">
+      <span class="toast-icon" id="toast-icon"></span>
+      <div class="toast-body">
+        <div class="toast-title" id="toast-title"></div>
+        <div class="toast-desc" id="toast-desc"></div>
+      </div>
+      <button class="toast-close" id="toast-close" onclick="hmi.ackHmiEvent()">✕</button>
+    </div>
+  </div>
+
+  <!-- SimulationPanel -->
+  <div id="sim-panel">
+    <div class="sim-toggle" onclick="hmi.toggleSim()">DEV ▾</div>
+    <div class="sim-buttons" id="sim-buttons">
+      <button class="sim-btn" onclick="hmi.simulate('fatigueL2')">Fatigue L2</button>
+      <button class="sim-btn" onclick="hmi.simulate('fatigueL3')">Fatigue L3</button>
+      <button class="sim-btn" onclick="hmi.simulate('roadRage')">Road Rage</button>
+      <button class="sim-btn" onclick="hmi.simulate('lifeDetected')">Life L3</button>
+      <button class="sim-btn" onclick="hmi.simulate('collision')">Collision</button>
+      <button class="sim-btn" onclick="hmi.simulate('sensorFail')">Sensor Fail</button>
+      <button class="sim-btn" onclick="hmi.simulate('familyAccess')">Family In</button>
+      <button class="sim-btn clear-btn" onclick="hmi.simulate('clear')">Clear</button>
+    </div>
+  </div>
+
+  <!-- Overlay -->
+  <div id="overlay">
+    <div class="overlay-header" id="overlay-header">HIGH RISK</div>
+    <div class="overlay-msg" id="overlay-msg"></div>
+    <div class="overlay-indicators" id="overlay-indicators"></div>
+    <button class="overlay-btn" onclick="hmi.onOverride('OVERLAY')">OVERRIDE</button>
+  </div>
+</div>
+
+<script>
+// ─── EventBus ───
+class EventBus {
+  constructor() { this._listeners = {}; }
+  on(event, fn) { (this._listeners[event] ||= []).push(fn); }
+  emit(event, payload) { (this._listeners[event] || []).forEach(fn => fn(payload)); }
+}
+
+// ─── EdgeService (REST + mock) ───
+class EdgeService {
+  constructor() {
+    this.useMock = false;
+    this.pollTimer = -1;
+    this.familyPollTimer = -1;
+    const loc = window.location;
+    const serverIp = '172.22.103.50';
+    this.baseUrl = (loc.hostname === '127.0.0.1' || loc.hostname === 'localhost')
+      ? `http://${loc.hostname}:8080/api/v1`
+      : `http://${serverIp}:8080/api/v1`;
+    this.tripId = 't006-67fa-89bc-01de-23456789fabc';
+    this.driverId = 'd001-d2e3-4abc-9f01-123456789abc';
+  }
+
+  async _get(url) {
+    if (this.useMock) return null;
+    try { const r = await fetch(url); return r.ok ? r.json() : null; } catch { return null; }
+  }
+  async _post(url, body) {
+    if (this.useMock) return null;
+    try { const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) }); return r.ok ? r.json() : null; } catch { return null; }
+  }
+
+  async probeBackend() {
+    try {
+      const r = await fetch(`${this.baseUrl}/drivers/${this.driverId}/risk-status`, { method:'GET', signal: AbortSignal.timeout(2000) });
+      return r.ok;
+    } catch { return false; }
+  }
+
+  async queryInterventionStatus() {
+    const r = await this._get(`${this.baseUrl}/trips/${this.tripId}/interventions/active`);
+    if (r && r.activeInstructions) {
+      return {
+        tripId: r.tripId || this.tripId,
+        riskLevel: r.riskLevel || 'NONE',
+        activeInstructions: r.activeInstructions.map(i => ({
+          type: i.type,
+          params: i.params || {},
+          description: i.description || i.type
+        }))
+      };
+    }
+    return null;
+  }
+  async reportOverride(type) {
+    const mappedType = type === 'STEER' ? 'STEER'
+      : type === 'BRAKE' ? 'BRAKE'
+      : type === 'ACCELERATE' || type === 'ACCEL' ? 'ACCELERATE'
+      : type;
+    const r = await this._post(`${this.baseUrl}/trips/${this.tripId}/override`, { type: mappedType, timestamp: Date.now() });
+    return r || { accepted: true, message: '覆盖信号已接受' };
+  }
+  async getDriverRiskStatus() {
+    const r = await this._get(`${this.baseUrl}/drivers/${this.driverId}/risk-status`);
+    if (r && r.derivedStatusColor !== undefined) {
+      let riskLevel = 'NONE';
+      if (r.activeAlerts && r.activeAlerts.length > 0) {
+        const hasL3 = r.activeAlerts.some(a => a.riskLevel === 'L3_CRITICAL');
+        const hasL2 = r.activeAlerts.some(a => a.riskLevel === 'L2_WARNING');
+        riskLevel = hasL3 ? 'L3' : hasL2 ? 'L2' : 'L1';
+      }
+      return { driverId: this.driverId, riskLevel, riskDescription: `活跃告警: ${r.activeAlerts ? r.activeAlerts.length : 0}条` };
+    }
+    return null;
+  }
+  async getPendingFamilyRequest() {
+    const r = await this._get(`${this.baseUrl}/drivers/${this.driverId}/family-requests/pending`);
+    if (r && r.hasPendingRequest) {
+      return { requestId: r.requestId, accountId: r.accountId, sessionType: r.sessionType || 'AUDIO' };
+    }
+    return null;
+  }
+  async respondFamilyRequest(requestId, action) {
+    return await this._post(`${this.baseUrl}/drivers/${this.driverId}/family-requests/${requestId}/respond`, { action });
+  }
+  async getPendingHmiEvent() {
+    if (this.useMock) return null;
+    try { const r = await fetch(`${this.baseUrl}/drivers/${this.driverId}/hmi-events/pending`); return r.ok ? r.json() : null; } catch { return null; }
+  }
+  async ackHmiEvent(eventId) {
+    if (this.useMock) return false;
+    try { const r = await fetch(`${this.baseUrl}/drivers/${this.driverId}/hmi-events/${eventId}/ack`, { method:'POST' }); return r.ok; } catch { return false; }
+  }
+
+  startPolling(callback) {
+    this.stopPolling();
+    this.pollTimer = setInterval(async () => {
+      if (this.useMock) return;
+      const data = await this.queryInterventionStatus();
+      if (data) callback(data);
+    }, 2000);
+  }
+  startFamilyPolling(callback) {
+    this.stopFamilyPolling();
+    this.familyPollTimer = setInterval(async () => {
+      if (this.useMock) return;
+      const req = await this.getPendingFamilyRequest();
+      if (req) callback(req);
+    }, 1500);
+  }
+  stopFamilyPolling() {
+    if (this.familyPollTimer !== -1) { clearInterval(this.familyPollTimer); this.familyPollTimer = -1; }
+  }
+}
+
+// ─── HMI State ───
+const RISK = { NONE:0, L1:1, L2:2, L3:3 };
+const RISK_NAMES = ['NONE','L1','L2','L3'];
+const INTERVENTION = {
+  AMBIENT_LIGHT_COLOR:'AMBIENT_LIGHT_COLOR', VOICE_BROADCAST:'VOICE_BROADCAST',
+  SEAT_VIBRATION:'SEAT_VIBRATION', HAZARD_LIGHTS:'HAZARD_LIGHTS',
+  AIR_CONDITIONING:'AIR_CONDITIONING', AUDIO_PLAYBACK:'AUDIO_PLAYBACK',
+  CAN_DECELERATION_REQUEST:'CAN_DECELERATION_REQUEST', NAVIGATE_DECELERATION:'NAVIGATE_DECELERATION',
+  NAVIGATE_TO_SHOULDER:'NAVIGATE_TO_SHOULDER', ALERT:'ALERT'
+};
+
+// ─── DmsCamera (simulated YOLO + MediaPipe detection overlay) ───
+class DmsCamera {
+  constructor() {
+    this.stream = null;
+    this.video = document.getElementById('pip-video');
+    this.canvas = document.getElementById('pip-canvas');
+    this.ctx = this.canvas.getContext('2d');
+    this.animId = 0;
+    this.frameCount = 0;
+    this.lastFpsTime = performance.now();
+    this.fps = 0;
+    this.faceBbox = { x:0.3, y:0.15, w:0.4, h:0.55 }; // normalized coords
+    this.leftEye = { x:0.42, y:0.32, r:0.025 };
+    this.rightEye = { x:0.58, y:0.32, r:0.025 };
+    this.mouth = { x:0.5, y:0.49, w:0.08, h:0.03 };
+    this.phoneBbox = null;
+    this.smokeBbox = null;
+    this._hmi = null;
+  }
+
+  setHMI(hmi) { this._hmi = hmi; }
+
+  async start() {
+    try {
+      this.stream = await navigator.mediaDevices.getUserMedia({ video: { width:320, height:240, facingMode:'user' }, audio:false });
+      this.video.srcObject = this.stream;
+      this.video.classList.add('active');
+      this.video.style.opacity = '0'; // hidden but still plays for canvas drawImage
+      this.canvas.classList.add('active');
+      document.getElementById('pip-placeholder').classList.add('hidden');
+      document.getElementById('pip-detection-info').classList.add('show');
+      const btn = document.getElementById('pip-camera-btn');
+      btn.textContent = '\u25A0 STOP';
+      btn.classList.add('stop');
+      await this.video.play();
+      this.frameCount = 0; this.lastFpsTime = performance.now();
+      this._drawLoop();
+      return true;
+    } catch(e) {
+      console.warn('Camera access failed:', e.message);
+      return false;
+    }
+  }
+
+  stop() {
+    cancelAnimationFrame(this.animId);
+    if (this.stream) { this.stream.getTracks().forEach(t => t.stop()); this.stream = null; }
+    this.video.classList.remove('active');
+    this.video.style.opacity = '1';
+    this.canvas.classList.remove('active');
+    document.getElementById('pip-placeholder').classList.remove('hidden');
+    document.getElementById('pip-detection-info').classList.remove('show');
+    const btn = document.getElementById('pip-camera-btn');
+    btn.textContent = '\u25B6 START';
+    btn.classList.remove('stop');
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+  }
+
+  _drawLoop() {
+    this.animId = requestAnimationFrame(() => this._drawLoop());
+    if (!this.stream) return;
+
+    const w = this.canvas.width = this.video.videoWidth || 320;
+    const h = this.canvas.height = this.video.videoHeight || 240;
+    if (w === 0 || h === 0) return;
+
+    // Update state-based animations
+    const state = this._hmi ? this._hmi.state : null;
+    this._updateAnnotations(state);
+
+    // FPS counter
+    this.frameCount++;
+    const now = performance.now();
+    if (now - this.lastFpsTime >= 1000) {
+      this.fps = Math.round(this.frameCount / ((now - this.lastFpsTime) / 1000));
+      this.frameCount = 0; this.lastFpsTime = now;
+      document.getElementById('pip-fps').textContent = this.fps + ' FPS';
+    }
+
+    const g = this.ctx;
+    g.globalCompositeOperation = 'source-over';
+    g.clearRect(0, 0, w, h);
+
+    // Draw video frame onto canvas
+    if (this.video.readyState >= 2) {
+      g.drawImage(this.video, 0, 0, w, h);
+    }
+
+    if (state && state.cameraOccluded) {
+      // Draw occlusion pattern
+      g.save();
+      g.strokeStyle = 'rgba(255,69,58,0.8)'; g.lineWidth = 3;
+      g.beginPath(); g.moveTo(0,0); g.lineTo(w,h); g.stroke();
+      g.beginPath(); g.moveTo(w,0); g.lineTo(0,h); g.stroke();
+      g.fillStyle = 'rgba(255,69,58,0.15)'; g.fillRect(0, 0, w, h);
+      g.font = '14px monospace'; g.fillStyle = 'var(--red)'; g.textAlign = 'center';
+      g.fillText('CAMERA OCCLUDED', w/2, h/2);
+      g.restore();
+      return;
+    }
+
+    // Face bounding box
+    const fb = this.faceBbox;
+    const fx = fb.x * w, fy = fb.y * h, fw = fb.w * w, fh = fb.h * h;
+    let faceColor = '#30D158';
+    let faceConf = 0.95;
+    if (state) {
+      if (state.riskLevel >= RISK.L3) { faceColor = '#FF453A'; faceConf = 0.72; }
+      else if (state.riskLevel >= RISK.L2) { faceColor = '#FF9F0A'; faceConf = 0.82; }
+      else if (state.riskLevel >= RISK.L1) { faceColor = '#FFD60A'; faceConf = 0.88; }
+    }
+    g.save();
+    g.strokeStyle = faceColor; g.lineWidth = 2; g.setLineDash([4,2]);
+    g.strokeRect(fx, fy, fw, fh);
+    g.setLineDash([]);
+    // Confidence label
+    g.font = '10px monospace'; g.fillStyle = faceColor;
+    g.fillText(`face ${(faceConf*100).toFixed(0)}%`, fx+4, fy-4);
+    g.restore();
+
+    // Eye landmarks
+    [this.leftEye, this.rightEye].forEach(eye => {
+      g.save();
+      g.fillStyle = faceColor; g.beginPath();
+      const ex = eye.x * w, ey = eye.y * h, er = eye.r * w;
+      g.arc(ex, ey, er, 0, Math.PI*2);
+      // Elongated/closed for fatigue
+      const scaleY = (state && state.riskLevel >= RISK.L3) ? 0.15 : (state && state.riskLevel >= RISK.L2) ? 0.4 : 1;
+      g.scale(1, scaleY); g.arc(ex, ey/scaleY, er, 0, Math.PI*2);
+      g.fill();
+      g.restore();
+    });
+
+    // Mouth
+    const m = this.mouth;
+    const mx = m.x * w, my = m.y * h, mw = m.w * w, mh = m.h * h;
+    const yawnScale = (state && state.riskLevel >= RISK.L3) ? 3.5 : (state && state.riskLevel >= RISK.L2) ? 2 : 1;
+    g.save();
+    g.strokeStyle = faceColor; g.lineWidth = 2;
+    g.beginPath(); g.ellipse(mx, my, mw, mh * yawnScale, 0, 0, Math.PI*2); g.stroke();
+    g.restore();
+
+    // Phone detection
+    const phoneInst = state && state.activeInstructions.find(i => i.type === INTERVENTION.AUDIO_PLAYBACK || i.type === 'PHONE');
+    const smokeInst = state && state.activeInstructions.find(i => i.type === 'SMOKE');
+
+    // Simulate phone for road rage scenario
+    if (state && state.activeInstructions.some(i => i.type === INTERVENTION.AUDIO_PLAYBACK)) {
+      this.phoneBbox = { x:0.62, y:0.55, w:0.12, h:0.15 };
+      const p = this.phoneBbox;
+      g.save();
+      g.strokeStyle = '#FF453A'; g.lineWidth = 2; g.setLineDash([3,2]);
+      g.strokeRect(p.x*w, p.y*h, p.w*w, p.h*h);
+      g.setLineDash([]);
+      g.font = '9px monospace'; g.fillStyle = '#FF453A';
+      g.fillText('phone 78%', p.x*w+2, p.y*h-3);
+      g.restore();
+    } else {
+      this.phoneBbox = null;
+    }
+
+    // Grid + info
+    g.save();
+    g.font = '9px monospace'; g.fillStyle = 'rgba(255,255,255,0.4)'; g.textAlign = 'right';
+    g.fillText('YOLO + FaceMesh', w-4, h-4);
+    g.restore();
+  }
+
+  _updateAnnotations(state) {
+    if (!state) return;
+    const lerp = (a, b, t=0.08) => a + (b - a) * t;
+    const target = {
+      faceX: 0.3, faceY: 0.15, faceW: 0.4, faceH: 0.55,
+      lEyeX: 0.42, lEyeY: 0.32,
+      rEyeX: 0.58, rEyeY: 0.32,
+      mouthX: 0.5, mouthY: 0.49
+    };
+    // Micro-drift: very slow sinusoidal movement, not random jumps
+    const t = performance.now() / 1000;
+    const drift = (amp, freq) => Math.sin(t * freq) * amp;
+    target.faceX += drift(0.008, 0.7);
+    target.faceY += drift(0.006, 0.9);
+    this.faceBbox.x = lerp(this.faceBbox.x, target.faceX);
+    this.faceBbox.y = lerp(this.faceBbox.y, target.faceY);
+    this.faceBbox.w = lerp(this.faceBbox.w, target.faceW);
+    this.faceBbox.h = lerp(this.faceBbox.h, target.faceH);
+    this.leftEye.x = lerp(this.leftEye.x, target.lEyeX + drift(0.003, 1.3));
+    this.leftEye.y = lerp(this.leftEye.y, target.lEyeY + drift(0.002, 1.1));
+    this.rightEye.x = lerp(this.rightEye.x, target.rEyeX + drift(0.003, 1.3));
+    this.rightEye.y = lerp(this.rightEye.y, target.rEyeY + drift(0.002, 1.5));
+    this.mouth.x = lerp(this.mouth.x, target.mouthX + drift(0.004, 1.0));
+    this.mouth.y = lerp(this.mouth.y, target.mouthY + drift(0.002, 0.8));
+
+    let conf = 0.95;
+    if (state.riskLevel >= RISK.L3) conf = 0.68 + Math.sin(t*1.7)*0.04;
+    else if (state.riskLevel >= RISK.L2) conf = 0.80 + Math.sin(t*1.4)*0.03;
+    else if (state.riskLevel >= RISK.L1) conf = 0.87 + Math.sin(t*1.1)*0.02;
+    else conf = 0.93 + Math.sin(t*0.9)*0.02;
+    document.getElementById('pip-face-conf').textContent = `face ${(conf*100).toFixed(0)}%`;
+  }
+}
+
+class HMI {
+  constructor() {
+    this.bus = new EventBus();
+    this.edge = new EdgeService();
+    this.state = {
+      riskLevel: RISK.NONE, activeInstructions: [],
+      sensorStatus: { camera:true, radar:true, physio:true },
+      sensorFailureAlert: false, cameraOccluded: false,
+      familyAccess: null, lifeDetectedAlert: false, emergencyAlert: false,
+      otaProgress: null, speed: 0, hmiEvent: null, perception: null
+    };
+    this.simOpen = false;
+    this.familyNoticeTween = -1;
+    this.speedTween = -1;
+    this.camera = new DmsCamera();
+    this.camera.setHMI(this);
+    this._startSpeedSim();
+  }
+
+  notify() { this.bus.emit('stateChange', this.state); }
+
+  // ─── Override ───
+  async onOverride(type) {
+    this.state.riskLevel = RISK.NONE;
+    this.state.activeInstructions = [];
+    this.state.sensorFailureAlert = false;
+    this.state.lifeDetectedAlert = false;
+    this.state.emergencyAlert = false;
+    this.state.sensorStatus = { camera:true, radar:true, physio:true };
+    this.state.familyAccess = null;
+    this.state.otaProgress = null;
+    this.state.cameraOccluded = false;
+    this.notify();
+    if (!this.edge.useMock) {
+      this._pollActive = false;
+      await this.edge.reportOverride(type);
+      setTimeout(() => { this._pollActive = true; }, 1000);
+    } else {
+      this.edge.reportOverride(type);
+    }
+  }
+
+  // ─── Camera ───
+  async toggleCameraFeed() {
+    if (this.camera.stream) {
+      this.camera.stop();
+    } else {
+      const ok = await this.camera.start();
+      if (!ok) alert('无法访问摄像头，请允许摄像头权限后重试');
+    }
+  }
+  toggleCamera() {
+    this.state.cameraOccluded = !this.state.cameraOccluded;
+    this.notify();
+  }
+
+  // ─── Family ───
+  async acceptFamily() {
+    if (this._pendingRequestId && !this.edge.useMock) {
+      await this.edge.respondFamilyRequest(this._pendingRequestId, 'accept');
+      this._pendingRequestId = null;
+    }
+    this.state.familyAccess = { granted:true, memberName:'家属', accessType:'对讲', timestamp: Date.now() };
+    this.notify();
+  }
+  async declineFamily() {
+    if (this._pendingRequestId && !this.edge.useMock) {
+      await this.edge.respondFamilyRequest(this._pendingRequestId, 'decline');
+      this._pendingRequestId = null;
+    }
+    this.state.familyAccess = null;
+    this.notify();
+  }
+
+  async ackHmiEvent() {
+    if (this._pendingHmiEventId && !this.edge.useMock) {
+      await this.edge.ackHmiEvent(this._pendingHmiEventId);
+    }
+    this._pendingHmiEventId = null;
+    this.state.hmiEvent = null;
+    this.notify();
+  }
+
+  // ─── Simulation Panel ───
+  toggleSim() { this.simOpen = !this.simOpen; this.notify(); }
+
+  simulate(name) {
+    this.state.sensorStatus = { camera:true, radar:true, physio:true };
+    this.state.sensorFailureAlert = false; this.state.lifeDetectedAlert = false; this.state.emergencyAlert = false;
+    this.state.familyAccess = null; this.state.otaProgress = null; this.state.cameraOccluded = false;
+    this.state.hmiEvent = null;
+
+    switch (name) {
+      case 'fatigueL2':
+        this.state.riskLevel = RISK.L2;
+        this.state.activeInstructions = [
+          { type:INTERVENTION.AMBIENT_LIGHT_COLOR, params:{color:'ORANGE'}, description:'橙色氛围灯' },
+          { type:INTERVENTION.ALERT, params:{}, description:'疲劳警告' }
+        ];
+        break;
+      case 'fatigueL3':
+        this.state.riskLevel = RISK.L3;
+        this.state.activeInstructions = [
+          { type:INTERVENTION.AMBIENT_LIGHT_COLOR, params:{color:'RED'}, description:'红色氛围灯' },
+          { type:INTERVENTION.VOICE_BROADCAST, params:{message:'您已疲劳驾驶，请停车休息'}, description:'语音播报-疲劳' },
+          { type:INTERVENTION.SEAT_VIBRATION, params:{}, description:'座椅振动' }
+        ];
+        break;
+      case 'roadRage':
+        this.state.riskLevel = RISK.L2;
+        this.state.activeInstructions = [
+          { type:INTERVENTION.AMBIENT_LIGHT_COLOR, params:{color:'ORANGE'}, description:'橙色氛围灯' },
+          { type:INTERVENTION.AIR_CONDITIONING, params:{tempDelta:'-2'}, description:'空调降温2°C' },
+          { type:INTERVENTION.AUDIO_PLAYBACK, params:{audioType:'舒缓音乐'}, description:'播放舒缓音乐' }
+        ];
+        break;
+      case 'lifeDetected':
+        this.state.riskLevel = RISK.L3;
+        this.state.lifeDetectedAlert = true;
+        this.state.activeInstructions = [
+          { type:INTERVENTION.HAZARD_LIGHTS, params:{}, description:'双闪灯' },
+          { type:INTERVENTION.VOICE_BROADCAST, params:{message:'车外鸣笛-短促'}, description:'车外鸣笛' }
+        ];
+        break;
+      case 'collision':
+        this.state.riskLevel = RISK.L3;
+        this.state.emergencyAlert = true;
+        this.state.activeInstructions = [
+          { type:INTERVENTION.HAZARD_LIGHTS, params:{}, description:'双闪灯' },
+          { type:INTERVENTION.VOICE_BROADCAST, params:{message:'碰撞失能-车门已解锁'}, description:'碰撞求救' }
+        ];
+        break;
+      case 'sensorFail':
+        this.state.sensorFailureAlert = true;
+        this.state.sensorStatus = { camera:false, radar:false, physio:false };
+        this.state.activeInstructions = [
+          { type:INTERVENTION.VOICE_BROADCAST, params:{message:'安全监测系统已失效，请注意驾驶安全'}, description:'传感器失效告警' }
+        ];
+        break;
+      case 'familyAccess':
+        this.state.familyAccess = { granted:true, memberName:'家属', accessType:'对讲', timestamp: Date.now() };
+        break;
+      case 'clear':
+        this.state.riskLevel = RISK.NONE;
+        this.state.activeInstructions = [];
+        break;
+    }
+    this.notify();
+  }
+
+  // ─── Speed simulation ───
+  _startSpeedSim() {
+    const phases = [
+      { from:0, to:60, duration:8000 },
+      { from:60, to:120, duration:6000 },
+      { from:120, to:60, duration:5000 },
+      { from:60, to:0, duration:7000 }
+    ];
+    let phaseIdx = 0;
+    const advance = () => {
+      const p = phases[phaseIdx];
+      const start = Date.now();
+      const step = () => {
+        const elapsed = Date.now() - start;
+        const t = Math.min(elapsed / p.duration, 1);
+        const eased = t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2;
+        this.state.speed = Math.round(p.from + (p.to - p.from) * eased);
+        this.notify();
+        if (t < 1) { this.speedTween = requestAnimationFrame(step); }
+        else {
+          this.speedTween = setTimeout(() => {
+            phaseIdx = (phaseIdx + 1) % phases.length;
+            advance();
+          }, 1500);
+        }
+      };
+      step();
+    };
+    advance();
+  }
+}
+
+// ─── UI Renderer ───
+function render(state, simOpen, mode) {
+  const els = {
+    sensorCam: document.getElementById('sensor-cam'),
+    sensorRadar: document.getElementById('sensor-radar'),
+    sensorPhysio: document.getElementById('sensor-physio'),
+    offlineBadge: document.getElementById('monitor-offline-badge'),
+    modeIndicator: document.getElementById('mode-indicator'),
+    speedGlow: document.getElementById('speed-glow'),
+    speedRing: document.getElementById('speed-ring'),
+    speedValue: document.getElementById('speed-value'),
+    driveTime: document.getElementById('drive-time'),
+    familyNotice: document.getElementById('family-notice'),
+    familyNoticeText: document.getElementById('family-notice-text'),
+    ambientBar: document.getElementById('ambient-bar'),
+    riskBar: document.getElementById('risk-bar'),
+    envCard: document.getElementById('env-card'),
+    acTile: document.getElementById('ac-tile'),
+    audioTile: document.getElementById('audio-tile'),
+    acDesc: document.getElementById('ac-desc'),
+    audioDesc: document.getElementById('audio-desc'),
+    otaCard: document.getElementById('ota-card'),
+    otaPercent: document.getElementById('ota-percent'),
+    otaBarFill: document.getElementById('ota-bar-fill'),
+    otaStage: document.getElementById('ota-stage'),
+    otaEta: document.getElementById('ota-eta'),
+    interventionSummary: document.getElementById('intervention-summary'),
+    familyCard: document.getElementById('family-card'),
+    cameraBtn: document.getElementById('camera-btn'),
+    simButtons: document.getElementById('sim-buttons'),
+    overlay: document.getElementById('overlay'),
+    overlayHeader: document.getElementById('overlay-header'),
+    overlayMsg: document.getElementById('overlay-msg'),
+    overlayIndicators: document.getElementById('overlay-indicators'),
+    toast: document.getElementById('hmi-event-toast'),
+    toastIcon: document.getElementById('toast-icon'),
+    toastTitle: document.getElementById('toast-title'),
+    toastDesc: document.getElementById('toast-desc'),
+    percPanel: document.getElementById('perception-panel'),
+    percFace: document.getElementById('perc-face'),
+    percFatigue: document.getElementById('perc-fatigue'),
+    percDistraction: document.getElementById('perc-distraction'),
+    percEmotion: document.getElementById('perc-emotion'),
+    percHands: document.getElementById('perc-hands')
+  };
+
+  if (!els.sensorCam) return;
+
+  // Mode indicator
+  els.modeIndicator.className = 'mode-' + mode;
+  els.modeIndicator.textContent = mode.toUpperCase();
+
+  // Drive time
+  const dt = Math.floor(hmi._driveSec || 0);
+  const mm = String(Math.floor(dt / 60)).padStart(2,'0');
+  const ss = String(dt % 60).padStart(2,'0');
+  els.driveTime.textContent = mm + ':' + ss;
+
+  const rk = state.riskLevel;
+  const rkName = RISK_NAMES[rk];
+  const rkCls = rk >= RISK.L3 ? 'l3' : rk === RISK.L2 ? 'l2' : rk === RISK.L1 ? 'l1' : '';
+
+  // Sensors
+  [els.sensorCam, els.sensorRadar, els.sensorPhysio].forEach(el => el.classList.remove('failed'));
+  if (!state.sensorStatus.camera) els.sensorCam.classList.add('failed');
+  if (!state.sensorStatus.radar) els.sensorRadar.classList.add('failed');
+  if (!state.sensorStatus.physio) els.sensorPhysio.classList.add('failed');
+  els.offlineBadge.classList.toggle('show', state.sensorFailureAlert);
+
+  // Speed
+  els.speedGlow.className = 'glow-bg' + (rkCls ? ' ' + rkCls : '');
+  els.speedRing.className = 'speed-ring' + (rkCls ? ' ' + rkCls : '');
+  els.speedValue.textContent = state.speed;
+  let speedCls = rkCls;
+  if (state.speed > 100) speedCls = 'overfast';
+  else if (state.speed > 80 && !rkCls) speedCls = 'fast';
+  els.speedValue.className = 'speed-value' + (speedCls ? ' ' + speedCls : '');
+
+  // PIP / DMS Camera
+  const placeholder = document.getElementById('pip-placeholder');
+  const pipLabel = document.getElementById('pip-label');
+  const pipBtn = document.getElementById('pip-camera-btn');
+  const pipInfo = document.getElementById('pip-detection-info');
+
+  const camActive = !!(hmi.camera && hmi.camera.stream);
+  if (state.cameraOccluded) {
+    placeholder.classList.add('occluded');
+    const placeholderIcon = placeholder.querySelector('.pip-icon');
+    const placeholderText = placeholder.querySelector('.pip-start-text');
+    if (placeholderIcon) placeholderIcon.textContent = '🚫';
+    if (placeholderText) placeholderText.textContent = 'CAMERA OCCLUDED';
+    pipLabel.textContent = 'CAMERA OCCLUDED';
+    pipLabel.style.color = 'var(--red)';
+    pipBtn.style.display = 'none';
+  } else {
+    placeholder.classList.remove('occluded');
+    const placeholderIcon = placeholder.querySelector('.pip-icon');
+    const placeholderText = placeholder.querySelector('.pip-start-text');
+    if (placeholderIcon) placeholderIcon.textContent = '\uD83D\uDCF7';
+    if (placeholderText) placeholderText.innerHTML = 'Click to start<br>DMS Camera';
+    pipLabel.textContent = camActive ? 'DMS CAMERA - LIVE' : 'DMS CAMERA';
+    pipLabel.style.color = camActive ? 'var(--green)' : '';
+    pipBtn.style.display = '';
+  }
+
+  // Family notice
+  const famActive = state.familyAccess && state.familyAccess.granted;
+  els.familyNotice.classList.toggle('show', !!state.familyAccess);
+  els.familyNotice.classList.toggle('ended', state.familyAccess && !state.familyAccess.granted);
+  els.familyNoticeText.textContent = famActive ? 'Family Call Active' : 'Call Ended';
+
+  // Ambient bar
+  const ambientInst = state.activeInstructions.find(i => i.type === INTERVENTION.AMBIENT_LIGHT_COLOR);
+  const ambientColor = ambientInst ? ambientInst.params.color : '';
+  els.ambientBar.className = '';
+  if (ambientColor === 'ORANGE') els.ambientBar.className = 'orange';
+  if (ambientColor === 'RED') els.ambientBar.className = 'red';
+
+  // Risk bar
+  els.riskBar.className = rkCls;
+
+  // Environment card
+  const acInst = state.activeInstructions.find(i => i.type === INTERVENTION.AIR_CONDITIONING);
+  const audioInst = state.activeInstructions.find(i => i.type === INTERVENTION.AUDIO_PLAYBACK);
+  const hasEnv = acInst || audioInst;
+  els.envCard.classList.toggle('show', hasEnv);
+  els.acTile.style.display = acInst ? 'flex' : 'none';
+  els.audioTile.style.display = audioInst ? 'flex' : 'none';
+  if (acInst) els.acDesc.textContent = `空调 - 降温${Math.abs(parseInt(acInst.params.tempDelta || '0'))}°C`;
+  if (audioInst) els.audioDesc.textContent = `音频 - ${audioInst.params.audioType || ''}`;
+
+  // OTA
+  const hasOta = state.otaProgress != null;
+  els.otaCard.classList.toggle('show', hasOta);
+  if (hasOta) {
+    const o = state.otaProgress;
+    els.otaPercent.textContent = o.percent + '%';
+    els.otaBarFill.style.width = o.percent + '%';
+    els.otaStage.textContent = o.stage;
+    els.otaEta.textContent = o.estimatedTimeRemaining;
+  }
+
+  // Action bar
+  const descs = state.activeInstructions.map(i => i.description).filter(Boolean);
+  els.interventionSummary.textContent = descs.length > 0 ? descs.join(' · ') : 'Normal driving';
+
+  els.familyCard.classList.toggle('show', !!state.familyAccess && state.riskLevel < RISK.L3);
+
+  // HMI event toast (rescue, window control, etc.)
+  if (state.hmiEvent && els.toast) {
+    const e = state.hmiEvent;
+    els.toast.className = 'hmi-event-toast show ' + (e.eventType === 'RESCUE' ? 'rescue' : 'window');
+    els.toastIcon.textContent = e.eventType === 'RESCUE' ? '🆘' : '🪟';
+    els.toastTitle.textContent = e.title;
+    els.toastDesc.textContent = e.description;
+  } else if (els.toast) {
+    els.toast.className = 'hmi-event-toast';
+  }
+
+  // Perception panel (YOLO)
+  if (state.perception && els.percPanel) {
+    const p = state.perception;
+    els.percPanel.classList.add('show');
+
+    const faceCls = p.faceConfidence > 0.70 ? 'ok' : (p.faceConfidence > 0.50 ? 'warning' : 'danger');
+    els.percFace.textContent = '人脸: ' + Math.round(p.faceConfidence * 100) + '%';
+    els.percFace.className = 'perc-item ' + faceCls;
+
+    const fatCls = p.fatigueLevel === 'NONE' ? 'ok' : (p.fatigueLevel === 'L2' ? 'warning' : 'danger');
+    els.percFatigue.textContent = '疲劳: ' + p.fatigueDesc;
+    els.percFatigue.className = 'perc-item ' + fatCls;
+
+    const distCls = p.distractionLevel === 'NONE' ? 'ok' : 'warning';
+    els.percDistraction.textContent = '分心: ' + p.distractionDesc;
+    els.percDistraction.className = 'perc-item ' + distCls;
+
+    const emoCls = p.emotion === '平静' || p.emotion === '正常' ? 'ok' : 'warning';
+    els.percEmotion.textContent = '情绪: ' + p.emotion;
+    els.percEmotion.className = 'perc-item ' + emoCls;
+
+    const handsCls = p.handsOnWheel ? 'ok' : 'danger';
+    els.percHands.textContent = '手握: ' + (p.handsOnWheel ? '握紧' : '脱手');
+    els.percHands.className = 'perc-item ' + handsCls;
+  } else if (els.percPanel) {
+    els.percPanel.classList.remove('show');
+  }
+
+  els.cameraBtn.textContent = state.cameraOccluded ? 'RESTORE' : 'BLOCK CAM';
+  els.cameraBtn.classList.toggle('restore', state.cameraOccluded);
+
+  // Sim panel
+  els.simButtons.classList.toggle('show', simOpen);
+
+  // Overlay
+  const isL3 = rk >= RISK.L3;
+  const isAlert = state.sensorFailureAlert || state.lifeDetectedAlert || state.emergencyAlert;
+  const showOverlay = isL3 || isAlert;
+  els.overlay.classList.toggle('show', showOverlay);
+
+  if (showOverlay) {
+    if (state.emergencyAlert) els.overlayHeader.textContent = 'EMERGENCY';
+    else if (state.sensorFailureAlert) els.overlayHeader.textContent = 'SENSOR FAILURE';
+    else if (state.lifeDetectedAlert) els.overlayHeader.textContent = 'LIFE DETECTED';
+    else els.overlayHeader.textContent = 'HIGH RISK';
+
+    const voiceInst = state.activeInstructions.find(i => i.type === INTERVENTION.VOICE_BROADCAST);
+    els.overlayMsg.textContent = voiceInst ? voiceInst.params.message : 'Risk intervention activated';
+
+    let indicatorHtml = '';
+    if (state.activeInstructions.some(i => i.type === INTERVENTION.SEAT_VIBRATION))
+      indicatorHtml += '<div class="overlay-indicator"><div class="ind-dot"></div>Seat Vibration</div>';
+    if (state.activeInstructions.some(i => i.type === INTERVENTION.HAZARD_LIGHTS))
+      indicatorHtml += '<div class="overlay-indicator"><div class="ind-dot"></div>Hazard Lights</div>';
+    if (state.sensorFailureAlert)
+      indicatorHtml += '<div class="overlay-indicator"><div class="ind-dot"></div>Sensor Failure</div>';
+    if (state.lifeDetectedAlert)
+      indicatorHtml += '<div class="overlay-indicator"><div class="ind-dot"></div>Life Detected</div>';
+    if (state.emergencyAlert)
+      indicatorHtml += '<div class="overlay-indicator"><div class="ind-dot"></div>Emergency Rescue</div>';
+    if (state.activeInstructions.some(i => i.type === INTERVENTION.NAVIGATE_TO_SHOULDER))
+      indicatorHtml += '<div class="overlay-indicator"><div class="ind-dot"></div>Pull Over Safely</div>';
+    els.overlayIndicators.innerHTML = indicatorHtml;
+  }
+}
+
+// ─── Init ───
+const hmi = new HMI();
+let appMode = 'live';
+hmi._driveSec = 0;
+hmi._pollActive = true;
+hmi._pendingRequestId = null;
+hmi._pendingHmiEventId = null;
+
+hmi.bus.on('stateChange', (state) => render(state, hmi.simOpen, appMode));
+
+// Start polling family requests immediately
+hmi.edge.startFamilyPolling(req => {
+  if (hmi.state.familyAccess && hmi.state.familyAccess.granted) return;
+  if (hmi._pendingRequestId === req.requestId) return;
+  hmi._pendingRequestId = req.requestId;
+  hmi.state.familyAccess = {
+    granted: false,
+    memberName: '家属',
+    accessType: req.sessionType === 'VIDEO' ? '视频通话' : '语音对讲',
+    timestamp: Date.now(),
+    pending: true
+  };
+  hmi.notify();
+});
+
+// Start polling HMI events (rescue, window, yolo)
+setInterval(async () => {
+  if (!hmi._pollActive) return;
+  const event = await hmi.edge.getPendingHmiEvent();
+  if (event && event.hasPending) {
+    if (hmi._pendingHmiEventId === event.eventId) return;
+    hmi._pendingHmiEventId = event.eventId;
+    hmi.state.hmiEvent = {
+      eventId: event.eventId,
+      eventType: event.eventType,
+      title: event.title,
+      description: event.description
+    };
+    hmi.notify();
+  }
+}, 1000);
+
+// Start polling perception (YOLO) data
+setInterval(async () => {
+  if (!hmi._pollActive) return;
+  const d = await (async () => {
+    try {
+      const r = await fetch(`${hmi.edge.baseUrl}/drivers/${hmi.edge.driverId}/perception/latest`);
+      return r.ok ? r.json() : null;
+    } catch { return null; }
+  })();
+  if (d) {
+    hmi.state.perception = d;
+    hmi.notify();
+  }
+}, 1500);
+
+// Probe backend and start intervention polling
+hmi.edge.probeBackend().then(async ok => {
+  if (ok) {
+    const riskData = await hmi.edge.getDriverRiskStatus();
+    if (riskData) {
+      hmi.state.riskLevel = RISK[riskData.riskLevel] || RISK.NONE;
+    }
+
+    hmi.edge.startPolling(data => {
+      if (!hmi._pollActive) return;
+      hmi.state.riskLevel = RISK[data.riskLevel] || RISK.NONE;
+      hmi.state.activeInstructions = data.activeInstructions || [];
+      hmi.notify();
+    });
+
+    render(hmi.state, hmi.simOpen, appMode);
+  }
+});
+
+// Drive time ticker
+setInterval(() => { hmi._driveSec += 1; render(hmi.state, hmi.simOpen, appMode); }, 1000);
+
+render(hmi.state, hmi.simOpen, appMode);
+</script>
+</body>
+</html>

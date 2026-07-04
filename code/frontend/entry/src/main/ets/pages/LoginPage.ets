@@ -1,6 +1,10 @@
 import { router } from '@kit.ArkUI'
 import { authApi } from '../api/AuthApi'
 import { sessionStore } from '../viewmodel/SessionStore'
+import { hilog } from '@kit.PerformanceAnalysisKit'
+
+const DOMAIN = 0x0502
+const TAG = 'LoginPage'
 
 @Entry
 @Component
@@ -45,22 +49,31 @@ struct LoginPage {
         'credential': this.account.trim(),
         'secret': this.password,
       }
+      hilog.info(DOMAIN, TAG, 'doLogin start, account=%{public}s', this.account.trim())
       const resp = await authApi.login(loginReq)
+      hilog.info(DOMAIN, TAG, 'login resp success=%{public}s, status=%{public}d', String(resp.success), resp.status)
       if (resp.success && resp.data !== undefined) {
+        hilog.info(DOMAIN, TAG, 'login data accountId=%{public}s role=%{public}s', resp.data.accountId, resp.data.role)
         await sessionStore.saveSession(
           resp.data.accessToken,
           resp.data.accountId,
           resp.data.role,
         )
+        hilog.info(DOMAIN, TAG, 'session saved, navigating to MainPage')
+        router.replaceUrl({ url: 'pages/MainPage' })
+        hilog.info(DOMAIN, TAG, 'replaceUrl called')
       } else {
-        await sessionStore.saveSession('mock_token', 'mock_family_001', 'FAMILY')
+        const msg = (resp.error !== undefined && resp.error.message.length > 0)
+          ? resp.error.message : '登录失败，请检查账号密码'
+        hilog.error(DOMAIN, TAG, 'login failed: %{public}s', msg)
+        this.errorMsg = msg
       }
     } catch (_e) {
+      hilog.error(DOMAIN, TAG, 'doLogin exception: %{public}s', String(_e))
       this.errorMsg = '网络不可达，请检查网络连接'
     } finally {
       this.isLoading = false
     }
-    router.replaceUrl({ url: 'pages/MainPage' })
   }
 
   aboutToAppear(): void {

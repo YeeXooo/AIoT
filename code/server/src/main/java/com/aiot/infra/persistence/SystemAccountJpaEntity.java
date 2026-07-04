@@ -26,6 +26,9 @@ public class SystemAccountJpaEntity {
     @Column(nullable = false, length = 16)
     private String role;
 
+    @Column(length = 128)
+    private String passwordHash;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -42,6 +45,8 @@ public class SystemAccountJpaEntity {
     public void setPhone(String phone) { this.phone = phone; }
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+    public String getPasswordHash() { return passwordHash; }
+    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 }

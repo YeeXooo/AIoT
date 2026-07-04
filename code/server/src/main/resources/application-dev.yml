@@ -10,7 +10,25 @@ spring:
 
 aiot:
   security:
+    mock-verification-code: "000000"
+
     key-store-path: /tmp/aiot-dev-keystore.p12
     voice-evidence-base-path: /tmp/aiot-voice-evidence
   storage:
     base-path: /tmp/aiot-storage
+  mqtt:
+    enabled: true
+    iotda: true
+    broker-url: ssl://99d7c8973d.st1.iotda-device.cn-north-4.myhuaweicloud.com:8883
+    client-id-prefix: 6a44f1047f2e6c302f80df85_data_receiver
+    username: 6a44f1047f2e6c302f80df85_data_receiver
+    password: ""
+    device-secret: dyx123456789
+    product-id: 6a44f1047f2e6c302f80df85_data_receiver
+    instance-id: 6a44f1047f2e6c302f80df85
+  amqp:
+    host: 99d7c8973d.st1.iotda-app.cn-north-4.myhuaweicloud.com
+    port: 5671
+    access-key: XmtEC88F
+    access-code: 1v4IIT7qXhwbzWLAkF2jf31mXIUqQYOZ
+    queue-name: DefaultQueue

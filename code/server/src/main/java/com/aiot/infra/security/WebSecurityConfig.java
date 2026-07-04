@@ -48,6 +48,10 @@ public class WebSecurityConfig {
                 .requestMatchers("/api/v1/auth/login", "/api/v1/auth/refresh").permitAll()
                 // WebSocket 握手——由 WebSocket Handler 自行处理认证
                 .requestMatchers("/ws/**").permitAll()
+                // 车机端 HMI 接口——边缘设备本地访问，无需认证
+                .requestMatchers(HttpMethod.GET, "/api/v1/trips/*/interventions/active").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/trips/*/override").permitAll()
+                .requestMatchers("/hmi/**", "/static/hmi/**").permitAll()
                 // S5 救援端点——仅 RESCUE 角色
                 .requestMatchers("/api/v1/emergency/**").hasRole("RESCUE")
                 // S4 车队管理端点——仅 MANAGER 角色
@@ -61,6 +65,12 @@ public class WebSecurityConfig {
                 // S6 OTA 管理端点——MANAGER 角色
                 .requestMatchers("/api/v1/ota/**").hasRole("MANAGER")
                 // S1/S2 查询端点——已认证用户
+                .requestMatchers(HttpMethod.GET, "/api/v1/drivers/*/risk-status").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/drivers/*/family-requests/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/drivers/*/family-requests/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/drivers/*/hmi-events/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/drivers/*/hmi-events/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/drivers/*/perception/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/drivers/**").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/v1/trips/**").authenticated()
                 // 其余端点——已认证

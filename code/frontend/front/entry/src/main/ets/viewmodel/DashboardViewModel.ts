@@ -1,12 +1,11 @@
 /**
  * Dashboard VM — 驾驶员风险状态 + 告警历史。
- *
- * 注意：DriverApi 依赖的 ApiClient 使用 fetch/AbortController（ArkTS 不可用），
- * 故本 VM 暂返回 mock 数据，待 ApiClient 改用 @kit.NetworkKit.http 后接入真实接口。
+ * 登录失败/接口不可达时返回 error 状态，不再返回 mock 数据。
  */
-import { ViewState, successState } from './ViewState'
+import { ViewState, successState, errorState } from './ViewState'
+import { driverApi } from '../api/DriverApi'
+import type { GetDriverRiskStatusResponse, QueryAlertHistoryResponse } from '../model/driver'
 
-/** 状态色（与 model/types 解耦） */
 export type StatusColor = 'GREEN' | 'YELLOW' | 'RED'
 export type RiskLevel = 'L1_HINT' | 'L2_WARNING' | 'L3_CRITICAL'
 export type AlertType =
@@ -34,23 +33,54 @@ export interface DashboardData {
   totalAlerts: number
 }
 
-function mockData(): DashboardData {
-  return {
-    statusColor: 'GREEN',
-    hasActiveTrip: true,
-    activeAlerts: [],
-    alertHistory: [
-      { alertId: '1', alertType: 'FATIGUE', riskLevel: 'L1_HINT', occurredAt: '2026-07-01T14:32:00Z', tripId: 'T001' },
-      { alertId: '2', alertType: 'DISTRACTION', riskLevel: 'L2_WARNING', occurredAt: '2026-07-01T13:15:00Z', tripId: 'T001' },
-      { alertId: '3', alertType: 'FATIGUE', riskLevel: 'L1_HINT', occurredAt: '2026-07-01T11:40:00Z', tripId: 'T001' },
-    ],
-    totalAlerts: 3,
-  }
-}
-
 export class DashboardViewModel {
+  driverId: string = 'd1'
+
   async load(): Promise<ViewState<DashboardData>> {
-    return successState<DashboardData>(mockData())
+    const riskResp = await driverApi.getRiskStatus(this.driverId)
+    if (!riskResp.success || riskResp.data === undefined) {
+      const msg = (riskResp.error !== undefined && riskResp.error.message.length > 0)
+        ? riskResp.error.message : '获取风险状态失败'
+      return errorState<DashboardData>(msg)
+    }
+
+    const alertResp = await driverApi.queryAlertHistory(this.driverId)
+    if (!alertResp.success || alertResp.data === undefined) {
+      const msg = (alertResp.error !== undefined && alertResp.error.message.length > 0)
+        ? alertResp.error.message : '获取告警历史失败'
+      return errorState<DashboardData>(msg)
+    }
+
+    const riskData: GetDriverRiskStatusResponse = riskResp.data
+    const alertData: QueryAlertHistoryResponse = alertResp.data
+
+    const activeAlerts: ActiveAlertEntry[] = []
+    for (let i = 0; i < riskData.activeAlerts.length; i++) {
+      const entry = riskData.activeAlerts[i]
+      activeAlerts.push({ alertType: entry.alertType, riskLevel: entry.riskLevel })
+    }
+
+    const alertHistory: AlertSummary[] = []
+    for (let i = 0; i < alertData.alerts.length; i++) {
+      const entry = alertData.alerts[i]
+      alertHistory.push({
+        alertId: entry.alertId,
+        alertType: entry.alertType,
+        riskLevel: entry.riskLevel,
+        occurredAt: entry.occurredAt,
+        tripId: entry.tripId,
+      })
+    }
+
+    const data: DashboardData = {
+      statusColor: riskData.derivedStatusColor,
+      hasActiveTrip: riskData.hasActiveTrip,
+      activeAlerts,
+      alertHistory,
+      totalAlerts: alertData.totalCount,
+    }
+
+    return successState<DashboardData>(data)
   }
 }
 

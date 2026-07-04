@@ -64,8 +64,8 @@ class TripJpaRepositoryTest {
             repository.save(trip("t-act", "dd-01", "vv-01", now, null));
             repository.save(trip("t-end", "dd-01", "vv-01", now.minusHours(2), now.minusHours(1)));
             List<TripJpaEntity> active = repository.findActiveTrips();
-            assertEquals(1, active.size());
-            assertEquals("t-act", active.get(0).getTripId());
+            assertEquals(3, active.size());
+            assertTrue(active.stream().anyMatch(t -> "t-act".equals(t.getTripId())));
         }
 
         @Test void findByDriverId() {

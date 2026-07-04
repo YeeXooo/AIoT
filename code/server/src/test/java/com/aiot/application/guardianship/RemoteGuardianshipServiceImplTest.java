@@ -38,6 +38,8 @@ class RemoteGuardianshipServiceImplTest {
     @Mock private SystemAccountRepository systemAccountRepository;
     @Mock private MediaSessionPort mediaSessionPort;
     @Mock private NotificationPort notificationPort;
+    @Mock private com.aiot.infra.repository.GuardianshipJpaRepository guardianshipJpaRepository;
+    @Mock private com.aiot.application.PendingFamilyRequestStore pendingFamilyRequestStore;
 
     private RemoteGuardianshipServiceImpl service;
     private final AccountId accountId = new AccountId("acc-1");
@@ -47,7 +49,8 @@ class RemoteGuardianshipServiceImplTest {
     void setUp() {
         service = new RemoteGuardianshipServiceImpl(
                 permissionService, driverStatusBroadcastService, emergencyRescueService,
-                systemAccountRepository, mediaSessionPort, notificationPort);
+                systemAccountRepository, mediaSessionPort, notificationPort,
+                guardianshipJpaRepository, pendingFamilyRequestStore);
     }
 
     @Test
