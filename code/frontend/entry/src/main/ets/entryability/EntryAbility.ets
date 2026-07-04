@@ -13,9 +13,9 @@ export default class EntryAbility extends UIAbility {
     } catch (err) {
       hilog.error(DOMAIN, 'testTag', 'SessionStore init failed: %{public}s', JSON.stringify(err));
     }
-    AppStorage.setOrCreate('currentDriverId', 'd1')
-    AppStorage.setOrCreate('currentDriverName', '张明')
-    AppStorage.setOrCreate('currentDriverVehicleId', '京A·88562')
+    AppStorage.setOrCreate('currentDriverId', '')
+    AppStorage.setOrCreate('currentDriverName', '')
+    AppStorage.setOrCreate('currentDriverVehicleId', '')
     try {
       await themeStore.init(this.context);
       const isDark = themeStore.isDarkMode;

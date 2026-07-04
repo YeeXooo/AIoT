@@ -2,6 +2,8 @@ import { DashboardTab } from './tabs/DashboardTab'
 import { GuardianshipTab } from './tabs/GuardianshipTab'
 import { FleetTab } from './tabs/FleetTab'
 import { ProfileTab } from './tabs/ProfileTab'
+import { router } from '@kit.ArkUI'
+import { sessionStore } from '../viewmodel/SessionStore'
 
 @Entry
 @Component
@@ -29,6 +31,10 @@ struct MainPage {
   ]
 
   aboutToAppear(): void {
+    if (!sessionStore.isLoggedIn) {
+      router.replaceUrl({ url: 'pages/LoginPage' })
+      return
+    }
     this.updateIndicator(0)
   }
 

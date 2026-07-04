@@ -69,14 +69,14 @@ export class GuardianshipWebSocket extends BaseWebSocket {
     options: GuardianshipWebSocketOptions = {}
   ) {
     super(accessToken, {
-      baseUrl: options.baseUrl ?? 'wss://api.example.com/ws/guardianship',
+      baseUrl: options.baseUrl ?? 'ws://172.22.103.50:8080/ws/guardianship',
       maxReconnectAttempts: options.maxReconnectAttempts,
       reconnectBaseDelay: options.reconnectBaseDelay,
       autoReconnect: options.autoReconnect,
     })
     this.events = events
     this.guardianshipOptions = {
-      baseUrl: options.baseUrl ?? 'wss://api.example.com/ws/guardianship',
+      baseUrl: options.baseUrl ?? 'ws://172.22.103.50:8080/ws/guardianship',
       maxMissedPings: options.maxMissedPings ?? 3,
       pingInterval: options.pingInterval ?? 30000,
       maxReconnectAttempts: options.maxReconnectAttempts ?? 5,

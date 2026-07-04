@@ -35,12 +35,6 @@ struct LoginPage {
     this.errorMsg = ''
     this.isLoading = true
     try {
-      // 内置演示账号 — 不依赖后端，便于直接体验 UI
-      if (this.account.trim() === 'demo' && this.password === 'demo123') {
-        await sessionStore.saveSession('demo-token', 'demo-account', 'FAMILY')
-        router.replaceUrl({ url: 'pages/MainPage' })
-        return
-      }
       const loginReq: Record<string, string> = {
         'authMethod': 'PASSWORD',
         'credential': this.account.trim(),
@@ -60,11 +54,7 @@ struct LoginPage {
         this.errorMsg = msg
       }
     } catch (e) {
-      // 网络/服务不可达 → 降级演示模式，进入主页
-      this.errorMsg = '网络不可达，已进入演示模式'
-      setTimeout(() => {
-        router.replaceUrl({ url: 'pages/MainPage' })
-      }, 800)
+      this.errorMsg = '网络不可达，请检查网络连接'
     } finally {
       this.isLoading = false
     }

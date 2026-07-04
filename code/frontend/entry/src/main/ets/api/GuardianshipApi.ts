@@ -90,8 +90,21 @@ export class GuardianshipApi {
     return { success: false, error: resp.error, status: resp.status }
   }
 
+  /**
+   * GET /api/v1/guardianship/list?driverId=&accountId=
+   * 查询监护绑定列表。FAMILY 账号传入 accountId 过滤当前账户的绑定；
+   * driverId 可选，传入则只查该驾驶员的绑定。
+   */
+  async queryBoundDrivers(accountId: string, driverId?: string): Promise<ApiResponse<Record<string, Object>>> {
+    const params: Record<string, Object> = { 'accountId': accountId }
+    if (driverId !== undefined && driverId.length > 0) {
+      params['driverId'] = driverId
+    }
+    return apiClient.get('/guardianship/list', { params })
+  }
+
   /** POST /api/v1/sparkrtc/token */
-  async issueSparkRTCToken(body: Record<string, unknown>): Promise<ApiResponse<IssueSparkRTCTokenResp>> {
+  async issueSparkRTCToken(body: Record<string, Object>): Promise<ApiResponse<IssueSparkRTCTokenResp>> {
     const resp = await apiClient.post('/sparkrtc/token', body)
     if (resp.success && resp.data !== undefined) {
       return {

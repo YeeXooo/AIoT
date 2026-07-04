@@ -59,14 +59,14 @@ export class FleetWebSocket extends BaseWebSocket {
     options: FleetWebSocketOptions = {}
   ) {
     super(accessToken, {
-      baseUrl: options.baseUrl ?? 'wss://api.example.com/ws/fleet',
+      baseUrl: options.baseUrl ?? 'ws://172.22.103.50:8080/ws/fleet',
       maxReconnectAttempts: options.maxReconnectAttempts,
       reconnectBaseDelay: options.reconnectBaseDelay,
       autoReconnect: options.autoReconnect,
     })
     this.events = events
     this.fleetOptions = {
-      baseUrl: options.baseUrl ?? 'wss://api.example.com/ws/fleet',
+      baseUrl: options.baseUrl ?? 'ws://172.22.103.50:8080/ws/fleet',
       pingInterval: options.pingInterval ?? 30000,
       maxMissedPings: options.maxMissedPings ?? 3,
       maxReconnectAttempts: options.maxReconnectAttempts ?? 5,

@@ -4,7 +4,7 @@
  * 基于 docs/ood_interface.md §1.3 RemoteGuardianshipService
  *
  * fromJson 构造器：ArkTS-safe，仅用基础类型断言逐字段提取，
- * 使 API 层可返回具体 DTO 类型而非 ApiResponse<Record<string, unknown>>（问题 4 修复）。
+ * 使 API 层可返回具体 DTO 类型而非 ApiResponse<Record<string, Object>>（问题 4 修复）。
  */
 
 import { getStr, getNum, getArray, getRecord } from '../common/JsonParser'
@@ -17,6 +17,7 @@ import type {
   SparkRTCRole,
   WindowControlOperation,
   WindowPosition,
+  WindowState,
   WindowStatusEntry,
 } from './types'
 
@@ -43,7 +44,7 @@ export interface RequestMediaSessionResp {
 }
 
 /** ArkTS-safe 构造器 */
-export function requestMediaSessionRespFromJson(raw: Record<string, unknown>): RequestMediaSessionResp {
+export function requestMediaSessionRespFromJson(raw: Record<string, Object>): RequestMediaSessionResp {
   return {
     sessionHandle: getStr(raw, 'sessionHandle'),
     sessionToken: getStr(raw, 'sessionToken'),
@@ -83,7 +84,7 @@ export interface TriggerManualRescueResp {
 }
 
 /** ArkTS-safe 构造器 */
-export function triggerManualRescueRespFromJson(raw: Record<string, unknown>): TriggerManualRescueResp {
+export function triggerManualRescueRespFromJson(raw: Record<string, Object>): TriggerManualRescueResp {
   return {
     rescueRequestId: getStr(raw, 'rescueRequestId'),
     rescueReportId: getStr(raw, 'rescueReportId'),
@@ -108,11 +109,16 @@ export interface QueryWindowStatusResp {
 }
 
 /** ArkTS-safe 构造器 */
-export function queryWindowStatusRespFromJson(raw: Record<string, unknown>): QueryWindowStatusResp {
+export function queryWindowStatusRespFromJson(raw: Record<string, Object>): QueryWindowStatusResp {
   const arr = getArray(raw, 'windowStatuses')
   const windowStatuses: WindowStatusEntry[] = []
   for (let i = 0; i < arr.length; i++) {
-    windowStatuses.push(arr[i] as unknown as WindowStatusEntry)
+    const item = arr[i]
+    windowStatuses.push({
+      windowPosition: getStr(item, 'windowPosition') as WindowPosition,
+      state: getStr(item, 'state') as WindowState,
+      updatedAt: getStr(item, 'updatedAt'),
+    })
   }
   return { windowStatuses }
 }
@@ -151,7 +157,7 @@ export interface IssueSparkRTCTokenReq {
   role: SparkRTCRole
 }
 
-export function guardianshipPermissionEntryFromJson(raw: Record<string, unknown>): GuardianshipPermissionEntry {
+export function guardianshipPermissionEntryFromJson(raw: Record<string, Object>): GuardianshipPermissionEntry {
   return {
     permissionType: getStr(raw, 'permissionType') as GuardianshipPermissionType,
     granted: (raw['granted'] !== undefined && raw['granted'] !== null) ? (raw['granted'] as boolean) : false,
@@ -160,14 +166,14 @@ export function guardianshipPermissionEntryFromJson(raw: Record<string, unknown>
   }
 }
 
-export function careRelationshipSummaryFromJson(raw: Record<string, unknown>): CareRelationshipSummary {
+export function careRelationshipSummaryFromJson(raw: Record<string, Object>): CareRelationshipSummary {
   return {
     status: getStr(raw, 'status') as CareRelationshipStatus,
     establishedAt: getStr(raw, 'establishedAt'),
   }
 }
 
-export function queryGuardianshipPermissionsRespFromJson(raw: Record<string, unknown>): QueryGuardianshipPermissionsResp {
+export function queryGuardianshipPermissionsRespFromJson(raw: Record<string, Object>): QueryGuardianshipPermissionsResp {
   const arr = getArray(raw, 'permissions')
   const permissions: GuardianshipPermissionEntry[] = []
   for (let i = 0; i < arr.length; i++) {
@@ -186,7 +192,7 @@ export interface IssueSparkRTCTokenResp {
   expiresAt: string  // ISO 8601（有效期 10 分钟）
 }
 
-export function issueSparkRTCTokenRespFromJson(raw: Record<string, unknown>): IssueSparkRTCTokenResp {
+export function issueSparkRTCTokenRespFromJson(raw: Record<string, Object>): IssueSparkRTCTokenResp {
   return {
     token: getStr(raw, 'token'),
     expiresAt: getStr(raw, 'expiresAt'),
