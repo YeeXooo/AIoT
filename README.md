@@ -4,7 +4,7 @@
 
 **功能域**：多维感知、AI 风险判定引擎（边缘—云协同）、闭环干预与反馈、远程监护（家属 APP）、车队运营管理（大屏/报表）、应急救援联动、OTA 固件升级管理。
 
-**技术栈**：前端 ArkTS（HarmonyOS），后端 Java Spring Boot，数据库 H2（开发）/ PostgreSQL（生产），IoTDA（MQTT）。
+**技术栈**：前端 ArkTS（HarmonyOS），后端 Java Spring Boot，嵌入侧 C（Hi3863），数据库 H2（开发）/ PostgreSQL（生产），IoTDA（MQTT）。
 
 > 课程作业，全部采用本地免费方案，参见 `todo.md` 附录对照表。
 
@@ -21,14 +21,27 @@
 │   │       ├── application/           # 应用层
 │   │       ├── infra/                 # 基础设施层
 │   │       └── interfaces/            # 接口层
-│   └── frontend/                      # 前端 HarmonyOS ArkTS
-│       ├── pages/                     # 页面
-│       ├── model/                     # DTO 类型定义
-│       ├── api/                       # REST API 客户端
-│       ├── websocket/                 # WebSocket 信令
-│       ├── rtc/                       # SparkRTC 集成
-│       ├── viewmodel/                 # 状态管理
-│       └── common/                    # 常量/工具
+│   ├── frontend/                      # 前端 HarmonyOS ArkTS
+│   │   ├── pages/                     # 页面
+│   │   ├── model/                     # DTO 类型定义
+│   │   ├── api/                       # REST API 客户端
+│   │   ├── websocket/                 # WebSocket 信令
+│   │   ├── rtc/                       # SparkRTC 集成
+│   │   ├── viewmodel/                 # 状态管理
+│   │   └── common/                    # 常量/工具
+│   ├── HMI/                           # 车载 HMI（HarmonyOS）
+│   ├── perception/                    # 视觉感知层（YOLO / DMS）
+│   └── embedded/                      # 嵌入侧 Hi3863
+│       ├── bmx055/                    # 六轴姿态传感器
+│       ├── dht11/                     # 温湿度传感器
+│       ├── gps/                       # GPS 定位
+│       ├── heartrate/                 # 心率检测
+│       ├── radar/                     # 毫米波雷达
+│       ├── dms/                       # 驾驶员监测
+│       ├── motor/ servo/              # 电机/舵机控制
+│       ├── oled/ led/ rgb/ beep/      # 显示与告警
+│       ├── wifi/ mqtt/                # 网络通信
+│       └── battery/ rtc/ adc/         # 电源与采集
 ├── docs/
 │   ├── ood_domain.md                  # 领域层 OOD 设计
 │   ├── ood_application.md             # 应用层 OOD 设计
@@ -69,4 +82,5 @@ main ───── 设计文档（冻结，受保护）
 | 第二阶段：应用层 OOD | ✅ | `docs/ood_application.md` |
 | 第三阶段：基础设施层 OOD | ✅ | `docs/ood_infrastructure.md` |
 | 第四阶段：接口/API 层 OOD | ✅ | `docs/ood_interface.md` |
+| 第五阶段：嵌入侧开发 | ✅ | `code/embedded/`（传感器驱动、执行器、通信、电源管理） |
 | 实现阶段 | 🔲 | `todo.md`（38 个后端包 + 7 个前端目录已建） |
