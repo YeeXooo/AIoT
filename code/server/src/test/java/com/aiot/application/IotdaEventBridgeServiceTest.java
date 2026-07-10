@@ -35,6 +35,8 @@ class IotdaEventBridgeServiceTest {
     private GuardianshipWebSocketHandler guardianshipWs;
     @Mock
     private FleetWebSocketHandler fleetWs;
+    @Mock
+    private LatestSensorDataStore sensorDataStore;
 
     private IotdaEventBridgeService bridge;
 
@@ -46,7 +48,7 @@ class IotdaEventBridgeServiceTest {
     @BeforeEach
     void setUp() {
         bridge = new IotdaEventBridgeService(
-                eventPublisher, tripRepository, vehicleRepository, guardianshipWs, fleetWs);
+                eventPublisher, tripRepository, vehicleRepository, guardianshipWs, fleetWs, sensorDataStore);
     }
 
     @Test

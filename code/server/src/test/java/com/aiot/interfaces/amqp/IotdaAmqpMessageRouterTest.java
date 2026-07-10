@@ -1,5 +1,6 @@
 package com.aiot.interfaces.amqp;
 
+import com.aiot.application.LatestSensorDataStore;
 import com.aiot.domain.event.*;
 import com.aiot.domain.model.DrivingBehaviorCounters;
 import com.aiot.domain.model.PhysiologicalSnapshot;
@@ -36,6 +37,8 @@ class IotdaAmqpMessageRouterTest {
     private VehicleRepository vehicleRepository;
     @Mock
     private TripRepository tripRepository;
+    @Mock
+    private LatestSensorDataStore sensorDataStore;
 
     private IotdaAmqpMessageRouter router;
 
@@ -100,7 +103,7 @@ class IotdaAmqpMessageRouterTest {
     void setUp() {
         when(vehicleRepository.findByTerminalSn(anyString())).thenReturn(Optional.empty());
         when(tripRepository.findActiveTrips()).thenReturn(Collections.emptyList());
-        router = new IotdaAmqpMessageRouter(eventPublisher, vehicleRepository, tripRepository);
+        router = new IotdaAmqpMessageRouter(eventPublisher, vehicleRepository, tripRepository, sensorDataStore);
     }
 
     @Test
